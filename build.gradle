@@ -1,0 +1,65 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '2.4.3'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'io.freefair.lombok' version '5.3.0'
+  id 'jacoco'
+  id 'org.sonarqube' version '3.3'
+}
+
+group = 'org.sitmun'
+version = '${version}'
+sourceCompatibility = JavaVersion.VERSION_11
+
+repositories {
+	mavenLocal()
+	mavenCentral()
+}
+
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-rest'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+  implementation "org.json:json:${json_version}"
+  implementation "io.jsonwebtoken:jjwt-api:${jjwt_version}"
+  implementation "io.jsonwebtoken:jjwt-impl:${jjwt_version}"
+  implementation "io.jsonwebtoken:jjwt-jackson:${jjwt_version}"
+  	
+  //Jdbc drivers
+  implementation 'org.postgresql:postgresql:42.5.4'
+  
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+jacocoTestReport {
+  reports {
+    xml.enabled true
+  }
+}
+
+test.finalizedBy jacocoTestReport
+
+tasks.register("codeCoverageReport", JacocoReport) {
+  jacocoClasspath = project(":sitmun-proxy-middleware").configurations.jacocoAnt
+  subprojects { subproject ->
+    subproject.plugins.withType(JacocoPlugin).configureEach {
+      subproject.tasks.matching({ t -> t.extensions.findByType(JacocoTaskExtension) }).configureEach { testTask ->
+        if (testTask.extensions.getByType(JacocoTaskExtension).isEnabled()) {
+          sourceSets subproject.sourceSets.main
+          executionData(testTask)
+        } else {
+          logger.warn('Jacoco extension is disabled for test task \'{}\' in project \'{}\'. this test task will be excluded from jacoco report.', testTask.getName(), subproject.getName())
+        }
+      }
+      subproject.tasks.matching({ t -> t.extensions.findByType(JacocoTaskExtension) }).forEach {
+        rootProject.tasks.codeCoverageReport.dependsOn(it)
+      }
+    }
+  }
+
+}
