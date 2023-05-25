@@ -1,23 +1,16 @@
 package org.sitmun.proxy.middleware.service;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.http.HttpResponse;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 import org.sitmun.proxy.middleware.dto.ConfigProxyDto;
 import org.sitmun.proxy.middleware.dto.ConfigProxyRequest;
-import org.sitmun.proxy.middleware.dto.DatasourcePayloadDto;
 import org.sitmun.proxy.middleware.dto.ErrorResponseDTO;
-import org.sitmun.proxy.middleware.dto.OgcWmsPayloadDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -33,10 +26,7 @@ public class ProxyMiddlewareService {
 	private RestTemplate restTemplate;
 	
 	@Autowired
-	private JdbcUtils jdbcUtils;
-	
-	@Autowired
-	private MapServiceUtils mapServiceUtils;
+	private GlobalRequestService globalRequestService;
 	
 	@Value("${security.authentication.middleware.secret}")
 	private String secret;
@@ -47,10 +37,8 @@ public class ProxyMiddlewareService {
 		ResponseEntity<?> response = configRequest(configProxyRequest);
 		if (response.getStatusCodeValue() == 200){
 			ConfigProxyDto configProxyDto = (ConfigProxyDto) response.getBody();
-			if(configProxyDto != null && configProxyDto.getPayload() instanceof OgcWmsPayloadDto) {
-				return serviceRequest(configProxyDto);
-			} else if(configProxyDto != null && configProxyDto.getPayload() instanceof DatasourcePayloadDto) {
-				return jdbcRequest(configProxyDto);
+			if(configProxyDto != null) {
+				return globalRequestService.executeRequest(configProxyDto.getPayload());
 			} else {
 				return null;
 			}
@@ -72,25 +60,5 @@ public class ProxyMiddlewareService {
 			serviceResponse = ResponseEntity.status(e.getStatusCode()).body(errorResponse);
 		}
 		return serviceResponse;
-	}
-	
-	private ResponseEntity<?> serviceRequest(ConfigProxyDto configProxyDto) {
-		OgcWmsPayloadDto payload = (OgcWmsPayloadDto)configProxyDto.getPayload();
-		HttpResponse<InputStream> response = mapServiceUtils.doRequest(payload);
-		try {
-			return ResponseEntity.ok()
-					.contentType(MediaType.parseMediaType(response.headers().allValues("Content-type").get(0)))
-					.body(response.body().readAllBytes());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-	
-	private ResponseEntity<?> jdbcRequest(ConfigProxyDto configProxyDto) {
-		DatasourcePayloadDto payload = (DatasourcePayloadDto)configProxyDto.getPayload();
-		List<Map<String, Object>> queryResult = jdbcUtils.doQuery(payload);
-		
-		return ResponseEntity.ok().body(queryResult);
 	}
 }

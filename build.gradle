@@ -25,6 +25,7 @@ dependencies {
   implementation "io.jsonwebtoken:jjwt-api:${jjwt_version}"
   implementation "io.jsonwebtoken:jjwt-impl:${jjwt_version}"
   implementation "io.jsonwebtoken:jjwt-jackson:${jjwt_version}"
+  implementation 'com.squareup.okhttp3:okhttp:4.11.0'
   	
   //Jdbc drivers
   implementation 'org.postgresql:postgresql:42.5.4'

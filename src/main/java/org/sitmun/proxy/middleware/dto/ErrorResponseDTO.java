@@ -1,6 +1,5 @@
 package org.sitmun.proxy.middleware.dto;
 
-import java.io.Serializable;
 import java.util.Date;
 
 import lombok.AllArgsConstructor;
@@ -12,7 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ErrorResponseDTO implements Serializable {
+public class ErrorResponseDTO {
 	
 	private int status;
 	private String error;

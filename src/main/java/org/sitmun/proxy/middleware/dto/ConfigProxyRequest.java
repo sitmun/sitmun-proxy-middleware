@@ -1,6 +1,5 @@
 package org.sitmun.proxy.middleware.dto;
 
-import java.io.Serializable;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -16,9 +15,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ConfigProxyRequest implements Serializable{
-	
-	private static final long serialVersionUID = -21698088585892935L;
+public class ConfigProxyRequest {
 
 	@JsonProperty("appId")
 	private int appId;
