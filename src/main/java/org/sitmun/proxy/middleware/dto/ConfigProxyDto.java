@@ -9,14 +9,14 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class ConfigProxyDto{
+public class ConfigProxyDto {
 
-	private String type;
-	
-	private long exp;
-	
-	@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, property="type")
-	@JsonSubTypes({@JsonSubTypes.Type(value = OgcWmsPayloadDto.class), @JsonSubTypes.Type(value = DatasourcePayloadDto.class)})
-	private PayloadDto payload;
+  private String type;
+
+  private long exp;
+
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+  @JsonSubTypes({@JsonSubTypes.Type(value = OgcWmsPayloadDto.class), @JsonSubTypes.Type(value = DatasourcePayloadDto.class)})
+  private PayloadDto payload;
 
 }

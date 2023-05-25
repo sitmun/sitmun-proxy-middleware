@@ -8,14 +8,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class QueryDecorator implements RequestDecorator {
 
-	@Override
-	public boolean accept(PayloadDto payload) {
-		return payload instanceof DatasourcePayloadDto;
-	}
+  @Override
+  public boolean accept(PayloadDto payload) {
+    return payload instanceof DatasourcePayloadDto;
+  }
 
-	@Override
-	public void apply(GlobalRequest globalRequest, PayloadDto payload) {
-		globalRequest.getJdbcRequest().setSql(((DatasourcePayloadDto)payload).getSql());
-	}
+  @Override
+  public void apply(GlobalRequest globalRequest, PayloadDto payload) {
+    globalRequest.getJdbcRequest().setSql(((DatasourcePayloadDto) payload).getSql());
+  }
 
 }

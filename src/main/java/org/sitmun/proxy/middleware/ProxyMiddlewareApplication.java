@@ -10,12 +10,12 @@ import org.springframework.web.client.RestTemplate;
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 public class ProxyMiddlewareApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(ProxyMiddlewareApplication.class, args);
-	}
+  public static void main(String[] args) {
+    SpringApplication.run(ProxyMiddlewareApplication.class, args);
+  }
 
-	@Bean
-	public RestTemplate restTemplate(RestTemplateBuilder builder) {
-		return builder.build();
-	}
+  @Bean
+  public RestTemplate restTemplate(RestTemplateBuilder builder) {
+    return builder.build();
+  }
 }

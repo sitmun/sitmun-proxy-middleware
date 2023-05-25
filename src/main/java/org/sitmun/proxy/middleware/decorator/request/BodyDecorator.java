@@ -8,23 +8,24 @@ import org.springframework.stereotype.Component;
 @Component
 public class BodyDecorator implements RequestDecorator {
 
-	@Override
-	public boolean accept(PayloadDto payload) {
-		boolean result = false;
-		if(payload instanceof OgcWmsPayloadDto) {
-			OgcWmsPayloadDto ogcPayload = (OgcWmsPayloadDto) payload;
-			//result = "POST".equalsIgnoreCase(ogcPayload.getMethod()) && ogcPayload.getRequestBody() != null;
-		}
-		return result;
-	}
+  @Override
+  public boolean accept(PayloadDto payload) {
+    boolean result = false;
+    if (payload instanceof OgcWmsPayloadDto) {
+      // TODO complete implementation
+      // OgcWmsPayloadDto ogcPayload = (OgcWmsPayloadDto) payload;
+      // result = "POST".equalsIgnoreCase(ogcPayload.getMethod()) && ogcPayload.getRequestBody() != null;
+    }
+    return result;
+  }
 
-	@Override
-	public void apply(GlobalRequest globalRequest, PayloadDto payload) {
-		// TODO Valid implementation
-		//Example
+  @Override
+  public void apply(GlobalRequest globalRequest, PayloadDto payload) {
+    // TODO Valid implementation
+    //Example
 /*		OgcWmsPayloadDto ogcPayload = (OgcWmsPayloadDto) payload;		
 		globalRequest.getCustomHttpRequest().getRequestBuilder()
 			.post(ogcPayload.getRequestBody());*/
-	}
+  }
 
 }

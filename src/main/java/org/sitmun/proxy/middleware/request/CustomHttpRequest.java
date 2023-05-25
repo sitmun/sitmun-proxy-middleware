@@ -7,10 +7,10 @@ import okhttp3.Request.Builder;
 
 @Getter
 public class CustomHttpRequest {
-	
-	private Builder requestBuilder;
-	
-	public CustomHttpRequest() {
-		requestBuilder = new Request.Builder();
-	}
+
+  private final Builder requestBuilder;
+
+  public CustomHttpRequest() {
+    requestBuilder = new Request.Builder();
+  }
 }
