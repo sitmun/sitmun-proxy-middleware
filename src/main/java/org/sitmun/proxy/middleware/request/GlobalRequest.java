@@ -4,6 +4,8 @@ import lombok.Getter;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+
+import org.sitmun.proxy.middleware.service.ClientService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
@@ -18,10 +20,13 @@ import java.util.Map;
 public class GlobalRequest {
 
   private CustomHttpRequest customHttpRequest;
+  
+  private ClientService clientService;
 
   private JdbcRequest jdbcRequest;
 
-  public void setMapServiceRequest() {
+  public void setMapServiceRequest(ClientService clientService) {
+	this.clientService = clientService;
     this.customHttpRequest = new CustomHttpRequest();
   }
 
@@ -39,11 +44,10 @@ public class GlobalRequest {
   }
 
   private ResponseEntity<?> executeHttp() {
-    OkHttpClient httpClient = new OkHttpClient();
     Request httpRequest = customHttpRequest.getRequestBuilder().build();
     Response response = null;
     try {
-      response = httpClient.newCall(httpRequest).execute();
+      response = clientService.executeRequest(httpRequest);
       return ResponseEntity.ok()
         .contentType(MediaType.parseMediaType(response.header("content-type")))
         .body(response.body().bytes());

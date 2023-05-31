@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'org.sitmun'
-version = '${version}'
+
 sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {

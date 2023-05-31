@@ -3,6 +3,7 @@ package org.sitmun.proxy.middleware.dto;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.Map;
 @Getter
 @Setter
 @JsonTypeName("OgcWmsPayload")
+@NoArgsConstructor
 public class OgcWmsPayloadDto extends PayloadDto {
 
   private String uri;

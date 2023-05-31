@@ -1,8 +1,10 @@
 package org.sitmun.proxy.middleware.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.List;
 @Getter
 @Setter
 @JsonTypeName("DatasourcePayload")
+@NoArgsConstructor
 public class DatasourcePayloadDto extends PayloadDto {
 
   private String uri;
@@ -17,6 +20,7 @@ public class DatasourcePayloadDto extends PayloadDto {
   private String password;
   private String driver;
   private String sql;
+
 
   @Builder
   public DatasourcePayloadDto(List<String> vary, String uri, String user, String password, String driver, String sql) {
@@ -27,4 +31,5 @@ public class DatasourcePayloadDto extends PayloadDto {
     this.driver = driver;
     this.sql = sql;
   }
+
 }

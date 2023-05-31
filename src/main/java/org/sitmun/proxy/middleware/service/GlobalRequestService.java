@@ -20,11 +20,14 @@ public class GlobalRequestService {
 
   @Autowired
   private List<ResponseDecorator> responseDecorators;
+  
+  @Autowired
+  private ClientService clientService;
 
   public ResponseEntity<?> executeRequest(PayloadDto payload) {
     GlobalRequest globalRequest = new GlobalRequest();
     if (payload instanceof OgcWmsPayloadDto) {
-      globalRequest.setMapServiceRequest();
+      globalRequest.setMapServiceRequest(clientService);
       globalRequest.getCustomHttpRequest().getRequestBuilder()
         .url(((OgcWmsPayloadDto) payload).getUri());
     } else if (payload instanceof DatasourcePayloadDto) {
