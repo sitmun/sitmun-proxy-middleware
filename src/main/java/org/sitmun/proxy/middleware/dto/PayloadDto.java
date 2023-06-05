@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.sitmun.proxy.middleware.decorator.Context;
 
 import java.util.List;
 
@@ -11,7 +12,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PayloadDto {
+public class PayloadDto implements Context {
 
   private List<String> vary;
 

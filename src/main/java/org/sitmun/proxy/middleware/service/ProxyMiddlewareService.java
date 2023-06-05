@@ -1,8 +1,13 @@
 package org.sitmun.proxy.middleware.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.log4j.Log4j;
+import lombok.extern.slf4j.Slf4j;
 import org.sitmun.proxy.middleware.dto.ConfigProxyDto;
 import org.sitmun.proxy.middleware.dto.ConfigProxyRequest;
 import org.sitmun.proxy.middleware.dto.ErrorResponseDTO;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -16,27 +21,38 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Date;
 import java.util.Map;
 
+import static org.sitmun.proxy.middleware.utils.LoggerUtils.logAsPrettyJson;
+
 @Service
+@Slf4j
 public class ProxyMiddlewareService {
 
   @Value("${sitmun.config.url}")
   private String configUrl;
 
-  @Autowired
-  private RestTemplate restTemplate;
+  private final RestTemplate restTemplate;
 
-  @Autowired
-  private GlobalRequestService globalRequestService;
+  private final GlobalRequestService globalRequestService;
 
   @Value("${security.authentication.middleware.secret}")
   private String secret;
 
+  public ProxyMiddlewareService(RestTemplate restTemplate, GlobalRequestService globalRequestService) {
+    this.restTemplate = restTemplate;
+    this.globalRequestService = globalRequestService;
+  }
+
   public ResponseEntity<?> doRequest(Integer appId, Integer terId, String type,
                                      Integer typeId, String token, Map<String, String> params) {
     ConfigProxyRequest configProxyRequest = new ConfigProxyRequest(appId, terId, type, typeId, "GET", params, null, token);
+    logAsPrettyJson(log, "Request to the API:\n{}", configProxyRequest);
+
     ResponseEntity<?> response = configRequest(configProxyRequest);
     if (response.getStatusCodeValue() == 200) {
+
       ConfigProxyDto configProxyDto = (ConfigProxyDto) response.getBody();
+      logAsPrettyJson(log, "Response from the API:\n{}", configProxyDto);
+
       if (configProxyDto != null) {
         return globalRequestService.executeRequest(configProxyDto.getPayload());
       } else {
