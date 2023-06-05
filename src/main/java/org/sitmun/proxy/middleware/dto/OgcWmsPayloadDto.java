@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.sitmun.proxy.middleware.decorator.HttpContext;
 
 import java.util.List;
 import java.util.Map;
@@ -14,7 +13,7 @@ import java.util.Map;
 @Setter
 @JsonTypeName("OgcWmsPayload")
 @NoArgsConstructor
-public class OgcWmsPayloadDto extends PayloadDto implements HttpContext {
+public class OgcWmsPayloadDto extends PayloadDto {
 
   private String uri;
   private String method;

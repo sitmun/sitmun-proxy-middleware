@@ -1,12 +1,9 @@
 package org.sitmun.proxy.middleware.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.sitmun.proxy.middleware.request.HttpRequest;
-import org.sitmun.proxy.middleware.service.GlobalRequestService;
 import org.sitmun.proxy.middleware.test.TestUtils;
 import org.sitmun.proxy.middleware.test.URIConstants;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +21,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @TestInstance(Lifecycle.PER_CLASS)
 class ProxyMiddlewareControllerTest {
-
-  @Autowired
-  private GlobalRequestService requestService;
 
 	@Autowired
 	private MockMvc mvc;
