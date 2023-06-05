@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.sitmun.proxy.middleware.decorator.JdbcContext;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ import java.util.List;
 @Setter
 @JsonTypeName("DatasourcePayload")
 @NoArgsConstructor
-public class DatasourcePayloadDto extends PayloadDto {
+public class DatasourcePayloadDto extends PayloadDto implements JdbcContext {
 
   private String uri;
   private String user;
