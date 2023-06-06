@@ -11,11 +11,8 @@ import okhttp3.Response;
 @Service
 public class ClientServiceImpl implements ClientService {
 
-	private OkHttpClient httpClient;
+	private final OkHttpClient httpClient = new OkHttpClient();
 	
-	public ClientServiceImpl() {
-		httpClient = new OkHttpClient();
-	}
 
 	@Override
 	public Response executeRequest(Request httpRequest) {

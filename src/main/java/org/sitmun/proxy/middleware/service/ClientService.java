@@ -5,5 +5,5 @@ import okhttp3.Response;
 
 public interface ClientService {
 
-	public Response executeRequest(Request httpRequest);
+	Response executeRequest(Request httpRequest);
 }
