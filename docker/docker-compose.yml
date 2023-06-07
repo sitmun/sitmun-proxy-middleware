@@ -4,8 +4,8 @@ services:
     image: sitmun/proxy-middleware
     build:
       context: ./proxy
-    args:
-      PROXY_VERSION: 0.1.0-SNAPSHOT
+      args:
+        PROXY_VERSION: 0.1.0-SNAPSHOT
     environment:
       sitmun.config.url: backend:8081/api/config/proxy 
     ports:
