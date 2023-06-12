@@ -1,14 +1,9 @@
 package org.sitmun.proxy.middleware.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.log4j.Log4j;
 import lombok.extern.slf4j.Slf4j;
 import org.sitmun.proxy.middleware.dto.ConfigProxyDto;
 import org.sitmun.proxy.middleware.dto.ConfigProxyRequest;
 import org.sitmun.proxy.middleware.dto.ErrorResponseDTO;
-import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -67,14 +62,11 @@ public class ProxyMiddlewareService {
     HttpHeaders requestHeaders = new HttpHeaders();
     requestHeaders.add("X-SITMUN-Proxy-Key", this.secret);
     HttpEntity<ConfigProxyRequest> httpEntity = new HttpEntity<>(configRequest, requestHeaders);
-    ResponseEntity<?> serviceResponse = null;
     try {
-      serviceResponse = restTemplate.exchange(configUrl, HttpMethod.POST, httpEntity, ConfigProxyDto.class);
+      return restTemplate.exchange(configUrl, HttpMethod.POST, httpEntity, ConfigProxyDto.class);
     } catch (HttpClientErrorException e) {
       ErrorResponseDTO errorResponse = new ErrorResponseDTO(e.getRawStatusCode(), "", e.getMessage(), configUrl, new Date());
-
-      serviceResponse = ResponseEntity.status(e.getStatusCode()).body(errorResponse);
+      return ResponseEntity.status(e.getStatusCode()).body(errorResponse);
     }
-    return serviceResponse;
   }
 }

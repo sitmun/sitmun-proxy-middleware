@@ -1,7 +1,6 @@
 package org.sitmun.proxy.middleware.controllers;
 
 import org.sitmun.proxy.middleware.service.ProxyMiddlewareService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,8 +11,11 @@ import java.util.Map;
 @RequestMapping("/proxy")
 public class ProxyMiddlewareController {
 
-  @Autowired
-  private ProxyMiddlewareService proxyMiddlewareService;
+  private final ProxyMiddlewareService proxyMiddlewareService;
+
+  public ProxyMiddlewareController(ProxyMiddlewareService proxyMiddlewareService) {
+    this.proxyMiddlewareService = proxyMiddlewareService;
+  }
 
   @GetMapping("/{appId}/{terId}/{type}/{typeId}")
   public ResponseEntity<?> getService(@PathVariable("appId") Integer appId, @PathVariable("terId") Integer terId,
