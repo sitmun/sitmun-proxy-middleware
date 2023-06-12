@@ -15,7 +15,7 @@ public class PaginationResponseDecorator implements ResponseDecorator{
 
   @Override
   public void addBehavior(Object response, Context context) {
-    //TODO  implementation if necesary
+    //TODO  implementation if necessary
   }
 
 }

@@ -15,9 +15,12 @@ It is a reverse proxy and therefore the client cannot choose whether to use it o
 
 The **SITMUN proxy middleware** can be deployed using docker:
 
-Because `sitmun-proxy-middleware` depends of `sitmun-backend-core` It is nedded run a docker compose with backend image and requires a previous build for `sitmun-backend-core`.
+Because `sitmun-proxy-middleware` depends on `sitmun-backend-core`.
+It is needed to run a docker compose with backend image and requires a previous build for `sitmun-backend-core`.
 
-The docker-compose.yml is located in the folder `docker` and can run executing in the folder the next command in a terminal:
+The docker-compose.yml is located in the folder `docker` and can run executing in the folder the next command in a
+terminal:
+
 ```bash
 docker compose up
 ```
@@ -26,10 +29,13 @@ The proxy image build download the sitmun-proxy-middleware repository and run a 
 
 **SITMUN proxy middleware** can also be deployed locally via a jar file.
 To get the jar, we have to compile the project with the following command:
+
 ```bash
 gradlew clean build
 ```
+
 This creates a jar that we can deploy for local testing:
+
 ```bash
 java -jar sitmun-proxy-middleware-${version}.jar
 ```
