@@ -1,67 +1,66 @@
 package org.sitmun.proxy.middleware.service;
 
-import java.io.IOException;
-import java.util.List;
-
-import javax.annotation.Priority;
-
-import org.sitmun.proxy.middleware.interceptors.TestInterceptor;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Priority;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Profile("test")
 @Priority(1)
 @Service
 public class ClientServiceTestImpl implements ClientService {
 
-	private final List<TestInterceptor> interceptors;
+  private final List<Interceptor> interceptors = new ArrayList<>();
 
-	private OkHttpClient httpClient;
+  private OkHttpClient httpClient;
 
-	public ClientServiceTestImpl(List<TestInterceptor> interceptors) {
-		this.interceptors = interceptors;
-		Builder builder = new Builder();
-		addInterceptors(builder);
-		httpClient = builder.build();
-	}
+  public ClientServiceTestImpl(List<Interceptor> interceptors) {
+    this.interceptors.addAll(interceptors);
+    httpClient = build();
+  }
 
-	@Override
-	public Response executeRequest(Request httpRequest) {
-		Response response = null;
+  private OkHttpClient build() {
+    Builder builder = new Builder();
+    for (Interceptor ti : interceptors) {
+      builder.addInterceptor(ti);
+    }
+    return builder.build();
+  }
 
-		try {
-			response = httpClient.newCall(httpRequest).execute();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+  @Override
+  public Response executeRequest(Request httpRequest) {
+    Response response = null;
 
-		return response;
-	}
+    try {
+      response = httpClient.newCall(httpRequest).execute();
+    } catch (IOException e) {
+      // TODO propagate exception or provide access to the last exception.
+      e.printStackTrace();
+    }
 
-	private void addInterceptors(Builder builder) {
-		if (interceptors != null && !interceptors.isEmpty()) {
-			for (TestInterceptor ti : interceptors) {
-				builder.addInterceptor(ti);
-			}
-		}
-	}
+    return response;
+  }
 
-	public void addInterceptor(Interceptor interceptor) {
-		httpClient = new Builder().addInterceptor(interceptor).build();
-	}
+  public void addInterceptor(Interceptor interceptor) {
+    if (!interceptors.contains(interceptor)) {
+      interceptors.add(interceptor);
+      httpClient = build();
+    }
+  }
 
-	public void removeInterceptor(Interceptor interceptor) {
-		if (interceptor != null && httpClient.interceptors().contains(interceptor)) {
-			Builder builder = httpClient.newBuilder();
-			builder.interceptors().remove(interceptor);
-			httpClient = builder.build();
-		}
-	}
+  public void removeInterceptor(Interceptor interceptor) {
+    if (interceptors.contains(interceptor)) {
+      interceptors.remove(interceptor);
+      httpClient = build();
+    }
+  }
 
 }
