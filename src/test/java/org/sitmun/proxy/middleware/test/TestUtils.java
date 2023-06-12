@@ -28,9 +28,10 @@ public class TestUtils {
   }
 
   public static String requestAuthorization(RestTemplate restTemplate) {
-    UserPasswordAuthenticationRequest login = new UserPasswordAuthenticationRequest();
-    login.setUsername(ADMIN_USERNAME);
-    login.setPassword(ADMIN_PASSWORD);
+    UserPasswordAuthenticationRequest login = UserPasswordAuthenticationRequest.builder()
+      .username(ADMIN_USERNAME)
+      .password(ADMIN_PASSWORD)
+      .build();
     ResponseEntity<AuthenticationResponse> loginResponse =
       restTemplate
         .postForEntity(URIConstants.AUTHORIZATION_URI, login, AuthenticationResponse.class);

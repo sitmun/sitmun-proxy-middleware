@@ -1,37 +1,27 @@
 package org.sitmun.proxy.middleware.response;
 
+import lombok.Data;
 import org.sitmun.proxy.middleware.decorator.DecoratedResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
+@Data
 public class Response<T> implements DecoratedResponse<T> {
 
-  private final int code;
+  private final int statusCode;
   private final String contentType;
-
   private final T body;
-  public Response(int code, String contentType, T body) {
-    this.code = code;
+
+  public Response(int statusCode, String contentType, T body) {
+    this.statusCode = statusCode;
     this.contentType = contentType;
     this.body = body;
-  }
-
-  public int getStatusCode() {
-    return code;
-  }
-
-  public T getBody() {
-    return body;
-  }
-
-  public String getContentType() {
-    return contentType;
   }
 
   @Override
   public ResponseEntity<T> asResponseEntity() {
     return ResponseEntity
-      .status(code)
+      .status(statusCode)
       .contentType(MediaType.parseMediaType(contentType))
       .body(body);
   }
