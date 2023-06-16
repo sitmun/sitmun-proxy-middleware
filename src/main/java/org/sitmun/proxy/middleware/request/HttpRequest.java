@@ -3,11 +3,13 @@ package org.sitmun.proxy.middleware.request;
 import okhttp3.ResponseBody;
 import org.sitmun.proxy.middleware.decorator.DecoratedRequest;
 import org.sitmun.proxy.middleware.decorator.DecoratedResponse;
+import org.sitmun.proxy.middleware.dto.ErrorResponseDTO;
 import org.sitmun.proxy.middleware.response.Response;
 import org.sitmun.proxy.middleware.service.ClientService;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,9 +56,8 @@ public class HttpRequest implements DecoratedRequest {
       return new Response<>(r.code(), r.header("content-type"), body.bytes());
     } catch (IOException e) {
       e.printStackTrace();
-      // TODO return a response with error
+      return new Response<>(500, "application/json", new ErrorResponseDTO(500, "ServiceError", "Error with the request to final service", "", new Date()));
     }
-    return null;
   }
 
   public String getUrl() {

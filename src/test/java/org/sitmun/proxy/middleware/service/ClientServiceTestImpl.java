@@ -36,14 +36,13 @@ public class ClientServiceTestImpl implements ClientService {
   }
 
   @Override
-  public Response executeRequest(Request httpRequest) {
+  public Response executeRequest(Request httpRequest) throws IOException {
     Response response = null;
 
     try {
       response = httpClient.newCall(httpRequest).execute();
     } catch (IOException e) {
-      // TODO propagate exception or provide access to the last exception.
-      e.printStackTrace();
+      throw e;
     }
 
     return response;

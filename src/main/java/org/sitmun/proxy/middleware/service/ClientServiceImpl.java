@@ -15,13 +15,13 @@ public class ClientServiceImpl implements ClientService {
 	
 
 	@Override
-	public Response executeRequest(Request httpRequest) {
+	public Response executeRequest(Request httpRequest) throws IOException {
 		Response response = null;
 		
 		try {
 			response = httpClient.newCall(httpRequest).execute();
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw e;
 		}
 		
 		return response;

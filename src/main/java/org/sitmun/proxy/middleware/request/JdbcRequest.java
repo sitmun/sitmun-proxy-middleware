@@ -3,6 +3,7 @@ package org.sitmun.proxy.middleware.request;
 
 import org.sitmun.proxy.middleware.decorator.DecoratedRequest;
 import org.sitmun.proxy.middleware.decorator.DecoratedResponse;
+import org.sitmun.proxy.middleware.dto.ErrorResponseDTO;
 import org.sitmun.proxy.middleware.response.Response;
 
 import java.sql.*;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Date;
 
 public class JdbcRequest implements DecoratedRequest {
 
@@ -31,7 +33,7 @@ public class JdbcRequest implements DecoratedRequest {
       executeStatement(connectionUsed, result);
     } catch (SQLException e) {
       e.printStackTrace();
-      // TODO return a response with error
+      return new Response<>(500, "application/json", new ErrorResponseDTO(500, "SQLError", e.getMessage(), "", new Date()));
     }
     return new Response<>(200, "application/json", result);
   }
