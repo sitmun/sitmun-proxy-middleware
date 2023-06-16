@@ -25,12 +25,13 @@ public class JdbcRequest implements DecoratedRequest {
   }
 
   @Override
-  public DecoratedResponse execute() {
+  public DecoratedResponse<?> execute() {
     List<Map<String, Object>> result = new ArrayList<>();
     try (Connection connectionUsed = connection) {
       executeStatement(connectionUsed, result);
     } catch (SQLException e) {
       e.printStackTrace();
+      // TODO return a response with error
     }
     return new Response<>(200, "application/json", result);
   }
@@ -45,12 +46,12 @@ public class JdbcRequest implements DecoratedRequest {
 
   private void retrieveResultSetMetadata(Statement stmt, List<Map<String, Object>> result) {
     try (ResultSet resultSet = stmt.executeQuery(sql)) {
-      ResultSetMetaData rsmd = resultSet.getMetaData();
+      ResultSetMetaData metadata = resultSet.getMetaData();
       while (resultSet.next()) {
         Map<String, Object> row = new HashMap<>();
-        for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+        for (int i = 1; i <= metadata.getColumnCount(); i++) {
           Object value = resultSet.getObject(i);
-          row.put(rsmd.getColumnLabel(i), value);
+          row.put(metadata.getColumnLabel(i), value);
         }
         result.add(row);
       }

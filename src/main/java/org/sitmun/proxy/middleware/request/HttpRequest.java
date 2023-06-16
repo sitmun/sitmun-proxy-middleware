@@ -36,7 +36,7 @@ public class HttpRequest implements DecoratedRequest {
 
 
   @Override
-  public DecoratedResponse execute() {
+  public DecoratedResponse<?> execute() {
     if (!StringUtils.hasText(url)) {
       throw new IllegalStateException("Url is not set");
     }
@@ -54,6 +54,7 @@ public class HttpRequest implements DecoratedRequest {
       return new Response<>(r.code(), r.header("content-type"), body.bytes());
     } catch (IOException e) {
       e.printStackTrace();
+      // TODO return a response with error
     }
     return null;
   }
