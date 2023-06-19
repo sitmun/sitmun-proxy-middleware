@@ -1,5 +1,6 @@
 package org.sitmun.proxy.middleware.decorator.request;
 
+import lombok.extern.slf4j.Slf4j;
 import org.sitmun.proxy.middleware.decorator.Context;
 import org.sitmun.proxy.middleware.decorator.JdbcContext;
 import org.sitmun.proxy.middleware.decorator.RequestDecorator;
@@ -10,6 +11,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+
+@Slf4j
 @Component
 public class JdbcConnectionRequestDecorator implements RequestDecorator {
 
@@ -32,7 +35,7 @@ public class JdbcConnectionRequestDecorator implements RequestDecorator {
       Class.forName(context.getDriver());
       connection = DriverManager.getConnection(context.getUri(), context.getUser(), context.getPassword());
     } catch (SQLException | ClassNotFoundException e) {
-      e.printStackTrace();
+      log.error("Error getting connection: {}", e.getMessage(), e);
     }
     return connection;
   }

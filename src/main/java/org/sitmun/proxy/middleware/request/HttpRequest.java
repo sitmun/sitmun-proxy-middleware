@@ -1,5 +1,6 @@
 package org.sitmun.proxy.middleware.request;
 
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.ResponseBody;
 import org.sitmun.proxy.middleware.decorator.DecoratedRequest;
 import org.sitmun.proxy.middleware.decorator.DecoratedResponse;
@@ -13,6 +14,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 public class HttpRequest implements DecoratedRequest {
 
   private final Map<String, String> headers = new HashMap<>();
@@ -50,7 +52,7 @@ public class HttpRequest implements DecoratedRequest {
       if (body == null) return new Response<>(r.code(), r.header("content-type"), null);
       return new Response<>(r.code(), r.header("content-type"), body.bytes());
     } catch (IOException e) {
-      e.printStackTrace();
+      log.error("Error getting response: {}", e.getMessage(), e);
       return new Response<>(500, "application/json", new ErrorResponseDTO(500, "ServiceError", "Error with the request to final service", "", new Date()));
     }
   }
