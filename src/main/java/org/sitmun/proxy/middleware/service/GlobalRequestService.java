@@ -15,7 +15,9 @@ public class GlobalRequestService {
   private final List<RequestDecorator> requestDecorators;
 
   private final List<ResponseDecorator> responseDecorators;
-
+  private DecoratedRequest lastRequest;
+  private DecoratedResponse<?> lastResponse;
+  private Context lastContext;
   public GlobalRequestService(RequestFactory requestFactory, List<RequestDecorator> requestDecorators, List<ResponseDecorator> responseDecorators) {
     this.requestFactory = requestFactory;
     this.requestDecorators = requestDecorators;
@@ -32,11 +34,6 @@ public class GlobalRequestService {
     lastResponse = response;
     return response.asResponseEntity();
   }
-
-  private DecoratedRequest lastRequest;
-  private DecoratedResponse<?> lastResponse;
-
-  private Context lastContext;
 
   public DecoratedRequest getLastRequest() {
     return lastRequest;

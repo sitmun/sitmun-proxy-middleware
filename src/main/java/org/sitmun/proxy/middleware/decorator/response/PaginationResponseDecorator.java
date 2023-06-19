@@ -5,7 +5,7 @@ import org.sitmun.proxy.middleware.decorator.ResponseDecorator;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PaginationResponseDecorator implements ResponseDecorator{
+public class PaginationResponseDecorator implements ResponseDecorator {
 
   @Override
   public boolean accept(Object target, Context response) {

@@ -7,5 +7,5 @@ import java.io.IOException;
 
 public interface ClientService {
 
-	Response executeRequest(Request httpRequest) throws IOException;
+  Response executeRequest(Request httpRequest) throws IOException;
 }

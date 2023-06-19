@@ -26,14 +26,14 @@ public class BasicSecurityRequestInterceptor implements TestInterceptor {
       response = response.newBuilder().body(body).code(200).build();
     }
     return response;
-	}
+  }
 
-	private String decodeAuthorization(String authorization) {
-		String token = null;
-		if (StringUtils.hasText(authorization)) {
-			token = new String(Base64.getDecoder().decode(authorization.substring(6)));
-		}
-		return token;
-	}
+  private String decodeAuthorization(String authorization) {
+    String token = null;
+    if (StringUtils.hasText(authorization)) {
+      token = new String(Base64.getDecoder().decode(authorization.substring(6)));
+    }
+    return token;
+  }
 
 }

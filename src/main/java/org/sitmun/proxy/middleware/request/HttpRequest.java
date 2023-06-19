@@ -15,17 +15,13 @@ import java.util.Map;
 
 public class HttpRequest implements DecoratedRequest {
 
-  private String url;
   private final Map<String, String> headers = new HashMap<>();
   private final Map<String, String> parameters = new HashMap<>();
-
   private final ClientService clientService;
+  private String url;
+
   public HttpRequest(ClientService clientService) {
     this.clientService = clientService;
-  }
-
-  public void setUrl(String uri) {
-    url = uri;
   }
 
   public void setHeader(String header, String value) {
@@ -35,7 +31,6 @@ public class HttpRequest implements DecoratedRequest {
   public void setParameters(Map<String, String> parameters) {
     this.parameters.putAll(parameters);
   }
-
 
   @Override
   public DecoratedResponse<?> execute() {
@@ -50,7 +45,7 @@ public class HttpRequest implements DecoratedRequest {
 
     okhttp3.Request httpRequest = builder.build();
 
-    try(okhttp3.Response r = clientService.executeRequest(httpRequest)) {
+    try (okhttp3.Response r = clientService.executeRequest(httpRequest)) {
       ResponseBody body = r.body();
       if (body == null) return new Response<>(r.code(), r.header("content-type"), null);
       return new Response<>(r.code(), r.header("content-type"), body.bytes());
@@ -69,5 +64,9 @@ public class HttpRequest implements DecoratedRequest {
     } else {
       return url;
     }
+  }
+
+  public void setUrl(String uri) {
+    url = uri;
   }
 }

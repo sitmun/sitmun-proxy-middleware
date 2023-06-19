@@ -22,13 +22,10 @@ import static org.sitmun.proxy.middleware.utils.LoggerUtils.logAsPrettyJson;
 @Slf4j
 public class ProxyMiddlewareService {
 
+  private final RestTemplate restTemplate;
+  private final GlobalRequestService globalRequestService;
   @Value("${sitmun.config.url}")
   private String configUrl;
-
-  private final RestTemplate restTemplate;
-
-  private final GlobalRequestService globalRequestService;
-
   @Value("${security.authentication.middleware.secret}")
   private String secret;
 

@@ -43,7 +43,7 @@ services:
       spring.datasource.hikari.connection-timeout: 500
       security.authentication.jwt.token-validity-in-miliseconds: 600000
   nginx_balancer:
-    build: 
+    build:
       context: ./nginx
     ports:
       - "9091:80"
