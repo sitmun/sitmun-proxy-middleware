@@ -15,15 +15,7 @@ public class ClientServiceImpl implements ClientService {
 
 	@Override
 	public Response executeRequest(Request httpRequest) throws IOException {
-		Response response = null;
-		
-		try {
-			response = httpClient.newCall(httpRequest).execute();
-		} catch (IOException e) {
-			throw e;
-		}
-		
-		return response;
+		return httpClient.newCall(httpRequest).execute();
 	}
 
 }
