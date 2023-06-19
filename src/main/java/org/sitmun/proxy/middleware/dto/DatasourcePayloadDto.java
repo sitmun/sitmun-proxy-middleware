@@ -1,7 +1,6 @@
 package org.sitmun.proxy.middleware.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
