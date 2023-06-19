@@ -1,7 +1,6 @@
 version: '3'
 services:
   proxy_1:
-    image: sitmun/proxy-middleware_1:latest
     build:
       context: ./proxy
       args:
@@ -13,7 +12,6 @@ services:
     depends_on:
       - heroku
   proxy_2:
-    image: sitmun/proxy-middleware_2:latest
     build:
       context: ./proxy
       args:
@@ -25,7 +23,6 @@ services:
     depends_on:
       - heroku
   heroku:
-    image: sitmun/heroku:latest
     build:
       context: ./heroku-dev-lite
       args:
