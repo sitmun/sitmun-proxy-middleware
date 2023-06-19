@@ -48,6 +48,7 @@ public class ProxyMiddlewareService {
       if (configProxyDto != null) {
         return globalRequestService.executeRequest(configProxyDto.getPayload());
       } else {
+        // TODO return error
         return null;
       }
     } else {
