@@ -7,7 +7,7 @@ services:
       args:
         PROXY_VERSION: 0.1.0-SNAPSHOT
     environment:
-      sitmun.config.url: backend:8081/api/config/proxy 
+      sitmun.config.url: backend:8081/api/config/proxy
     ports:
       - "9090:8080"
     depends_on:

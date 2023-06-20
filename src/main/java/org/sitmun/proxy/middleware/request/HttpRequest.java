@@ -1,5 +1,6 @@
 package org.sitmun.proxy.middleware.request;
 
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.ResponseBody;
 import org.sitmun.proxy.middleware.decorator.DecoratedRequest;
 import org.sitmun.proxy.middleware.decorator.DecoratedResponse;
@@ -13,19 +14,16 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 public class HttpRequest implements DecoratedRequest {
 
-  private String url;
   private final Map<String, String> headers = new HashMap<>();
   private final Map<String, String> parameters = new HashMap<>();
-
   private final ClientService clientService;
+  private String url;
+
   public HttpRequest(ClientService clientService) {
     this.clientService = clientService;
-  }
-
-  public void setUrl(String uri) {
-    url = uri;
   }
 
   public void setHeader(String header, String value) {
@@ -35,7 +33,6 @@ public class HttpRequest implements DecoratedRequest {
   public void setParameters(Map<String, String> parameters) {
     this.parameters.putAll(parameters);
   }
-
 
   @Override
   public DecoratedResponse<?> execute() {
@@ -50,12 +47,12 @@ public class HttpRequest implements DecoratedRequest {
 
     okhttp3.Request httpRequest = builder.build();
 
-    try(okhttp3.Response r = clientService.executeRequest(httpRequest)) {
+    try (okhttp3.Response r = clientService.executeRequest(httpRequest)) {
       ResponseBody body = r.body();
       if (body == null) return new Response<>(r.code(), r.header("content-type"), null);
       return new Response<>(r.code(), r.header("content-type"), body.bytes());
     } catch (IOException e) {
-      e.printStackTrace();
+      log.error("Error getting response: {}", e.getMessage(), e);
       return new Response<>(500, "application/json", new ErrorResponseDTO(500, "ServiceError", "Error with the request to final service", "", new Date()));
     }
   }
@@ -69,5 +66,9 @@ public class HttpRequest implements DecoratedRequest {
     } else {
       return url;
     }
+  }
+
+  public void setUrl(String uri) {
+    url = uri;
   }
 }

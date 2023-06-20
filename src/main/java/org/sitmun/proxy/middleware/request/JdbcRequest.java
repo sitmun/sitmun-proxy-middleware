@@ -1,18 +1,17 @@
 package org.sitmun.proxy.middleware.request;
 
 
+import lombok.extern.slf4j.Slf4j;
 import org.sitmun.proxy.middleware.decorator.DecoratedRequest;
 import org.sitmun.proxy.middleware.decorator.DecoratedResponse;
 import org.sitmun.proxy.middleware.dto.ErrorResponseDTO;
 import org.sitmun.proxy.middleware.response.Response;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Date;
+import java.util.*;
 
+@Slf4j
 public class JdbcRequest implements DecoratedRequest {
 
   private Connection connection;
@@ -32,7 +31,7 @@ public class JdbcRequest implements DecoratedRequest {
     try (Connection connectionUsed = connection) {
       executeStatement(connectionUsed, result);
     } catch (SQLException e) {
-      e.printStackTrace();
+      log.error("Error getting response: {}", e.getMessage(), e);
       return new Response<>(500, "application/json", new ErrorResponseDTO(500, "SQLError", e.getMessage(), "", new Date()));
     }
     return new Response<>(200, "application/json", result);
@@ -42,7 +41,7 @@ public class JdbcRequest implements DecoratedRequest {
     try (Statement stmt = connection.createStatement()) {
       retrieveResultSetMetadata(stmt, result);
     } catch (SQLException e) {
-      e.printStackTrace();
+      log.error("Error in connection: {}", e.getMessage(), e);
     }
   }
 
@@ -58,7 +57,7 @@ public class JdbcRequest implements DecoratedRequest {
         result.add(row);
       }
     } catch (SQLException e) {
-      e.printStackTrace();
+      log.error("Error in statement: {}", e.getMessage(), e);
     }
   }
 }

@@ -1,15 +1,19 @@
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=org.sitmun%3Asitmun-proxy-middleware&metric=alert_status)](https://sonarcloud.io/dashboard?id=org.sitmun%3Asitmun-proxy-middleware)
+
 # SITMUN proxy middleware
 
-Middleware proxy: is a reverse proxy to allow access to protected services and databases (either because they are on an Intranet, and users are outside it, or because they require access credentials and users should not know them, or because they want to modify the information they provide before returning it to the client application, e.g. masking part of an image with a map).
+Middleware proxy: is a reverse proxy to allow access to protected services and databases (either because they are on an
+Intranet, and users are outside it, or because they require access credentials and users should not know them, or
+because they want to modify the information they provide before returning it to the client application, e.g. masking
+part of an image with a map).
 
-It is a reverse proxy and therefore the client cannot choose whether to use it or not, and it is essentially transparent to the client.
-
+It is a reverse proxy and therefore the client cannot choose whether to use it or not, and it is essentially transparent
+to the client.
 
 ## Requirements
 
-`sitmun-proxy-middleware` depends on `sitmun-backend-core` to make requests to the backend that return the configurations needed to make requests to the end services.
-
+`sitmun-proxy-middleware` depends on `sitmun-backend-core` to make requests to the backend that return the
+configurations needed to make requests to the end services.
 
 ## Deployments
 
@@ -24,8 +28,8 @@ terminal:
 ```bash
 docker compose up
 ```
-The proxy image build download the sitmun-proxy-middleware repository and run a gradle build.
 
+The proxy image build download the sitmun-proxy-middleware repository and run a gradle build.
 
 **SITMUN proxy middleware** can also be deployed locally via a jar file.
 To get the jar, we have to compile the project with the following command:
@@ -40,9 +44,11 @@ This creates a jar that we can deploy for local testing:
 java -jar sitmun-proxy-middleware-${version}.jar
 ```
 
-Regardless of the deployment method used, the proxy depends on the `sitmun-backend-core` as it makes use of the configuration and authorization api.
+Regardless of the deployment method used, the proxy depends on the `sitmun-backend-core` as it makes use of the
+configuration and authorization api.
 
-The API definitions for this deployment can be found at https://sitmun-backend-core.herokuapp.com/swagger-ui/index.html?urls.primaryName=API%20del%20Proxy.
+The API definitions for this deployment can be found
+at https://sitmun-backend-core.herokuapp.com/swagger-ui/index.html?urls.primaryName=API%20del%20Proxy.
 
 ## Developer documentation
 
