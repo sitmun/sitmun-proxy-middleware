@@ -48,8 +48,8 @@ public class ProxyMiddlewareService {
       if (configProxyDto != null) {
         return globalRequestService.executeRequest(configProxyDto.getPayload());
       } else {
-        // TODO return error
-        return null;
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(401, "Bad Request", "Request not valid", configUrl, new Date());
+        return ResponseEntity.status(401).body(errorResponse);
       }
     } else {
       return response;
