@@ -1,4 +1,4 @@
-package org.sitmun.proxy.middleware.test;
+package org.sitmun.proxy.middleware.test.dto;
 
 
 import lombok.Builder;

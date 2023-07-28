@@ -1,10 +1,11 @@
-package org.sitmun.proxy.middleware.service;
+package org.sitmun.proxy.middleware.test.services;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.sitmun.proxy.middleware.service.ClientService;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
@@ -16,13 +17,13 @@ import java.util.List;
 @Profile("test")
 @Priority(1)
 @Service
-public class ClientServiceTestImpl implements ClientService {
+public class TestClientService implements ClientService {
 
   private final List<Interceptor> interceptors = new ArrayList<>();
 
   private OkHttpClient httpClient;
 
-  public ClientServiceTestImpl(List<Interceptor> interceptors) {
+  public TestClientService(List<Interceptor> interceptors) {
     this.interceptors.addAll(interceptors);
     httpClient = build();
   }
@@ -47,6 +48,15 @@ public class ClientServiceTestImpl implements ClientService {
     }
   }
 
+  public void addInterceptors(Interceptor... interceptor) {
+    for (Interceptor i : interceptor) {
+      if (!interceptors.contains(i)) {
+        interceptors.add(i);
+      }
+    }
+    httpClient = build();
+  }
+
   public void removeInterceptor(Interceptor interceptor) {
     if (interceptors.contains(interceptor)) {
       interceptors.remove(interceptor);
@@ -54,4 +64,8 @@ public class ClientServiceTestImpl implements ClientService {
     }
   }
 
+  public void removeAllInterceptors() {
+    interceptors.clear();
+    httpClient = build();
+  }
 }

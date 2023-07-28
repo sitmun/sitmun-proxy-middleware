@@ -25,10 +25,10 @@ dependencies {
   implementation "io.jsonwebtoken:jjwt-api:${jjwt_version}"
   implementation "io.jsonwebtoken:jjwt-impl:${jjwt_version}"
   implementation "io.jsonwebtoken:jjwt-jackson:${jjwt_version}"
-  implementation 'com.squareup.okhttp3:okhttp:4.11.0'
+  implementation "com.squareup.okhttp3:okhttp:${okhttp3_version}"
 
   //Jdbc drivers
-  implementation 'org.postgresql:postgresql:42.5.4'
+  testImplementation 'com.h2database:h2'
 
   testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

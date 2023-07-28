@@ -4,12 +4,6 @@ logging:
     org.sitmun.plugin.core: INFO
 
 spring:
-  datasource:
-    url: jdbc:h2:mem:testdb
-    username: admin
-    password: admin
-    initialization-mode: always
-    data: classpath:data.sql
   profiles:
     # The commented value for `active` can be replaced with valid Spring profiles to load.
     # Otherwise, it will be filled in by gradle when building the JAR file
