@@ -1,7 +1,10 @@
 package org.sitmun.proxy.middleware.test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assertj.core.api.Assertions;
 import org.json.JSONObject;
+import org.sitmun.proxy.middleware.test.dto.AuthenticationResponse;
+import org.sitmun.proxy.middleware.test.dto.UserPasswordAuthenticationRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
@@ -15,10 +18,15 @@ public class TestUtils {
   private static final String ADMIN_PASSWORD = "admin";
 
   public static String requestAuthorization(MockMvc mvc) throws Exception {
+    UserPasswordAuthenticationRequest login = UserPasswordAuthenticationRequest.builder()
+      .username(ADMIN_USERNAME)
+      .password(ADMIN_PASSWORD)
+      .build();
+    ObjectMapper mapper = new ObjectMapper();
     String result = "";
     String authorization = mvc.perform(post(URIConstants.AUTHORIZATION_URI)
         .contentType(MediaType.APPLICATION_JSON)
-        .content("{\"username\": \"admin\", \"password\": \"admin\"}"))
+        .content(mapper.writeValueAsString(login)))
       .andReturn().getResponse().getContentAsString();
 
     if (authorization.contains("id_token")) {
@@ -28,9 +36,10 @@ public class TestUtils {
   }
 
   public static String requestAuthorization(RestTemplate restTemplate) {
-    UserPasswordAuthenticationRequest login = new UserPasswordAuthenticationRequest();
-    login.setUsername(ADMIN_USERNAME);
-    login.setPassword(ADMIN_PASSWORD);
+    UserPasswordAuthenticationRequest login = UserPasswordAuthenticationRequest.builder()
+      .username(ADMIN_USERNAME)
+      .password(ADMIN_PASSWORD)
+      .build();
     ResponseEntity<AuthenticationResponse> loginResponse =
       restTemplate
         .postForEntity(URIConstants.AUTHORIZATION_URI, login, AuthenticationResponse.class);

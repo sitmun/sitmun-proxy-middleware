@@ -1,0 +1,9 @@
+CREATE TABLE FEATURES (
+	id INT PRIMARY KEY,
+	nombre VARCHAR(25),
+	tipo VARCHAR(15)
+);
+
+INSERT INTO FEATURES VALUES (1, 'Feature1', 'Gasolinera');
+INSERT INTO FEATURES VALUES (2, 'Feature2', 'Bar');
+INSERT INTO FEATURES VALUES (3, 'Feature3', 'Parque');

@@ -1,12 +1,7 @@
 package org.sitmun.proxy.middleware.service;
 
-import org.sitmun.proxy.middleware.decorator.request.RequestDecorator;
-import org.sitmun.proxy.middleware.decorator.response.ResponseDecorator;
-import org.sitmun.proxy.middleware.dto.DatasourcePayloadDto;
-import org.sitmun.proxy.middleware.dto.OgcWmsPayloadDto;
-import org.sitmun.proxy.middleware.dto.PayloadDto;
-import org.sitmun.proxy.middleware.request.GlobalRequest;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.sitmun.proxy.middleware.decorator.*;
+import org.sitmun.proxy.middleware.request.RequestFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -15,40 +10,41 @@ import java.util.List;
 @Service
 public class GlobalRequestService {
 
-  @Autowired
-  private List<RequestDecorator> requestDecorators;
+  private final RequestFactory requestFactory;
 
-  @Autowired
-  private List<ResponseDecorator> responseDecorators;
+  private final List<RequestDecorator> requestDecorators;
 
-  public ResponseEntity<?> executeRequest(PayloadDto payload) {
-    GlobalRequest globalRequest = new GlobalRequest();
-    if (payload instanceof OgcWmsPayloadDto) {
-      globalRequest.setMapServiceRequest();
-      globalRequest.getCustomHttpRequest().getRequestBuilder()
-        .url(((OgcWmsPayloadDto) payload).getUri());
-    } else if (payload instanceof DatasourcePayloadDto) {
-      globalRequest.setDatabaseRequest();
-    }
-    applyRequestDecorators(globalRequest, payload);
-    ResponseEntity<?> response = globalRequest.execute();
-    applyResponseDecorators(response);
-    return response;
+  private final List<ResponseDecorator> responseDecorators;
+  private DecoratedRequest lastRequest;
+  private DecoratedResponse<?> lastResponse;
+  private Context lastContext;
+  public GlobalRequestService(RequestFactory requestFactory, List<RequestDecorator> requestDecorators, List<ResponseDecorator> responseDecorators) {
+    this.requestFactory = requestFactory;
+    this.requestDecorators = requestDecorators;
+    this.responseDecorators = responseDecorators;
   }
 
-  private void applyRequestDecorators(GlobalRequest globalRequest, PayloadDto payload) {
-    requestDecorators.forEach(d -> {
-      if (d.accept(payload)) {
-        d.apply(globalRequest, payload);
-      }
-    });
+  public <T> ResponseEntity<T> executeRequest(Context context) {
+    lastContext = context;
+    DecoratedRequest request = requestFactory.create(context);
+    requestDecorators.forEach(d -> d.apply(request, context));
+    lastRequest = request;
+    DecoratedResponse<T> response = request.execute();
+    responseDecorators.forEach(d -> d.apply(response, context));
+    lastResponse = response;
+    return response.asResponseEntity();
   }
 
-  private void applyResponseDecorators(ResponseEntity<?> response) {
-    responseDecorators.forEach(d -> {
-      if (d.accept(response)) {
-        d.apply(response);
-      }
-    });
+  public DecoratedRequest getLastRequest() {
+    return lastRequest;
   }
+
+  public DecoratedResponse<?> getLastResponse() {
+    return lastResponse;
+  }
+
+  public Context getLastContext() {
+    return lastContext;
+  }
+
 }
