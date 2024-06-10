@@ -46,6 +46,7 @@ public class ProxyMiddlewareService {
       logAsPrettyJson(log, "Response from the API:\n{}", configProxyDto);
 
       if (configProxyDto != null) {
+        log.info("Requesting data from the final service");
         return globalRequestService.executeRequest(configProxyDto.getPayload());
       } else {
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(401, "Bad Request", "Request not valid", configUrl, new Date());
@@ -63,8 +64,13 @@ public class ProxyMiddlewareService {
     try {
       return restTemplate.exchange(configUrl, HttpMethod.POST, httpEntity, ConfigProxyDto.class);
     } catch (HttpClientErrorException e) {
+      log.error("Error getting response: {}", e.getMessage(), e);
       ErrorResponseDTO errorResponse = new ErrorResponseDTO(e.getRawStatusCode(), "", e.getMessage(), configUrl, new Date());
       return ResponseEntity.status(e.getStatusCode()).body(errorResponse);
+    } catch (Exception e) {
+      log.error("Error getting response: {}", e.getMessage(), e);
+      ErrorResponseDTO errorResponse = new ErrorResponseDTO(500, "", e.getMessage(), configUrl, new Date());
+      return ResponseEntity.status(500).body(errorResponse);
     }
   }
 }

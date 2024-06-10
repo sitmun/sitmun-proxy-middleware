@@ -1,6 +1,7 @@
 package org.sitmun.proxy.middleware.request;
 
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.sitmun.proxy.middleware.decorator.DecoratedRequest;
 import org.sitmun.proxy.middleware.decorator.DecoratedResponse;
@@ -11,19 +12,12 @@ import java.sql.*;
 import java.util.Date;
 import java.util.*;
 
+@Setter
 @Slf4j
 public class JdbcRequest implements DecoratedRequest {
 
   private Connection connection;
   private String sql;
-
-  public void setConnection(Connection connection) {
-    this.connection = connection;
-  }
-
-  public void setSql(String sql) {
-    this.sql = sql;
-  }
 
   @Override
   public DecoratedResponse<?> execute() {
@@ -59,5 +53,12 @@ public class JdbcRequest implements DecoratedRequest {
     } catch (SQLException e) {
       log.error("Error in statement: {}", e.getMessage(), e);
     }
+  }
+
+  public String describe() {
+    return "JdbcRequest{" +
+      "connection=" + connection +
+      ", sql='" + sql + '\'' +
+      '}';
   }
 }

@@ -29,4 +29,15 @@ public class OgcWmsPayloadDto extends PayloadDto implements HttpContext {
     this.parameters = parameters;
     this.security = security;
   }
+
+  @Override
+  public String describe() {
+    return "OgcWmsPayloadDto{" +
+      "vary=" + getVary() +
+      ", uri='" + uri + '\'' +
+      ", method='" + method + '\'' +
+      ", parameters=" + parameters +
+      ", security=" + security +
+      '}';
+  }
 }

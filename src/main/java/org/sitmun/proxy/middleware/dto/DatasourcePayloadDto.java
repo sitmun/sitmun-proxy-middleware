@@ -32,4 +32,15 @@ public class DatasourcePayloadDto extends PayloadDto implements JdbcContext {
     this.sql = sql;
   }
 
+  @Override
+  public String describe() {
+    return "DatasourcePayloadDto{" +
+      "vary=" + getVary() +
+      ", uri='" + uri + '\'' +
+      ", user='" + user + '\'' +
+      ", password='****'" +
+      ", driver='" + driver + '\'' +
+      ", sql='" + sql + '\'' +
+      '}';
+  }
 }

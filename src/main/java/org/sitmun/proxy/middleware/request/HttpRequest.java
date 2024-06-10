@@ -1,5 +1,6 @@
 package org.sitmun.proxy.middleware.request;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ResponseBody;
 import org.sitmun.proxy.middleware.decorator.DecoratedRequest;
@@ -20,6 +21,7 @@ public class HttpRequest implements DecoratedRequest {
   private final Map<String, String> headers = new HashMap<>();
   private final Map<String, String> parameters = new HashMap<>();
   private final ClientService clientService;
+  @Setter
   private String url;
 
   public HttpRequest(ClientService clientService) {
@@ -47,6 +49,10 @@ public class HttpRequest implements DecoratedRequest {
 
     okhttp3.Request httpRequest = builder.build();
 
+    log.info("Executing request to: {}", httpRequest.url());
+    log.info("Method: {}", httpRequest.method());
+    log.info("Headers: {}", httpRequest.headers());
+
     try (okhttp3.Response r = clientService.executeRequest(httpRequest)) {
       ResponseBody body = r.body();
       if (body == null) return new Response<>(r.code(), r.header("content-type"), null);
@@ -68,7 +74,11 @@ public class HttpRequest implements DecoratedRequest {
     }
   }
 
-  public void setUrl(String uri) {
-    url = uri;
+  public String describe() {
+    return "HttpRequest{" +
+      "url='" + url + '\'' +
+      ", headers=" + headers +
+      ", parameters=" + parameters +
+      '}';
   }
 }

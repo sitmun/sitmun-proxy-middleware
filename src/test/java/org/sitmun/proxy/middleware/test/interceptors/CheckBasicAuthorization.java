@@ -1,5 +1,6 @@
 package org.sitmun.proxy.middleware.test.interceptors;
 
+import lombok.Getter;
 import okhttp3.Interceptor;
 import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
@@ -8,12 +9,9 @@ import java.io.IOException;
 import java.util.Base64;
 
 
+@Getter
 public class CheckBasicAuthorization implements Interceptor {
   private String expectation;
-
-  public String getExpectation() {
-    return expectation;
-  }
 
   @NotNull
   @Override

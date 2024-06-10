@@ -16,4 +16,10 @@ public class PayloadDto implements Context {
 
   private List<String> vary;
 
+  @Override
+  public String describe() {
+    return "PayloadDto{" +
+      "vary=" + vary +
+      "}";
+  }
 }
