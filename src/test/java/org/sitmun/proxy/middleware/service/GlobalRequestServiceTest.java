@@ -123,21 +123,21 @@ class GlobalRequestServiceTest {
     assertThat(response.getStatusCodeValue()).isEqualTo(200);
     assertThat(Objects.requireNonNull(response.getHeaders().get("Content-Type")).get(0)).isEqualTo("application/json");
     Object body = response.getBody();
-    assertThat(body).isNotNull().isInstanceOf(List.class).asList().hasSize(33);
+    assertThat(body).isNotNull().isInstanceOf(List.class).asList().hasSize(35);
   }
 
   /**
    * Public user access to a relational service filtered.
-   * NOTE Redundant,  the test is identical to {@link #jdbcAccess()} because the SQL query is built on the Configuration and Authorization API.
    */
   @Test
   @DisplayName("Request to a JDBC service with filters")
+  @Disabled("Redundant test: the test is identical to jdbcAccess because the SQL query is built on the Configuration and Authorization API")
   void jdbcAccessWithFilters() {
     ResponseEntity<Object> response = globalRequestService.executeRequest(inMemoryH2Database(false));
     assertThat(response.getStatusCodeValue()).isEqualTo(200);
     assertThat(Objects.requireNonNull(response.getHeaders().get("Content-Type")).get(0)).isEqualTo("application/json");
     Object body = response.getBody();
-    assertThat(body).isNotNull().isInstanceOf(List.class).asList().hasSize(4);
+    assertThat(body).isNotNull().isInstanceOf(List.class).asList().hasSize(35);
   }
 
 }

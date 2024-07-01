@@ -1,0 +1,13 @@
+services:
+  admin:
+    image: sitmun-proxy-middleware
+    build:
+      context: .
+      args:
+        PROXY_VERSION: 0.1.0-SNAPSHOT
+    environment:
+      SITMUN_BACKEND_CONFIG_URL: ${SITMUN_BACKEND_CONFIG_URL}
+      SITMUN_BACKEND_CONFIG_SECRET: ${SITMUN_BACKEND_CONFIG_SECRET}
+
+    ports:
+      - "9002:8080"

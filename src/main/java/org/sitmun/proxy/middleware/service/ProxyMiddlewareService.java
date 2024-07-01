@@ -24,9 +24,9 @@ public class ProxyMiddlewareService {
 
   private final RestTemplate restTemplate;
   private final GlobalRequestService globalRequestService;
-  @Value("${sitmun.config.url}")
+  @Value("${sitmun.backend.config.url}")
   private String configUrl;
-  @Value("${security.authentication.middleware.secret}")
+  @Value("${sitmun.backend.config.secret}")
   private String secret;
 
   public ProxyMiddlewareService(RestTemplate restTemplate, GlobalRequestService globalRequestService) {

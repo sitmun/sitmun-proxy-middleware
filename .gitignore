@@ -51,3 +51,6 @@ library/src/main/resources/config/application-postgres.yml
 *.zip
 *.tar.gz
 *.rar
+
+# Other files
+.env
