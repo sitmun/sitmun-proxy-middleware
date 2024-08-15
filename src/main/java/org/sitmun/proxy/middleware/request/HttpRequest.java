@@ -21,10 +21,12 @@ public class HttpRequest implements DecoratedRequest {
   private final Map<String, String> headers = new HashMap<>();
   private final Map<String, String> parameters = new HashMap<>();
   private final ClientService clientService;
+  private final String baseUrl;
   @Setter
   private String url;
 
-  public HttpRequest(ClientService clientService) {
+  public HttpRequest(String baseUrl, ClientService clientService) {
+    this.baseUrl = baseUrl;
     this.clientService = clientService;
   }
 
@@ -36,6 +38,7 @@ public class HttpRequest implements DecoratedRequest {
     this.parameters.putAll(parameters);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public DecoratedResponse<?> execute() {
     if (!StringUtils.hasText(url)) {
@@ -52,14 +55,15 @@ public class HttpRequest implements DecoratedRequest {
     log.info("Executing request to: {}", httpRequest.url());
     log.info("Method: {}", httpRequest.method());
     log.info("Headers: {}", httpRequest.headers());
+    log.info("Base URL: {}", baseUrl);
 
     try (okhttp3.Response r = clientService.executeRequest(httpRequest)) {
       ResponseBody body = r.body();
-      if (body == null) return new Response<>(r.code(), r.header("content-type"), null);
-      return new Response<>(r.code(), r.header("content-type"), body.bytes());
+      if (body == null) return new Response<>(baseUrl, r.code(), r.header("content-type"), null);
+      return new Response<>(baseUrl, r.code(), r.header("content-type"), body.bytes());
     } catch (IOException e) {
       log.error("Error getting response: {}", e.getMessage(), e);
-      return new Response<>(500, "application/json", new ErrorResponseDTO(500, "ServiceError", "Error with the request to final service", "", new Date()));
+      return new Response<>(baseUrl, 500, "application/json", new ErrorResponseDTO(500, "ServiceError", "Error with the request to final service", "", new Date()));
     }
   }
 
@@ -79,6 +83,7 @@ public class HttpRequest implements DecoratedRequest {
       "url='" + url + '\'' +
       ", headers=" + headers +
       ", parameters=" + parameters +
+      ", baseUrl=" + baseUrl +
       '}';
   }
 }

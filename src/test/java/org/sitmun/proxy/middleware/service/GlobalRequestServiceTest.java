@@ -53,7 +53,7 @@ class GlobalRequestServiceTest {
   @Test
   @DisplayName("Request to a public WMS service")
   void publicWms() {
-    ResponseEntity<Object> response = globalRequestService.executeRequest(wmsService(false));
+    ResponseEntity<Object> response = globalRequestService.executeRequest("", wmsService(false));
     assertThat(response.getStatusCodeValue()).isEqualTo(200);
     assertThat(Objects.requireNonNull(response.getHeaders().get("Content-Type")).get(0)).isEqualTo("image/png");
   }
@@ -66,7 +66,7 @@ class GlobalRequestServiceTest {
   @Test
   @DisplayName("Request to a public WFS service")
   void publicWfs() throws Exception {
-    ResponseEntity<Object> response = globalRequestService.executeRequest(wfsService(false));
+    ResponseEntity<Object> response = globalRequestService.executeRequest("", wfsService(false));
     assertThat(response.getStatusCodeValue()).isEqualTo(200);
     assertThat(Objects.requireNonNull(response.getHeaders().get("Content-Type")).get(0)).isEqualTo("application/json;charset=UTF-8");
     Object body = response.getBody();
@@ -84,7 +84,7 @@ class GlobalRequestServiceTest {
   void privateWmsBasicAuthentication() {
     CheckBasicAuthorization interceptor = new CheckBasicAuthorization();
     testClientService.addInterceptors(interceptor, DoNotRequest.INSTANCE);
-    globalRequestService.executeRequest(wmsService(true));
+    globalRequestService.executeRequest("", wmsService(true));
     assertThat(interceptor.getExpectation()).isEqualTo("userServ:passwordServ");
   }
 
@@ -96,7 +96,7 @@ class GlobalRequestServiceTest {
   void privateWmsIpPrivateRed() {
     HostnameCheck interceptor = new HostnameCheck();
     testClientService.addInterceptors(interceptor, DoNotRequest.INSTANCE);
-    globalRequestService.executeRequest(wmsServiceWithIPasHostname());
+    globalRequestService.executeRequest("", wmsServiceWithIPasHostname());
     assertThat(interceptor.getExpectation()).isEqualTo("154.58.18.33");
   }
 
@@ -109,7 +109,7 @@ class GlobalRequestServiceTest {
   void privateWfsWithFilter() {
     QueryCheck interceptor = new QueryCheck();
     testClientService.addInterceptors(interceptor, DoNotRequest.INSTANCE);
-    globalRequestService.executeRequest(wfsService(true));
+    globalRequestService.executeRequest("", wfsService(true));
     assertThat(interceptor.getExpectation()).isEqualTo("REQUEST=GetFeature&VERSION=2.0.0&outputformat=application/json&SERVICE=WFS&CQL_FILTER=tr_05=5&typename=grid:gridp_250");
   }
 
@@ -119,7 +119,7 @@ class GlobalRequestServiceTest {
   @Test
   @DisplayName("Request to a JDBC service")
   void jdbcAccess() {
-    ResponseEntity<Object> response = globalRequestService.executeRequest(inMemoryH2Database(false));
+    ResponseEntity<Object> response = globalRequestService.executeRequest("", inMemoryH2Database(false));
     assertThat(response.getStatusCodeValue()).isEqualTo(200);
     assertThat(Objects.requireNonNull(response.getHeaders().get("Content-Type")).get(0)).isEqualTo("application/json");
     Object body = response.getBody();
@@ -133,7 +133,7 @@ class GlobalRequestServiceTest {
   @DisplayName("Request to a JDBC service with filters")
   @Disabled("Redundant test: the test is identical to jdbcAccess because the SQL query is built on the Configuration and Authorization API")
   void jdbcAccessWithFilters() {
-    ResponseEntity<Object> response = globalRequestService.executeRequest(inMemoryH2Database(false));
+    ResponseEntity<Object> response = globalRequestService.executeRequest("", inMemoryH2Database(false));
     assertThat(response.getStatusCodeValue()).isEqualTo(200);
     assertThat(Objects.requireNonNull(response.getHeaders().get("Content-Type")).get(0)).isEqualTo("application/json");
     Object body = response.getBody();

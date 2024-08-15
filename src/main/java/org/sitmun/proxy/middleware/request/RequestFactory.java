@@ -16,9 +16,9 @@ public class RequestFactory {
     this.clientService = clientService;
   }
 
-  public DecoratedRequest create(Context context) {
+  public DecoratedRequest create(String baseUrl, Context context) {
     if (context instanceof HttpContext) {
-      return new HttpRequest(clientService);
+      return new HttpRequest(baseUrl, clientService);
     } else if (context instanceof JdbcContext) {
       return new JdbcRequest();
     } else {

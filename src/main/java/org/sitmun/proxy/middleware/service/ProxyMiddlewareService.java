@@ -35,7 +35,8 @@ public class ProxyMiddlewareService {
   }
 
   public ResponseEntity<?> doRequest(Integer appId, Integer terId, String type,
-                                     Integer typeId, String token, Map<String, String> params) {
+                                     Integer typeId, String token, Map<String, String> params,
+                                     String url) {
     ConfigProxyRequest configProxyRequest = new ConfigProxyRequest(appId, terId, type, typeId, "GET", params, null, token);
     logAsPrettyJson(log, "Request to the API:\n{}", configProxyRequest);
 
@@ -47,7 +48,7 @@ public class ProxyMiddlewareService {
 
       if (configProxyDto != null) {
         log.info("Requesting data from the final service");
-        return globalRequestService.executeRequest(configProxyDto.getPayload());
+        return globalRequestService.executeRequest(url, configProxyDto.getPayload());
       } else {
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(401, "Bad Request", "Request not valid", configUrl, new Date());
         return ResponseEntity.status(401).body(errorResponse);

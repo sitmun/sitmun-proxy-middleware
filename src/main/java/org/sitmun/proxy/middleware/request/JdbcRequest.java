@@ -19,6 +19,7 @@ public class JdbcRequest implements DecoratedRequest {
   private Connection connection;
   private String sql;
 
+  @SuppressWarnings("unchecked")
   @Override
   public DecoratedResponse<?> execute() {
     List<Map<String, Object>> result = new ArrayList<>();
@@ -26,9 +27,9 @@ public class JdbcRequest implements DecoratedRequest {
       executeStatement(connectionUsed, result);
     } catch (SQLException e) {
       log.error("Error getting response: {}", e.getMessage(), e);
-      return new Response<>(500, "application/json", new ErrorResponseDTO(500, "SQLError", e.getMessage(), "", new Date()));
+      return new Response<>(null, 500, "application/json", new ErrorResponseDTO(500, "SQLError", e.getMessage(), "", new Date()));
     }
-    return new Response<>(200, "application/json", result);
+    return new Response<>(null, 200, "application/json", result);
   }
 
   private void executeStatement(Connection connection, List<Map<String, Object>> result) {

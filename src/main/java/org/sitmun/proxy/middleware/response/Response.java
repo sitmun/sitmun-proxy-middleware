@@ -8,11 +8,13 @@ import org.springframework.http.ResponseEntity;
 @Data
 public class Response<T> implements DecoratedResponse<T> {
 
-  private final int statusCode;
-  private final String contentType;
-  private final T body;
+  private String baseUrl;
+  private int statusCode;
+  private String contentType;
+  private T body;
 
-  public Response(int statusCode, String contentType, T body) {
+  public Response(String baseUrl, int statusCode, String contentType, T body) {
+    this.baseUrl = baseUrl;
     this.statusCode = statusCode;
     this.contentType = contentType;
     this.body = body;

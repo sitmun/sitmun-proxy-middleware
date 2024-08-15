@@ -30,11 +30,11 @@ public class GlobalRequestService {
     this.responseDecorators = responseDecorators;
   }
 
-  public <T> ResponseEntity<T> executeRequest(Context context) {
+  public <T> ResponseEntity<T> executeRequest(String baseUrl, Context context) {
     lastContext = context;
     log.info("Executing request with context: {}", context.describe());
 
-    DecoratedRequest request = requestFactory.create(context);
+    DecoratedRequest request = requestFactory.create(baseUrl, context);
     log.info("Default request: {}", request.describe());
 
     requestDecorators.forEach(d -> d.apply(request, context));
