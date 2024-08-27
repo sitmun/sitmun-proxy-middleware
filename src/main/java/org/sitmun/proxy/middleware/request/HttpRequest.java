@@ -8,11 +8,15 @@ import org.sitmun.proxy.middleware.decorator.DecoratedResponse;
 import org.sitmun.proxy.middleware.dto.ErrorResponseDTO;
 import org.sitmun.proxy.middleware.response.Response;
 import org.sitmun.proxy.middleware.service.ClientService;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.*;
 
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 @Slf4j
@@ -69,10 +73,32 @@ public class HttpRequest implements DecoratedRequest {
 
   public String getUrl() {
     if (!parameters.isEmpty()) {
-      StringBuilder uri = new StringBuilder(url).append('?');
-      parameters.keySet().forEach(k -> uri.append(k).append("=").append(parameters.get(k)).append("&"));
-      uri.deleteCharAt(uri.length() - 1);
-      return uri.toString();
+      UriComponents components = UriComponentsBuilder.fromUriString(url).build();
+
+      MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>(components.getQueryParams().size());
+
+      components.getQueryParams().forEach((k, v) -> queryParams.put(k.toUpperCase(), v));
+      parameters.forEach((k, v) -> {
+          String upperKey = k.toUpperCase();
+          if (
+            !queryParams.containsKey(upperKey) ||
+             queryParams.get(upperKey) == null ||
+            !queryParams.get(upperKey).contains(v)) {
+            queryParams.add(upperKey, v);
+          }
+        });
+
+      UriComponentsBuilder builder = UriComponentsBuilder.newInstance()
+        .scheme(components.getScheme())
+        .host(components.getHost())
+        .port(components.getPort())
+        .path(components.getPath())
+        .queryParams(queryParams);
+
+      log.info("path: {}", components.getPath());
+      log.info("query: {}", queryParams);
+
+      return builder.toUriString();
     } else {
       return url;
     }

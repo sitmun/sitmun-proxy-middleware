@@ -25,6 +25,14 @@ public class AuthorizationProxyFixtures {
       .build();
   }
 
+  public static OgcWmsPayloadDto wmsServiceWithURIWithParameters() {
+    return OgcWmsPayloadDto.builder()
+      .method("GET")
+      .parameters(getWmsParameters())
+      .uri("https://sitmun.diba.cat/arcgis/services/PUBLIC/DTE50/MapServer/WmsServer?service=WMS&")
+      .build();
+  }
+
   public static OgcWmsPayloadDto wfsService(boolean filtered) {
     OgcWmsPayloadDto payload = new OgcWmsPayloadDto();
     payload.setMethod("GET");

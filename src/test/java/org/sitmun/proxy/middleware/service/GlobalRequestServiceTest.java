@@ -59,6 +59,17 @@ class GlobalRequestServiceTest {
   }
 
   /**
+   * Public user access to the public WMS service.
+   */
+  @Test
+  @DisplayName("Request to a public WMS service with parameters in the URI")
+  void publicWmsWithURI() {
+    ResponseEntity<Object> response = globalRequestService.executeRequest("", wmsServiceWithURIWithParameters());
+    assertThat(response.getStatusCodeValue()).isEqualTo(200);
+    assertThat(Objects.requireNonNull(response.getHeaders().get("Content-Type")).get(0)).isEqualTo("image/png");
+  }
+
+  /**
    * Public user access to the public WFS service.
    *
    * @throws Exception for unexpected failures
