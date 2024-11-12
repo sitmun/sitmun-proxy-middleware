@@ -2,7 +2,7 @@
 
 # SITMUN proxy middleware
 
-The **SITMUN Proxy Middleware** is a reverse proxy and middleware thaqt facilitates the access of the **SITMUN Map Viewer** to protected services and databases. 
+The **SITMUN Proxy Middleware** is a reverse proxy and middleware that facilitates the access of the **SITMUN Map Viewer** to protected services and databases.
 
 These protected services or databases can have various restrictions or requirements, such as:
 
@@ -29,28 +29,35 @@ Before you begin, ensure you have met the following requirements:
 To install the SITMUN Proxy Middleware, follow these steps:
 
 1. Clone the repository:
+
     ```bash
     git clone https://github.com/sitmun/sitmun-proxy-middleware.git
     ```
 
 2. Change to the directory of the repository:
+
     ```bash
     cd sitmun-proxy-middleware
     ```
-   
+
 3. Create a new file named `.env` inside the directory.
    Open the `.env` file in a text editor and add in the following format:
+
     ```properties
     SITMUN_BACKEND_CONFIG_URL=the_location_of_the_sitmun_backend_configuration_endpoint
     SITMUN_BACKEND_CONFIG_SECRET=the_shared_secret
     ```
+
 4. Start the SITMUN Middleware proxy:
+
     ```bash
     docker compose up
     ```
+
    This command will build and start all the services defined in the `docker-compose.yml` file.
 
 5. Access the SITMUN Middleware Proxy at [http://localhost:9002/actuator/health](http://localhost:9002/actuator/health) and expect:
+
    ```json
    {"status":"UP"}
    ```
@@ -69,6 +76,7 @@ Additional information is available at <https://sitmun.github.io/architecture/>.
 ## Uninstalling SITMUN Proxy middleware
 
 To stop and remove all services, volumes, and networks defined in the `docker-compose.yml` file, use:
+
 ```bash
 docker compose down -v
 ```
