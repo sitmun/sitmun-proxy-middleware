@@ -27,6 +27,9 @@ dependencies {
   implementation "io.jsonwebtoken:jjwt-jackson:${jjwt_version}"
   implementation "com.squareup.okhttp3:okhttp:${okhttp3_version}"
 
+  implementation 'org.postgresql:postgresql'
+  implementation 'com.oracle.database.jdbc:ojdbc11-production'
+
   //Jdbc drivers
   testImplementation 'com.h2database:h2'
 
