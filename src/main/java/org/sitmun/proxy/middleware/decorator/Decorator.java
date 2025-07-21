@@ -4,11 +4,11 @@ public interface Decorator {
 
   boolean accept(Object target, Context context);
 
-  default void apply(Object target, Context context) {
+  default void apply(Object target, Context context) throws Exception {
     if (accept(target, context)) {
       addBehavior(target, context);
     }
   }
 
-  void addBehavior(Object target, Context context);
+  void addBehavior(Object target, Context context) throws Exception;
 }

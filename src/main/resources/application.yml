@@ -2,3 +2,11 @@ logging:
   level:
     ROOT: INFO
     org.sitmun.proxy.middleware: INFO
+
+spring:
+  batch:
+    job:
+      enabled: false
+      corePoolSize: 2
+      maxPoolSize: 4
+      queueCapacity: 12

@@ -21,16 +21,21 @@ dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-web'
   implementation 'org.springframework.boot:spring-boot-starter-jdbc'
   implementation 'org.springframework.boot:spring-boot-starter-actuator'
+  implementation 'org.springframework.boot:spring-boot-starter-batch'
   implementation "org.json:json:${json_version}"
   implementation "io.jsonwebtoken:jjwt-api:${jjwt_version}"
   implementation "io.jsonwebtoken:jjwt-impl:${jjwt_version}"
   implementation "io.jsonwebtoken:jjwt-jackson:${jjwt_version}"
   implementation "com.squareup.okhttp3:okhttp:${okhttp3_version}"
-
-  implementation 'org.postgresql:postgresql'
-  implementation 'com.oracle.database.jdbc:ojdbc11-production'
+  implementation "jakarta.xml.bind:jakarta.xml.bind-api:3.0.1"
+  implementation "org.glassfish.jaxb:jaxb-runtime:3.0.1"
+  implementation "ch.poole.geo:mbtiles4j:1.2.0"
+  implementation "org.locationtech.proj4j:proj4j:1.1.5"
 
   //Jdbc drivers
+  implementation 'org.postgresql:postgresql'
+  implementation 'com.oracle.database.jdbc:ojdbc11-production'
+  implementation 'org.xerial:sqlite-jdbc:3.42.0.0'
   testImplementation 'com.h2database:h2'
 
   testImplementation('org.springframework.boot:spring-boot-starter-test') {

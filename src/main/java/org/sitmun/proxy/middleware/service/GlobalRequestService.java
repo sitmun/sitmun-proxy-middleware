@@ -37,14 +37,26 @@ public class GlobalRequestService {
     DecoratedRequest request = requestFactory.create(baseUrl, context);
     log.info("Default request: {}", request.describe());
 
-    requestDecorators.forEach(d -> d.apply(request, context));
+    requestDecorators.forEach(d -> {
+      try {
+        d.apply(request, context);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    });
 
     log.info("Final request: {}", request.describe());
     lastRequest = request;
 
     log.info("Executing request after applying context: {}", context.describe());
     DecoratedResponse<T> response = request.execute();
-    responseDecorators.forEach(d -> d.apply(response, context));
+    responseDecorators.forEach(d -> {
+      try {
+        d.apply(response, context);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    });
     lastResponse = response;
     return response.asResponseEntity();
   }
