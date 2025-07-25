@@ -2,14 +2,19 @@ package org.sitmun.proxy.middleware.decorator.mbtiles;
 
 import org.sitmun.proxy.middleware.decorator.Context;
 import org.sitmun.proxy.middleware.decorator.MbtilesContext;
-import org.sitmun.proxy.middleware.decorator.MbtilesDecorator;
-import org.sitmun.proxy.middleware.service.MBTilesService;
+import org.sitmun.proxy.middleware.decorator.MbtilesProcessDecorator;
+import org.sitmun.proxy.middleware.process.WMTSTileProcess;
 import org.sitmun.proxy.middleware.utils.Constants;
 import org.springframework.batch.core.JobExecutionException;
+import org.springframework.batch.core.scope.context.StepContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class WMTSDecorator implements MbtilesDecorator{
+public class WMTSProcessDecorator implements MbtilesProcessDecorator{
+
+    @Autowired
+    WMTSTileProcess tileProcess;
 
     @Override
     public boolean accept(Object target, Context context) {
@@ -23,8 +28,7 @@ public class WMTSDecorator implements MbtilesDecorator{
 
     @Override
     public void addBehavior(Object target, Context context) throws JobExecutionException{
-        MBTilesService mbTilesService = (MBTilesService) target;
-        mbTilesService.processWMTSTile((MbtilesContext)context);
+        tileProcess.process((MbtilesContext)context, (StepContext)target);
     }
     
 }

@@ -1,6 +1,6 @@
 package org.sitmun.proxy.middleware.decorator;
 
-public interface Decorator {
+public interface VoidDecorator {
 
   boolean accept(Object target, Context context);
 

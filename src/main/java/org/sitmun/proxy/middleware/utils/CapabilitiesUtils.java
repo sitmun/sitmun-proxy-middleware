@@ -1,6 +1,7 @@
 package org.sitmun.proxy.middleware.utils;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -27,6 +28,7 @@ public class CapabilitiesUtils {
         Document doc = db.parse(new URL(capabilitiesUrl).openStream());
         doc.getDocumentElement().normalize();
         List<String> layers = service.getLayers();
+        List<LayerCapabilities> layerCapabilities = new ArrayList<>();
         NodeList capLayers = doc.getElementsByTagName("Layer");
         Element layer = null;
         Capabilities capabilities = new Capabilities();
@@ -35,21 +37,36 @@ public class CapabilitiesUtils {
             layer = (Element) capLayers.item(i);
             String layerIdentifier = layer.getElementsByTagName("Identifier").item(0).getTextContent();
             if (layers.contains(layerIdentifier)) {
-                capabilities.addLayer(createWMTSLayerCapabilities(layer, capabilities, capabilities.getTileMatrixSet()));
+                layerCapabilities.add(createWMTSLayerCapabilities(layerIdentifier, layer, capabilities, capabilities.getTileMatrixSet()));
+            }
+        }
+        //Order layers
+        for (String layerName : layers) {
+            for (LayerCapabilities lc : layerCapabilities) {
+                if (lc.getLayerIdentifier().equals(layerName)) {
+                    capabilities.addLayer(lc);
+                    break;
+                }
             }
         }
 
         return capabilities;
     }
 
-    private static LayerCapabilities createWMTSLayerCapabilities(Element layer, Capabilities capabilities, String tileMatrixSet) {
+    private static LayerCapabilities createWMTSLayerCapabilities(String identifier, Element layer, Capabilities capabilities, String tileMatrixSet) {
         LayerCapabilities layerCapabilities = new LayerCapabilities();
-        String[] lowerCorner = layer.getElementsByTagName("LowerCorner").item(0).getTextContent().split(" ");
-        String[] upperCorner = layer.getElementsByTagName("UpperCorner").item(0).getTextContent().split(" ");
-        layerCapabilities.setMinLon(Double.parseDouble(lowerCorner[0]));
-        layerCapabilities.setMinLat(Double.parseDouble(lowerCorner[1]));
-        layerCapabilities.setMaxLon(Double.parseDouble(upperCorner[0]));
-        layerCapabilities.setMaxLat(Double.parseDouble(upperCorner[1]));
+        layerCapabilities.setLayerIdentifier(identifier);
+        NodeList lowerCornerElements = layer.getElementsByTagName("LowerCorner");
+        NodeList upperCornerElements = layer.getElementsByTagName("UpperCorner");
+        if (lowerCornerElements != null && lowerCornerElements.getLength() > 0 &&
+            upperCornerElements != null && upperCornerElements.getLength() > 0) {
+            String[] lowerCorner = lowerCornerElements.item(0).getTextContent().split(" ");
+            String[] upperCorner = upperCornerElements.item(0).getTextContent().split(" ");
+            layerCapabilities.setMinLon(Double.parseDouble(lowerCorner[0]));
+            layerCapabilities.setMinLat(Double.parseDouble(lowerCorner[1]));
+            layerCapabilities.setMaxLon(Double.parseDouble(upperCorner[0]));
+            layerCapabilities.setMaxLat(Double.parseDouble(upperCorner[1]));
+        }
         NodeList tileMatrixSetLinks = layer.getElementsByTagName("TileMatrixSetLink");
         for (int i = 0; i < tileMatrixSetLinks.getLength(); i++) {
             Element matrixSet = (Element)tileMatrixSetLinks.item(i);

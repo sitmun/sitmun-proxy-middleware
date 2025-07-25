@@ -1,213 +1,168 @@
 package org.sitmun.proxy.middleware.service;
 
-import java.io.*;
-import java.net.*;
-import java.util.ArrayList;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
+import java.util.UUID;
 
 import org.sitmun.proxy.middleware.decorator.MbtilesContext;
-import org.sitmun.proxy.middleware.dto.Capabilities;
-import org.sitmun.proxy.middleware.dto.LayerCapabilities;
-import org.sitmun.proxy.middleware.dto.TileCoordinate;
-import org.sitmun.proxy.middleware.dto.TileMatrix;
+import org.sitmun.proxy.middleware.decorator.MbtilesEstimationDecorator;
+import org.sitmun.proxy.middleware.dto.MBTilesEstimateDto;
+import org.sitmun.proxy.middleware.dto.MBTilesProgressDto;
+import org.sitmun.proxy.middleware.dto.MapServiceDto;
 import org.sitmun.proxy.middleware.dto.TileServiceDto;
-import org.sitmun.proxy.middleware.utils.CapabilitiesUtils;
+import org.sitmun.proxy.middleware.request.TileRequestDto;
 import org.sitmun.proxy.middleware.utils.Constants;
-import org.sitmun.proxy.middleware.utils.Proj4Utils;
-import org.springframework.batch.core.JobExecutionException;
+import org.springframework.batch.core.BatchStatus;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobParameter;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import ch.poole.geo.mbtiles4j.MBTilesWriter;
-import ch.poole.geo.mbtiles4j.model.MetadataBounds;
-import ch.poole.geo.mbtiles4j.model.MetadataEntry;
-import ch.poole.geo.mbtiles4j.model.MetadataEntry.TileMimeType;
-import ch.poole.geo.mbtiles4j.model.MetadataEntry.TileSetType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 public class MBTilesService {
 
-    private static final Map<String, String> TEMPLATES = Map.of(
-        "WMS", "%s?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=%s&STYLES=&FORMAT=image/png&SRS=%s&WIDTH=256&HEIGHT=256&BBOX=%s,%s,%s,%s",
-        Constants.WMTSType, "%s?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&LAYER=%s&STYLE=default&TILEMATRIXSET=%s&TILEMATRIX=%s&TILEROW=%d&TILECOL=%d&FORMAT=image/png"
-    );
+    private final JobLauncher jobLauncher;
 
-    public void processWMTSTile(MbtilesContext mbtilesContext) throws JobExecutionException {
+    private final JobExplorer jobExplorer;
+
+    private final Job mbTilesJob;
+
+    private final MBTilesProgressService mbTilesProgressService;
+
+    @Autowired
+    private List<MbtilesEstimationDecorator> mbtilesDecorators;
+
+    public MBTilesService(JobLauncher jobLauncher, JobExplorer jobExplorer, Job mbTilesJob,
+                         MBTilesProgressService mbTilesProgressService) {
+        this.jobLauncher = jobLauncher;
+        this.jobExplorer = jobExplorer;
+        this.mbTilesJob = mbTilesJob;
+        this.mbTilesProgressService = mbTilesProgressService;
+    }
+
+    public Long startJob(TileRequestDto tileRequest) throws Exception {
+        String uuid = UUID.randomUUID().toString();
+        String outputPath = File.createTempFile(uuid, ".mbtiles").getAbsolutePath();
+
+        Map<String, JobParameter> params = new HashMap<>();
+        params.put("outputPath", new JobParameter(outputPath));
+        params.put("tileRequest", new JobParameter(new ObjectMapper().writeValueAsString(tileRequest)));
+        params.put("timestamp", new JobParameter(System.currentTimeMillis()));
+        JobExecution jobExecution = jobLauncher.run(mbTilesJob, new JobParameters(params));
+
+        return jobExecution.getId();
+    }
+
+    public ResponseEntity<?> getJobStatus(long jobId) {
+        Map<String, Object> statusMap = new HashMap<>();
+        int code = 200;
         try {
-            TileServiceDto service = mbtilesContext.getService();
-            String outputPath = mbtilesContext.getOutputPath();
-            Capabilities capabilities = CapabilitiesUtils.parseWMTSCapabilities(service);
-            MBTilesWriter writer = new MBTilesWriter(new File(outputPath));
-            double[] bounds = {service.getMinLon(), service.getMinLat(), service.getMaxLon(), service.getMaxLat()};
+            JobExecution jobExecution = jobExplorer.getJobExecution(jobId);
 
-            if (!service.getSrs().equals(Constants.MBTilesSrs)) {
-                bounds = Proj4Utils.transformExtent(bounds, service.getSrs(), Constants.MBTilesSrs);
-            }
-
-            for (LayerCapabilities lc : capabilities.getLayers()) {
-                List<TileCoordinate> coordinates = calculateCoordinates(service, lc, bounds);
-                for (TileCoordinate coord : coordinates) {
-                    BufferedImage tile = getTileImage(service, coord);
-                    if (tile != null) {
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        ImageIO.write(tile, "png", baos);
-                        int zoom = parseZoom(coord.getZ());
-                        int yTMS = invertTileRow(coord.getY(), zoom);
-                        writer.addTile(baos.toByteArray(), zoom, coord.getX(), yTMS);
-                    }
+            if (jobExecution == null) {        
+                code = 404;
+                statusMap.put("status", "NOT FOUND");
+            } else {
+                BatchStatus batchStatus = jobExecution.getStatus();
+                if (BatchStatus.FAILED.equals(batchStatus)) {
+                    code = 500;
+                    statusMap.put("status", "FAILED");
+                } else {
+                    statusMap.put("status", batchStatus.toString());
                 }
+                if (BatchStatus.COMPLETED.equals(batchStatus) || BatchStatus.FAILED.equals(batchStatus)) {
+                    mbTilesProgressService.clearJobProgress(jobId);
+                }
+                MBTilesProgressDto progressDto = mbTilesProgressService.getJobProgress(jobId);
+                if (progressDto != null) {
+                    statusMap.put("processedTiles", progressDto.getProcessedTiles());
+                    statusMap.put("totalTiles", progressDto.getTotalTiles());
+                }                    
             }
-            bounds = calculateBounds(capabilities.getLayers());
-            MetadataBounds metBounds = new MetadataBounds(bounds[0], bounds[1], bounds[2], bounds[3]);
-            writer.addMetadataEntry(new MetadataEntry(service.getLayers().get(0), TileSetType.BASE_LAYER, "1.0",
-                "Layer generated by Sitmun proxy middleware", TileMimeType.PNG, metBounds));
-            writer.close();
+            return ResponseEntity.status(code)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(statusMap);
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new JobExecutionException("Job failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
         }
     }
 
-    private List<TileCoordinate> calculateCoordinates(TileServiceDto service, LayerCapabilities layerCapabilities, double[] bounds) {
-        List<TileCoordinate> list = new ArrayList<>();
-        double[] layerBounds = {layerCapabilities.getMinLon(), layerCapabilities.getMinLat(),
-            layerCapabilities.getMaxLon(), layerCapabilities.getMaxLat()};
-        layerBounds = Proj4Utils.transformExtent(layerBounds, Constants.capabilitiesExtentSrs, Constants.MBTilesSrs);
-        for (int zoom = service.getMinZoom(); zoom <= service.getMaxZoom(); zoom++) {
-            String identifier = service.getMatrixSet() + ":" + zoom;
-            TileMatrix tileMatrix = calculateTileMatrixByExtent(layerCapabilities.getLimitsByMatrix(identifier), bounds, layerBounds, zoom);
-            int maxCol = tileMatrix.getMaxCol();
-            int maxRow = tileMatrix.getMaxRow();
-            int minCol = tileMatrix.getMinCol();
-            int minRow = tileMatrix.getMinRow();
-            for (int x = minCol; x <= maxCol; x++) {
-                for (int y = minRow; y <= maxRow; y++) {
-                    list.add(new TileCoordinate(x, y, identifier));
-                }
-            }
+    public ResponseEntity<Resource> getMBTilesFile(long jobId) throws IOException{
+        JobExecution jobExecution = jobExplorer.getJobExecution(jobId);
+
+        if (jobExecution == null || !BatchStatus.COMPLETED.equals(jobExecution.getStatus())) {
+            return ResponseEntity.notFound().build();
         }
 
-        return list;
-    }
+        String outputPath = jobExecution.getJobParameters().getString("outputPath");
+        Path path = Paths.get(outputPath);
 
-    private TileMatrix calculateTileMatrixByExtent(TileMatrix tileMatrixOrig, double[] extent, double[] layerExtent, int zoom) {
-        int tileSize = 256;
-        double originX = Constants.originX3857;
-        double originY = Constants.originY3857;
-        double resolution = Constants.globalSize3857 / (tileSize * Math.pow(2, zoom));
-
-        int tileMinX = Integer.MAX_VALUE;
-        int tileMaxX = Integer.MIN_VALUE;
-        int tileMinY = Integer.MAX_VALUE;
-        int tileMaxY = Integer.MIN_VALUE;
-
-        for (int x = tileMatrixOrig.getMinCol(); x <= tileMatrixOrig.getMaxCol(); x++) {
-                double minX = originX + x * tileSize * resolution;
-                double maxX = originX + (x + 1) * tileSize * resolution;
-
-                if (maxX < extent[0] || minX > extent[2]) {
-                	continue;
-                }
-                if (x < tileMinX) {
-                	tileMinX = x;
-                }
-                if (x > tileMaxX) {
-                	tileMaxX = x;
-                }
-
-                for (int y = tileMatrixOrig.getMinRow(); y <= tileMatrixOrig.getMaxRow(); y++) {
-                    double maxY = originY - y * tileSize * resolution;
-                    double minY = originY - (y + 1) * tileSize * resolution;
-					
-                    if (maxY < extent[1] || minY > extent[3]) {
-                    	continue;
-                    }
-                    if (y < tileMinY) {
-                		tileMinY = y;
-		            }
-		            if (y > tileMaxY) {
-		            	tileMaxY = y;
-		            }
-                }
-           }
-
-        return new TileMatrix(tileMatrixOrig.getMatrix(), tileMinY, tileMaxY, tileMinX, tileMaxX);
-    }
-
-    private double[] calculateBounds(List<LayerCapabilities> layers) {
-        double[] bounds = {Double.MAX_VALUE, Double.MIN_VALUE, Double.MAX_VALUE, Double.MIN_VALUE};
-        for (LayerCapabilities lc : layers) {
-            if (lc.getMinLon() < bounds[0]) {
-                bounds[0] = lc.getMinLon();
-            }
-            if (lc.getMinLat() < bounds[1]) {
-                bounds[1] = lc.getMinLat();
-            }
-            if (lc.getMaxLon() > bounds[2]) {
-                bounds[2] = lc.getMaxLon();
-            }
-            if (lc.getMaxLat() > bounds[3]) {
-                bounds[3] = lc.getMaxLat();
-            }
+        if (!Files.exists(path)) {
+            return ResponseEntity.notFound().build();
         }
-        return bounds;
+        String[] pathParts = outputPath.split("/");
+        String fileName = pathParts[pathParts.length - 1];
+
+        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName)
+                .contentLength(Files.size(path))
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(resource);
     }
 
-    private int invertTileRow(int tileRow, int zoom) {
-        return ((1 << zoom) - 1 - tileRow);
-    }
-
-    private int parseZoom (String zoom) {
-        int result = 0;
-        if (zoom.contains(":")) {
-            String[] parts = zoom.split(":");
-            result = Integer.parseInt(parts[parts.length - 1]);
-        }
-        return result;
-    }
-
-    public BufferedImage getTileImage(TileServiceDto service, TileCoordinate coordinate) {
-        byte[] tileData = downloadTile(service.getUrl(), service.getLayers(), service.getMatrixSet(),
-            coordinate.getX(), coordinate.getY(), coordinate.getZ());
-
-        if (tileData != null) {
+    public ResponseEntity<MBTilesEstimateDto> estimateSize(TileRequestDto tileRequest) {
+        MBTilesEstimateDto estimation = new MBTilesEstimateDto(0, 0, 0);
+        for (MapServiceDto ms : tileRequest.getMapServices()) {
+            TileServiceDto tileService = new TileServiceDto(
+                ms.getUrl(), ms.getLayers(), ms.getType(),
+                tileRequest.getMinLat(), tileRequest.getMinLon(),
+                tileRequest.getMaxLat(), tileRequest.getMaxLon(),
+                tileRequest.getMinZoom(), tileRequest.getMaxZoom(),
+                tileRequest.getSrs(), Constants.MBTilesSrs
+            );
+            MbtilesContext context = new MbtilesContext(tileService, null);
             try {
-                BufferedImage image = ImageIO.read(new ByteArrayInputStream(tileData));
-                return image;
-            } catch (IOException e) {
-                log.error("Error decoding image");
+                for (MbtilesEstimationDecorator md : mbtilesDecorators) {
+                    Object result = md.apply(null, context);
+                    if (result != null) {
+                        sumMBtilesEstimations(estimation, (MBTilesEstimateDto)result);
+                    }
+                }
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        return null;
+        return ResponseEntity.ok(estimation);
     }
 
-    private byte[] downloadTile(String urlService, List<String> layers, String matrixSet, int x, int y, String zoom) {
-        try {
-            String fullUrl = getFullUrlWMTS(urlService, layers, matrixSet, x, y, zoom);
-            if (fullUrl != null) {
-                URL url = new URL(fullUrl);
-                BufferedImage image = ImageIO.read(url);
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                ImageIO.write(image, "png", baos);
-                return baos.toByteArray();
-            }
-        } catch (Exception e) {
-            log.error("Failed to download tile");
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    private String getFullUrlWMTS(String urlService, List<String> layers, String matrixSet, int x, int y, String zoom) {
-        String template = TEMPLATES.get(Constants.WMTSType);
-        String layersJoin = String.join(",", layers);
-        String url = String.format(template, urlService, layersJoin, matrixSet, zoom, y, x);
-        return url;
+    private void sumMBtilesEstimations(MBTilesEstimateDto total, MBTilesEstimateDto newSize) {
+        double newEstimateTileSize = (total.getEstimatedTileSizeKb() * total.getTileCount() + newSize.getEstimatedTileSizeKb() * newSize.getTileCount()) / (total.getTileCount() + newSize.getTileCount());
+        total.setTileCount(total.getTileCount() + newSize.getTileCount());
+        total.setEstimatedTileSizeKb(newEstimateTileSize);
+        total.setEstimatedMbtilesSizeMb(total.getEstimatedMbtilesSizeMb() + newSize.getEstimatedMbtilesSizeMb());
     }
 
 }

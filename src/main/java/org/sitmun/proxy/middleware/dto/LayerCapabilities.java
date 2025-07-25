@@ -15,10 +15,10 @@ import lombok.Setter;
 public class LayerCapabilities {
     String layerIdentifier;
     List<TileMatrix> limits;
-    double minLon;
-    double minLat;
-    double maxLon;
-    double maxLat;
+    Double minLon;
+    Double minLat;
+    Double maxLon;
+    Double maxLat;
 
     public TileMatrix getLimitsByMatrix(String matrix) {
         return limits.stream().filter(l -> l.getMatrix().equals(matrix)).findFirst().orElse(null);

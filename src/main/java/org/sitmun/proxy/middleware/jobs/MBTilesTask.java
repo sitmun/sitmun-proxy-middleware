@@ -4,11 +4,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.sitmun.proxy.middleware.decorator.MbtilesContext;
-import org.sitmun.proxy.middleware.decorator.MbtilesDecorator;
+import org.sitmun.proxy.middleware.decorator.MbtilesProcessDecorator;
 import org.sitmun.proxy.middleware.dto.MapServiceDto;
 import org.sitmun.proxy.middleware.dto.TileServiceDto;
 import org.sitmun.proxy.middleware.request.TileRequestDto;
-import org.sitmun.proxy.middleware.service.MBTilesService;
 import org.sitmun.proxy.middleware.utils.Constants;
 import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.scope.context.StepContext;
@@ -24,13 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 public class MBTilesTask {
 
     @Autowired
-    private MBTilesService mbTilesService;
+    private List<MbtilesProcessDecorator> mbtilesDecorators;
 
-    @Autowired
-    private List<MbtilesDecorator> mbtilesDecorators;
-
-    public void execute(StepContext context) throws JobExecutionException{
-        Map<String, Object> jobParameters = context.getJobParameters();
+    public void execute(StepContext stepContext) throws JobExecutionException{
+        Map<String, Object> jobParameters = stepContext.getJobParameters();
         String outputPath = (String)jobParameters.get("outputPath");
         TileRequestDto tileRequest = null;
         try {
@@ -47,15 +43,15 @@ public class MBTilesTask {
                 tileRequest.getMinZoom(), tileRequest.getMaxZoom(),
                 tileRequest.getSrs(), Constants.MBTilesSrs
             );
-            processTile(tileService, outputPath);
+            processTile(tileService, outputPath, stepContext);
         }
     }
 
-    private void processTile(TileServiceDto service, String outputPath) throws JobExecutionException {
+    private void processTile(TileServiceDto service, String outputPath, StepContext stepContext) throws JobExecutionException {
         MbtilesContext context = new MbtilesContext(service, outputPath);
         try {
-            for (MbtilesDecorator md : mbtilesDecorators) {
-                md.apply(mbTilesService, context);
+            for (MbtilesProcessDecorator md : mbtilesDecorators) {
+                md.apply(stepContext, context);
             }
         } catch (Exception e) {
             throw new JobExecutionException(e.getMessage());
