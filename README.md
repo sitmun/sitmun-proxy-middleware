@@ -523,6 +523,7 @@ WmsCapabilitiesResponseDecorator       // Modifies WMS capabilities responses
 ### Deployment
 
 #### Docker Deployment
+
 ```bash
 # Build and run with Docker Compose
 cd docker/development
