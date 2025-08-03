@@ -1,5 +1,3 @@
 package org.sitmun.proxy.middleware.decorator;
 
-public interface ResponseDecorator extends Decorator {
-}
-
+public interface ResponseDecorator extends Decorator {}

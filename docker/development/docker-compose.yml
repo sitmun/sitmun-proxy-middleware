@@ -1,0 +1,40 @@
+services:
+  sitmun-proxy-middleware:
+    build:
+      context: ../..
+      dockerfile: docker/Dockerfile
+    container_name: sitmun-proxy-middleware
+    ports:
+      - "8080:8080"
+    environment:
+      # Spring Boot Configuration
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_PORT=8080
+      
+      # JVM Configuration
+      - JAVA_OPTS=-Xms512m -Xmx1024m -XX:+UseG1GC -XX:+UseContainerSupport
+      
+      # Logging Configuration
+      - LOGGING_LEVEL_ROOT=INFO
+      - LOGGING_LEVEL_ORG_SITMUN_PROXY_MIDDLEWARE=INFO
+      
+      # SITMUN Backend Configuration
+      - SITMUN_BACKEND_CONFIG_URL=http://sitmun-backend:8080
+      - SITMUN_BACKEND_CONFIG_SECRET=your-secret-key-here
+      
+      # Actuator Configuration
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics
+      - MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=never
+      
+    volumes:
+      # External configuration directory
+      - ../../config:/app/config:ro
+      
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s 

@@ -1,0 +1,22 @@
+{
+  "properties": [
+    {
+      "name": "sitmun.client.unsafe-allowed-hosts",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of hostnames that are allowed to use unsafe SSL connections. Use '*' to allow all hosts.",
+      "defaultValue": ["*"]
+    },
+    {
+      "name": "sitmun.backend.config.url",
+      "type": "java.lang.String",
+      "description": "URL for the SITMUN backend configuration API endpoint. This is the URL where the proxy middleware will request configuration data.",
+      "sourceType": "org.sitmun.proxy.middleware.service.RequestConfigurationService"
+    },
+    {
+      "name": "sitmun.backend.config.secret",
+      "type": "java.lang.String",
+      "description": "Secret key for authenticating with the SITMUN backend configuration API. This secret is used in the X-SITMUN-Proxy-Key header.",
+      "sourceType": "org.sitmun.proxy.middleware.service.RequestConfigurationService"
+    }
+  ]
+} 

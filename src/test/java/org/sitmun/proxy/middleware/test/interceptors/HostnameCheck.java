@@ -1,11 +1,10 @@
 package org.sitmun.proxy.middleware.test.interceptors;
 
+import java.io.IOException;
 import lombok.Getter;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
 
 @Getter
 @Component
