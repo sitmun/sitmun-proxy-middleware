@@ -1,0 +1,43 @@
+[versions]
+# Spring Boot and related versions
+spring-boot = "3.5.4"
+spring-dependency-management = "1.1.7"
+
+# Plugin versions
+lombok = "8.6"
+spotless = "7.2.0"
+axion-release = "1.19.0"
+
+# Dependency versions
+h2 = "2.2.224"
+json = "20240303"
+jjwt = "0.12.6"
+okhttp3 = "4.12.0"
+
+[libraries]
+spring-boot-starter-web = { group = "org.springframework.boot", name = "spring-boot-starter-web" }
+spring-boot-starter-jdbc = { group = "org.springframework.boot", name = "spring-boot-starter-jdbc" }
+spring-boot-starter-actuator = { group = "org.springframework.boot", name = "spring-boot-starter-actuator" }
+spring-boot-starter-test = { group = "org.springframework.boot", name = "spring-boot-starter-test" }
+spring-boot-devtools = { group = "org.springframework.boot", name = "spring-boot-devtools" }
+h2 = { group = "com.h2database", name = "h2", version.ref = "h2" }
+
+# JSON and JWT
+json = { group = "org.json", name = "json", version.ref = "json" }
+jjwt-api = { group = "io.jsonwebtoken", name = "jjwt-api", version.ref = "jjwt" }
+jjwt-impl = { group = "io.jsonwebtoken", name = "jjwt-impl", version.ref = "jjwt" }
+jjwt-jackson = { group = "io.jsonwebtoken", name = "jjwt-jackson", version.ref = "jjwt" }
+
+# HTTP Client
+okhttp3 = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp3" }
+
+# Database Drivers
+postgresql = { group = "org.postgresql", name = "postgresql" }
+oracle-jdbc = { group = "com.oracle.database.jdbc", name = "ojdbc11-production" }
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
+lombok = { id = "io.freefair.lombok", version.ref = "lombok" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+axion-release = { id = "pl.allegro.tech.build.axion-release", version.ref = "axion-release" }

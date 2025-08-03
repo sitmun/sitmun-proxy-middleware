@@ -10,11 +10,12 @@ public class DoNotRequest implements Interceptor {
   @Override
   public Response intercept(@NotNull Chain chain) {
     return new Response.Builder()
-      .code(418) // Whatever code
-      .body(ResponseBody.create("", MediaType.parse("plain/text"))) // Whatever body
-      .addHeader("Content-Type", "plain/text")
-      .protocol(Protocol.HTTP_2)
-      .message("Dummy response")
-      .request(chain.request())
-      .build();  }
+        .code(418) // Whatever code
+        .body(ResponseBody.create("", MediaType.parse("plain/text"))) // Whatever body
+        .addHeader("Content-Type", "plain/text")
+        .protocol(Protocol.HTTP_2)
+        .message("Dummy response")
+        .request(chain.request())
+        .build();
+  }
 }
