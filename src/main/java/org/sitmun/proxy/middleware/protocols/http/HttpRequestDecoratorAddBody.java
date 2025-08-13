@@ -2,15 +2,16 @@ package org.sitmun.proxy.middleware.protocols.http;
 
 import org.sitmun.proxy.middleware.decorator.Context;
 import org.sitmun.proxy.middleware.decorator.RequestDecorator;
+import org.sitmun.proxy.middleware.protocols.wms.WmsPayloadDto;
 import org.springframework.stereotype.Component;
 
 @Component
-public class HttpRequestDecoratorAddEndpoint implements RequestDecorator {
+public class HttpRequestDecoratorAddBody implements RequestDecorator {
 
   @Override
   public boolean accept(Object target, Context context) {
-    if (context instanceof HttpContext httpContext) {
-      return httpContext.getUri() != null && !httpContext.getUri().isEmpty();
+    if (context instanceof WmsPayloadDto wmsPayload) {
+      return wmsPayload.getMethod().equals("POST") && wmsPayload.getBody() != null;
     } else {
       return false;
     }
@@ -19,8 +20,9 @@ public class HttpRequestDecoratorAddEndpoint implements RequestDecorator {
   @Override
   public void addBehavior(Object target, Context context) {
     HttpRequestExecutor request = (HttpRequestExecutor) target;
-    HttpContext httpContext = (HttpContext) context;
-    request.setUrl(httpContext.getUri());
-    request.setParameters(httpContext.getParameters());
+    WmsPayloadDto wmsPayload = (WmsPayloadDto) context;
+
+    request.setBody(wmsPayload.getBody());
+    request.setHeader("Content-Type", "application/xml");
   }
 }

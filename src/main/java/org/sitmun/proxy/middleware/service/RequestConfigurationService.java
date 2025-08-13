@@ -43,9 +43,11 @@ public class RequestConfigurationService {
       Integer typeId,
       String token,
       Map<String, String> params,
-      String url) {
+      String url,
+      String body) {
+    String method = body == null ? "GET" : "POST";
     ConfigProxyRequestDto configProxyRequest =
-        new ConfigProxyRequestDto(appId, terId, type, typeId, "GET", params, null, token);
+        new ConfigProxyRequestDto(appId, terId, type, typeId, method, params, body, token);
     logAsPrettyJson(log, "Request to the API:\n{}", configProxyRequest);
 
     ResponseEntity<?> response = configRequest(configProxyRequest);
