@@ -34,7 +34,6 @@ dependencies {
 
   // HTTP Client
   implementation libs.okhttp3
-  implementation 'org.apache.httpcomponents.client5:httpclient5:5.5'
 
   // Database Drivers
   implementation libs.postgresql

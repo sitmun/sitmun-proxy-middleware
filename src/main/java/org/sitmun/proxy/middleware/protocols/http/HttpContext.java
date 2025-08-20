@@ -9,4 +9,8 @@ public interface HttpContext extends Context {
   Map<String, String> getParameters();
 
   String getUri();
+
+  String getMethod();
+
+  String getBody();
 }
