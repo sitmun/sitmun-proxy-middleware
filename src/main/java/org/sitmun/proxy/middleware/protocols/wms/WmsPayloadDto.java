@@ -21,6 +21,7 @@ public class WmsPayloadDto extends PayloadDto implements HttpContext {
   private String method;
   private Map<String, String> parameters;
   private HttpSecurityDto security;
+  private String body;
 
   @Builder
   public WmsPayloadDto(
@@ -28,12 +29,14 @@ public class WmsPayloadDto extends PayloadDto implements HttpContext {
       String uri,
       String method,
       Map<String, String> parameters,
-      HttpSecurityDto security) {
+      HttpSecurityDto security,
+      String body) {
     super(vary);
     this.uri = uri;
     this.method = method;
     this.parameters = parameters;
     this.security = security;
+    this.body = body;
   }
 
   @Override
