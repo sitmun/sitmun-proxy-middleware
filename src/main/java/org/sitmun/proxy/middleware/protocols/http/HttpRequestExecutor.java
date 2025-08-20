@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import org.sitmun.proxy.middleware.dto.ErrorResponseDto;
 import org.sitmun.proxy.middleware.service.RequestExecutor;
@@ -25,6 +26,7 @@ public class HttpRequestExecutor implements RequestExecutor {
   private final HttpClient httpClient;
   private final String baseUrl;
   @Setter private String url;
+  @Setter private String body;
 
   public HttpRequestExecutor(String baseUrl, HttpClient httpClient) {
     this.baseUrl = baseUrl;
@@ -36,7 +38,9 @@ public class HttpRequestExecutor implements RequestExecutor {
   }
 
   public void setParameters(Map<String, String> parameters) {
-    this.parameters.putAll(parameters);
+    if (parameters != null && !parameters.isEmpty()) {
+      this.parameters.putAll(parameters);
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -49,7 +53,15 @@ public class HttpRequestExecutor implements RequestExecutor {
     okhttp3.Request.Builder builder = new okhttp3.Request.Builder();
 
     builder.url(getUrl());
-    headers.keySet().forEach(k -> builder.addHeader(k, headers.get(k)));
+    for (String k : headers.keySet()) {
+      builder.addHeader(k, headers.get(k));
+    }
+
+    if (body != null) {
+      RequestBody requestBody =
+          RequestBody.create((String) body, okhttp3.MediaType.parse("text/xml"));
+      builder.post(requestBody);
+    }
 
     okhttp3.Request httpRequest = builder.build();
 
