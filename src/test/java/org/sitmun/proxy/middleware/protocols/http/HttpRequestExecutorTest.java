@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.sitmun.proxy.middleware.dto.ErrorResponseDto;
+import org.sitmun.proxy.middleware.dto.ProblemDetail;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponse;
 
 @ExtendWith(MockitoExtension.class)
@@ -94,18 +94,18 @@ class HttpRequestExecutorTest {
 
     // Then
     assertThat(result).isNotNull();
-    assertThat(result.asResponseEntity().getStatusCode().value()).isEqualTo(500);
+    assertThat(result.asResponseEntity().getStatusCode().value()).isEqualTo(503);
     assertThat(result.asResponseEntity().getHeaders().getFirst("content-type"))
-        .isEqualTo("application/json");
+        .isEqualTo("application/problem+json");
 
     Object body = result.asResponseEntity().getBody();
-    assertThat(body).isInstanceOf(ErrorResponseDto.class);
+    assertThat(body).isInstanceOf(ProblemDetail.class);
 
-    ErrorResponseDto errorResponse = (ErrorResponseDto) body;
-    Assertions.assertNotNull(errorResponse);
-    assertThat(errorResponse.getStatus()).isEqualTo(500);
-    assertThat(errorResponse.getError()).isEqualTo("ServiceError");
-    assertThat(errorResponse.getMessage()).isEqualTo("Error with the request to final service");
+    ProblemDetail problemDetail = (ProblemDetail) body;
+    Assertions.assertNotNull(problemDetail);
+    assertThat(problemDetail.getStatus()).isEqualTo(503);
+    assertThat(problemDetail.getTitle()).isEqualTo("Service Error");
+    assertThat(problemDetail.getDetail()).isEqualTo("Error with the request to final service");
   }
 
   @Test

@@ -2,10 +2,10 @@ package org.sitmun.proxy.middleware.protocols.jdbc;
 
 import java.sql.*;
 import java.util.*;
-import java.util.Date;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.sitmun.proxy.middleware.dto.ErrorResponseDto;
+import org.sitmun.proxy.middleware.dto.ProblemDetail;
+import org.sitmun.proxy.middleware.dto.ProblemTypes;
 import org.sitmun.proxy.middleware.service.RequestExecutor;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponse;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponseImpl;
@@ -25,11 +25,19 @@ public class JdbcRequestExecutor implements RequestExecutor {
       executeStatement(connectionUsed, result);
     } catch (SQLException e) {
       log.error("Error getting response: {}", e.getMessage(), e);
+      ProblemDetail problem =
+          ProblemDetail.builder()
+              .type(ProblemTypes.PROXY_SERVICE_ERROR)
+              .status(500)
+              .title("SQL Error")
+              .detail(e.getMessage())
+              .instance("")
+              .build();
       return new RequestExecutorResponseImpl<>(
           null,
           500,
-          "application/json",
-          new ErrorResponseDto(500, "SQLError", e.getMessage(), "", new Date()));
+          "application/problem+json",
+          problem);
     }
     return new RequestExecutorResponseImpl<>(null, 200, "application/json", result);
   }

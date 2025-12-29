@@ -53,6 +53,6 @@ class ExecutionRequestExecutorServiceTest {
     Object body = response.getBody();
     assertThat(body).isNotNull().isInstanceOf(byte[].class);
     String text = new String((byte[]) body, StandardCharsets.UTF_8);
-    assertThat(jsonTester.parse(text)).extracting("totalFeatures").isEqualTo(273);
+    assertThat(jsonTester.parse(text)).extracting("totalFeatures").isEqualTo(294);
   }
 }

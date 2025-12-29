@@ -7,7 +7,6 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.sitmun.proxy.middleware.dto.ConfigProxyDto;
 import org.sitmun.proxy.middleware.dto.ConfigProxyRequestDto;
-import org.sitmun.proxy.middleware.dto.ErrorResponseDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -60,9 +59,15 @@ public class RequestConfigurationService {
         log.info("Requesting data from the final service");
         return requestExecutorService.executeRequest(url, configProxyDto.getPayload());
       } else {
-        ErrorResponseDto errorResponse =
-            new ErrorResponseDto(401, "Bad Request", "Request not valid", configUrl, new Date());
-        return ResponseEntity.status(401).body(errorResponse);
+        org.sitmun.proxy.middleware.dto.ProblemDetail problem =
+            org.sitmun.proxy.middleware.dto.ProblemDetail.builder()
+                .type(org.sitmun.proxy.middleware.dto.ProblemTypes.PROXY_UNAUTHORIZED)
+                .status(401)
+                .title("Unauthorized")
+                .detail("Request not valid")
+                .instance(configUrl)
+                .build();
+        return ResponseEntity.status(401).contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON).body(problem);
       }
     } else {
       return response;
@@ -77,15 +82,26 @@ public class RequestConfigurationService {
       return restTemplate.exchange(configUrl, HttpMethod.POST, httpEntity, ConfigProxyDto.class);
     } catch (HttpClientErrorException e) {
       log.error("Error getting response: {}", e.getMessage(), e);
-      ErrorResponseDto errorResponse =
-          new ErrorResponseDto(
-              e.getStatusCode().value(), "", e.getMessage(), configUrl, new Date());
-      return ResponseEntity.status(e.getStatusCode()).body(errorResponse);
+      org.sitmun.proxy.middleware.dto.ProblemDetail problem =
+          org.sitmun.proxy.middleware.dto.ProblemDetail.builder()
+              .type(org.sitmun.proxy.middleware.dto.ProblemTypes.PROXY_BACKEND_ERROR)
+              .status(e.getStatusCode().value())
+              .title("Backend Error")
+              .detail(e.getMessage())
+              .instance(configUrl)
+              .build();
+      return ResponseEntity.status(e.getStatusCode()).contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON).body(problem);
     } catch (Exception e) {
       log.error("Error getting response: {}", e.getMessage(), e);
-      ErrorResponseDto errorResponse =
-          new ErrorResponseDto(500, "", e.getMessage(), configUrl, new Date());
-      return ResponseEntity.status(500).body(errorResponse);
+      org.sitmun.proxy.middleware.dto.ProblemDetail problem =
+          org.sitmun.proxy.middleware.dto.ProblemDetail.builder()
+              .type(org.sitmun.proxy.middleware.dto.ProblemTypes.PROXY_CONFIG_ERROR)
+              .status(500)
+              .title("Proxy Configuration Error")
+              .detail(e.getMessage())
+              .instance(configUrl)
+              .build();
+      return ResponseEntity.status(500).contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON).body(problem);
     }
   }
 }

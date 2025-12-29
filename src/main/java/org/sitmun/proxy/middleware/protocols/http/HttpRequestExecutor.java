@@ -9,7 +9,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
-import org.sitmun.proxy.middleware.dto.ErrorResponseDto;
 import org.sitmun.proxy.middleware.service.RequestExecutor;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponse;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponseImpl;
@@ -78,12 +77,19 @@ public class HttpRequestExecutor implements RequestExecutor {
           baseUrl, r.code(), r.header("content-type"), body.bytes());
     } catch (IOException e) {
       log.error("Error getting response: {}", e.getMessage(), e);
+      org.sitmun.proxy.middleware.dto.ProblemDetail problem =
+          org.sitmun.proxy.middleware.dto.ProblemDetail.builder()
+              .type(org.sitmun.proxy.middleware.dto.ProblemTypes.PROXY_SERVICE_ERROR)
+              .status(503)
+              .title("Service Error")
+              .detail("Error with the request to final service")
+              .instance("")
+              .build();
       return new RequestExecutorResponseImpl<>(
           baseUrl,
-          500,
-          "application/json",
-          new ErrorResponseDto(
-              500, "ServiceError", "Error with the request to final service", "", new Date()));
+          503,
+          "application/problem+json",
+          problem);
     }
   }
 

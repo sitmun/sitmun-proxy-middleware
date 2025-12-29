@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Assertions;
@@ -19,7 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sitmun.proxy.middleware.dto.ConfigProxyDto;
-import org.sitmun.proxy.middleware.dto.ErrorResponseDto;
+import org.sitmun.proxy.middleware.dto.ProblemDetail;
 import org.sitmun.proxy.middleware.protocols.wms.WmsPayloadDto;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -105,15 +104,14 @@ class RequestConfigurationServiceTest {
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-    assertThat(result.getBody()).isInstanceOf(ErrorResponseDto.class);
+    assertThat(result.getBody()).isInstanceOf(ProblemDetail.class);
 
-    ErrorResponseDto errorResponse = (ErrorResponseDto) result.getBody();
-    Assertions.assertNotNull(errorResponse);
-    assertThat(errorResponse.getStatus()).isEqualTo(401);
-    assertThat(errorResponse.getError()).isEqualTo("Bad Request");
-    assertThat(errorResponse.getMessage()).isEqualTo("Request not valid");
-    assertThat(errorResponse.getPath()).isEqualTo(CONFIG_URL);
-    assertThat(errorResponse.getTimestamp()).isInstanceOf(Date.class);
+    ProblemDetail problemDetail = (ProblemDetail) result.getBody();
+    Assertions.assertNotNull(problemDetail);
+    assertThat(problemDetail.getStatus()).isEqualTo(401);
+    assertThat(problemDetail.getTitle()).isEqualTo("Unauthorized");
+    assertThat(problemDetail.getDetail()).isEqualTo("Request not valid");
+    assertThat(problemDetail.getInstance()).isEqualTo(CONFIG_URL);
   }
 
   @Test
@@ -168,14 +166,14 @@ class RequestConfigurationServiceTest {
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(result.getBody()).isInstanceOf(ErrorResponseDto.class);
+    assertThat(result.getBody()).isInstanceOf(ProblemDetail.class);
 
-    ErrorResponseDto errorResponse = (ErrorResponseDto) result.getBody();
-    Assertions.assertNotNull(errorResponse);
-    assertThat(errorResponse.getStatus()).isEqualTo(400);
-    assertThat(errorResponse.getMessage()).isEqualTo("400 Bad Request");
-    assertThat(errorResponse.getPath()).isEqualTo(CONFIG_URL);
-    assertThat(errorResponse.getTimestamp()).isInstanceOf(Date.class);
+    ProblemDetail problemDetail = (ProblemDetail) result.getBody();
+    Assertions.assertNotNull(problemDetail);
+    assertThat(problemDetail.getStatus()).isEqualTo(400);
+    assertThat(problemDetail.getTitle()).isEqualTo("Backend Error");
+    assertThat(problemDetail.getDetail()).isEqualTo("400 Bad Request");
+    assertThat(problemDetail.getInstance()).isEqualTo(CONFIG_URL);
   }
 
   @Test
@@ -202,14 +200,14 @@ class RequestConfigurationServiceTest {
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    assertThat(result.getBody()).isInstanceOf(ErrorResponseDto.class);
+    assertThat(result.getBody()).isInstanceOf(ProblemDetail.class);
 
-    ErrorResponseDto errorResponse = (ErrorResponseDto) result.getBody();
-    Assertions.assertNotNull(errorResponse);
-    assertThat(errorResponse.getStatus()).isEqualTo(500);
-    assertThat(errorResponse.getMessage()).isEqualTo("Network error");
-    assertThat(errorResponse.getPath()).isEqualTo(CONFIG_URL);
-    assertThat(errorResponse.getTimestamp()).isInstanceOf(Date.class);
+    ProblemDetail problemDetail = (ProblemDetail) result.getBody();
+    Assertions.assertNotNull(problemDetail);
+    assertThat(problemDetail.getStatus()).isEqualTo(500);
+    assertThat(problemDetail.getTitle()).isEqualTo("Proxy Configuration Error");
+    assertThat(problemDetail.getDetail()).isEqualTo("Network error");
+    assertThat(problemDetail.getInstance()).isEqualTo(CONFIG_URL);
   }
 
   @Test
@@ -408,14 +406,14 @@ class RequestConfigurationServiceTest {
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(result.getBody()).isInstanceOf(ErrorResponseDto.class);
+    assertThat(result.getBody()).isInstanceOf(ProblemDetail.class);
 
-    ErrorResponseDto errorResponse = (ErrorResponseDto) result.getBody();
-    Assertions.assertNotNull(errorResponse);
-    assertThat(errorResponse.getStatus()).isEqualTo(400);
-    assertThat(errorResponse.getMessage()).isEqualTo("400 Bad Request");
-    assertThat(errorResponse.getPath()).isEqualTo(CONFIG_URL);
-    assertThat(errorResponse.getTimestamp()).isInstanceOf(Date.class);
+    ProblemDetail problemDetail = (ProblemDetail) result.getBody();
+    Assertions.assertNotNull(problemDetail);
+    assertThat(problemDetail.getStatus()).isEqualTo(400);
+    assertThat(problemDetail.getTitle()).isEqualTo("Backend Error");
+    assertThat(problemDetail.getDetail()).isEqualTo("400 Bad Request");
+    assertThat(problemDetail.getInstance()).isEqualTo(CONFIG_URL);
   }
 
   private ConfigProxyDto createValidConfigProxyDto() {
