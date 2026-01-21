@@ -1,4 +1,5 @@
-[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=org.sitmun%3Asitmun-proxy-middleware&metric=alert_status)](https://sonarcloud.io/dashboard?id=org.sitmun%3Asitmun-proxy-middleware)
+[![License: EUPL v1.2](https://img.shields.io/badge/License-EUPL%20v1.2-blue.svg)](LICENSE)
+![Version](https://img.shields.io/badge/version-1.2.0--rc.1-blue.svg)
 
 # SITMUN Proxy Middleware
 
@@ -83,17 +84,20 @@ This service integrates with the [SITMUN Backend Core](https://github.com/sitmun
 ### Local Development
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/sitmun/sitmun-proxy-middleware.git
    cd sitmun-proxy-middleware
    ```
 
 2. **Build the application**
+
    ```bash
    ./gradlew build -x test
    ```
 
 3. **Run the application**
+
    ```bash
    # Run with Java directly (recommended)
    java -jar build/libs/sitmun-proxy-middleware.jar --spring.profiles.active=prod
@@ -103,6 +107,7 @@ This service integrates with the [SITMUN Backend Core](https://github.com/sitmun
    ```
 
 4. **Verify the service is running**
+
    ```bash
    # Check health status
    curl http://localhost:8080/actuator/health
@@ -114,6 +119,7 @@ This service integrates with the [SITMUN Backend Core](https://github.com/sitmun
 ### Docker Deployment
 
 1. **Create environment configuration**
+
    ```bash
    # Create .env file
    cat > .env << EOF
@@ -123,12 +129,14 @@ This service integrates with the [SITMUN Backend Core](https://github.com/sitmun
    ```
 
 2. **Start with Docker Compose**
+
    ```bash
    cd docker/development
    docker-compose up
    ```
 
 3. **Verify deployment**
+
    ```bash
    curl http://localhost:8080/actuator/health
    ```
@@ -136,18 +144,21 @@ This service integrates with the [SITMUN Backend Core](https://github.com/sitmun
 ### Troubleshooting
 
 #### Port Already in Use
+
 ```bash
 # Use different port
 ./gradlew bootRun --args='--spring.profiles.active=prod --server.port=8081'
 ```
 
 #### Memory Issues
+
 ```bash
 # Increase heap size
 ./gradlew bootRun --args='--spring.profiles.active=prod -Xmx4g -Xms2g'
 ```
 
 #### Docker Issues
+
 ```bash
 # Clean up Docker resources
 cd docker/development
@@ -210,7 +221,7 @@ docker system prune -f
 - **Version Management**: Automated versioning with Axion Release
 - **Code Formatting**: Automated code formatting with Spotless
 - **Coverage Reporting**: JaCoCo integration for code coverage
-- **Comprehensive Testing**: Unit and integration tests with comprehensive coverage
+- **Testing**: Unit and integration tests
 
 ## API Reference
 
@@ -224,6 +235,7 @@ docker system prune -f
 ### Usage Examples
 
 #### Proxy Request to Protected Service
+
 ```bash
 curl -X GET "http://localhost:8080/proxy/1/1/wms/123" \
   -H "Authorization: Bearer your-jwt-token" \
@@ -231,11 +243,13 @@ curl -X GET "http://localhost:8080/proxy/1/1/wms/123" \
 ```
 
 #### Health Check
+
 ```bash
 curl http://localhost:8080/actuator/health
 ```
 
 Response:
+
 ```json
 {
   "status": "UP"
@@ -265,12 +279,14 @@ Response:
 ### Profiles
 
 #### Development Profile (`dev`)
+
 - Debug logging enabled
 - H2 console available
 - Detailed error messages
 - Development tools enabled
 
 #### Production Profile (`prod`)
+
 - Minimal logging
 - Security optimizations
 - Performance tuning
@@ -279,6 +295,7 @@ Response:
 ### Configuration Files
 
 #### Base Configuration (`src/main/resources/application.yml`)
+
 ```yaml
 # Logging Configuration
 logging:
@@ -310,6 +327,7 @@ management:
 ```
 
 #### Development Profile (`src/main/resources/application-dev.yml`)
+
 ```yaml
 # Development-specific configuration
 logging:
@@ -327,6 +345,7 @@ spring:
 ```
 
 #### Production Profile (`src/main/resources/application-prod.yml`)
+
 ```yaml
 # Production-specific configuration
 logging:
@@ -344,6 +363,7 @@ spring:
 ```
 
 #### External Configuration (`config/application.yml`)
+
 The application supports external configuration files mounted in Docker containers:
 
 ```yaml
@@ -387,6 +407,7 @@ http:
 ```
 
 #### External Production Configuration (`config/application-prod.yml`)
+
 ```yaml
 # External Production Configuration
 logging:
@@ -439,6 +460,7 @@ server:
 ```
 
 **Request Flow:**
+
 1. Client sends request to `/proxy/{appId}/{terId}/{type}/{typeId}`
 2. Proxy loads configuration from SITMUN Backend Core
 3. Request is decorated and forwarded to target service
@@ -451,14 +473,14 @@ server:
 - **`RequestConfigurationService`**: Orchestrates request processing flow and configuration loading from SITMUN Backend Core
 - **`RequestExecutorService`**: Handles request execution logic and protocol routing
 - **`RequestExecutorFactory`**: Factory for creating request execution instances based on service type
-- **Protocol Implementations**: 
+- **Protocol Implementations**:
   - **HTTP**: `HttpRequestExecutor`, `HttpClientFactoryService`, `HttpRequestDecoratorAddBasicSecurity`, `HttpRequestDecoratorAddEndpoint`
   - **JDBC**: `JdbcRequestExecutor`, `JdbcRequestDecoratorAddConnection`, `JdbcRequestDecoratorAddQuery`
   - **WMS**: `WmsCapabilitiesResponseDecorator` for WMS capabilities processing
 - **Decorator Pattern**: Flexible request/response modification through `RequestDecorator` and `ResponseDecorator` interfaces
 - **DTO Classes**: Data transfer objects including `ConfigProxyDto`, `ConfigProxyRequestDto`, `ErrorResponseDto`, `HttpSecurityDto`, `PayloadDto`
 - **Context Classes**: Protocol-specific contexts (`HttpContext`, `JdbcContext`) for request processing
-- **Test Structure**: Comprehensive testing with protocol-specific test classes (`ExecutionRequestExecutorServiceTest` for each protocol) and utilities
+- **Test Structure**: Protocol-specific tests (`ExecutionRequestExecutorServiceTest`) and utilities
 
 ### Request Processing Flow
 
@@ -472,7 +494,7 @@ server:
 
 ### Decorator Pattern
 
-The service uses the decorator pattern for flexible request/response modification:
+The service uses the decorator pattern to modify requests and responses:
 
 ```java
 // Request decorators
@@ -486,6 +508,7 @@ WmsCapabilitiesResponseDecorator       // Modifies WMS capabilities responses
 ```
 
 **Core Interfaces:**
+
 - `RequestDecorator<T>`: Interface for request decorators
 - `ResponseDecorator<T>`: Interface for response decorators
 - `Decorator<T>`: Base decorator interface
@@ -509,12 +532,14 @@ WmsCapabilitiesResponseDecorator       // Modifies WMS capabilities responses
 ### Profiles Explained
 
 #### Development Profile
+
 - Enhanced logging for debugging
 - Development tools enabled
 - H2 console for database management
 - Detailed error messages
 
 #### Production Profile
+
 - Optimized for performance
 - Minimal logging
 - Security hardening
@@ -540,6 +565,7 @@ docker-compose down
 ```
 
 **Docker Configuration:**
+
 - **Multi-stage build** using Amazon Corretto 17 (`docker/Dockerfile`)
 - **Development environment** with Docker Compose (`docker/development/docker-compose.yml`)
 - **Health checks** with curl-based monitoring
@@ -548,6 +574,7 @@ docker-compose down
 - **Volume mounting** for logs and configuration
 
 #### Manual Deployment
+
 ```bash
 # Build JAR
 ./gradlew build
@@ -621,7 +648,7 @@ sitmun-proxy-middleware/
 - **`RequestConfigurationService`**: Orchestrates request processing flow and configuration loading from SITMUN Backend Core
 - **`RequestExecutorService`**: Handles request execution logic and protocol routing
 - **`RequestExecutorFactory`**: Factory for creating request execution instances based on service type
-- **Protocol Implementations**: 
+- **Protocol Implementations**:
   - **HTTP**: `HttpRequestExecutor`, `HttpClientFactoryService`, `HttpRequestDecoratorAddBasicSecurity`, `HttpRequestDecoratorAddEndpoint`
   - **JDBC**: `JdbcRequestExecutor`, `JdbcRequestDecoratorAddConnection`, `JdbcRequestDecoratorAddQuery`
   - **WMS**: `WmsCapabilitiesResponseDecorator` for WMS capabilities processing
@@ -637,7 +664,7 @@ The project uses Gradle with Version Catalogs for dependency management:
 - **Version Catalog**: `gradle/libs.versions.toml` - Centralized dependency versions
 - **Plugins**: Spring Boot 3.5.4, Lombok 8.6, Spotless 7.2.0, Axion Release 1.19.0
 - **Quality Tools**: JaCoCo for coverage, Spotless for formatting
-- **Dependencies**: 
+- **Dependencies**:
   - Spring Boot Starters (Web, JDBC, Actuator)
   - OkHttp 4.12.0 for HTTP client
   - JJWT 0.12.6 for JWT handling
@@ -647,7 +674,7 @@ The project uses Gradle with Version Catalogs for dependency management:
 
 ### Code Quality
 
-The project includes several code quality tools:
+Code quality tools:
 
 - **Spotless**: Code formatting with Google Java Format
 - **JaCoCo**: Code coverage reporting
@@ -688,11 +715,13 @@ The project uses Axion Release for automated version management:
 #### Creating a Release
 
 **Prerequisites:**
+
 1. **Clean Git State**: Ensure all changes are committed
 2. **Working Directory**: No uncommitted changes
 3. **Git Repository**: Must be a valid Git repository
 
 **Step-by-Step Release Process:**
+
 ```bash
 # 1. Check current Git status
 git status
@@ -715,13 +744,14 @@ git push --tags
 ```
 
 **Release Types:**
+
 - `./gradlew release`: Creates a new patch version (e.g., 1.0.0 → 1.0.1)
 - `./gradlew release -Prelease.scope=minor`: Creates a new minor version (e.g., 1.0.0 → 1.1.0)
 - `./gradlew release -Prelease.scope=major`: Creates a new major version (e.g., 1.0.0 → 2.0.0)
 
 ### Testing
 
-The project includes comprehensive testing:
+Testing commands:
 
 ```bash
 # Run all tests
@@ -748,32 +778,35 @@ The project includes comprehensive testing:
   - `ExecutionRequestExecutorServiceTest` for each protocol
   - `HttpClientFactoryServiceTest` for HTTP client factory
 - **Service Tests**: `ExecutionRequestExecutorServiceTest` for service layer testing
-- **Test Utilities**: 
+- **Test Utilities**:
   - `TestUtils` for common test functionality
   - `URIConstants` for test URI constants
   - `AuthorizationProxyFixtures` for test data fixtures
   - Test interceptors for request/response simulation
 - **Test DTOs**: `AuthenticationResponse` and `UserPasswordAuthenticationRequest` for testing
-- **Edge Cases**: Boundary conditions and error handling through comprehensive test scenarios
+- **Edge Cases**: Boundary conditions and error handling
 
 ### Development Workflow
 
 #### Git Hooks
 
-The project includes automated Git hooks that run on every commit:
+Automated Git hooks run on every commit:
 
 **Pre-commit checks:**
+
 - Code formatting validation (Spotless)
 - Unit and integration tests
 - Code coverage verification
 
 **Commit message validation:**
+
 - Conventional commit format enforcement
 - SITMUN-specific scope support `(proxy)`
 
 #### Commit Message Format
 
 Follow the conventional commit format:
+
 ```
 <type>(<scope>): <description>
 
@@ -783,6 +816,7 @@ Follow the conventional commit format:
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -795,6 +829,7 @@ Follow the conventional commit format:
 - `build`: Build system changes
 
 **Examples:**
+
 ```bash
 git commit -m "feat(proxy): add request decorator functionality"
 git commit -m "fix(proxy): resolve authentication token handling"
@@ -817,21 +852,21 @@ git commit -m "style: format code with Google Java Format"
 
 ### Security and Authentication
 
-The service includes comprehensive security features:
+Security features:
 
-- **JWT Token Handling**: Secure token validation and processing
+- **JWT Token Handling**: Validate and parse tokens
 - **Credential Protection**: Never expose backend credentials
 - **Request Sanitization**: Clean and validate all incoming requests
 - **Access Control**: Enforce service-level permissions
-- **Audit Logging**: Comprehensive request logging
+- **Audit Logging**: Request logging
 
 ### Monitoring and Observability
 
 - **Spring Boot Actuator**: Health checks, metrics, and application monitoring
 - **Custom Health Indicators**: Proxy service health monitoring
-- **Request Tracking**: Real-time request monitoring
-- **Error Handling**: Comprehensive error handling and logging
-- **Performance Metrics**: Request timing and performance monitoring
+- **Request Tracking**: Request monitoring
+- **Error Handling**: Error handling and logging
+- **Performance Metrics**: Request timing and metrics
 
 #### Actuator Endpoints
 
@@ -840,6 +875,7 @@ The service includes comprehensive security features:
 | `/actuator/health` | Application health status | Public |
 
 **Health Check Response:**
+
 ```json
 {
   "status": "UP"
@@ -865,11 +901,11 @@ The service includes comprehensive security features:
 
 ## Integration with SITMUN
 
-This service is designed to provide secure proxy capabilities for the [SITMUN](https://github.com/sitmun/) platform. It can be deployed as a microservice alongside other SITMUN components.
+Provides proxy capabilities for the [SITMUN](https://github.com/sitmun/) platform and can be deployed alongside other components.
 
 ### Prerequisites
 
-Before integrating the Proxy Middleware with SITMUN, ensure you have:
+Prerequisites:
 
 - **SITMUN Backend Core** running and accessible
 - **SITMUN Map Viewer** configured to use the proxy
@@ -971,6 +1007,7 @@ networks:
 The Proxy Middleware supports different service types that can be configured in the SITMUN Backend Core:
 
 #### WMS Services
+
 ```json
 {
   "type": "wms",
@@ -984,9 +1021,8 @@ The Proxy Middleware supports different service types that can be configured in 
 }
 ```
 
-
-
 #### JDBC Services
+
 ```json
 {
   "type": "jdbc",
@@ -999,11 +1035,12 @@ The Proxy Middleware supports different service types that can be configured in 
 
 ### Security Configuration
 
-The service includes basic security features for proxy authentication and request handling.
+Basic security features cover proxy authentication and request handling.
 
 ### Monitoring and Health Checks
 
 #### Health Check Configuration
+
 ```yaml
 # Health check configuration for SITMUN integration
 management:
@@ -1024,6 +1061,7 @@ management:
 ```
 
 #### Logging Configuration
+
 ```yaml
 # Logging configuration for SITMUN integration
 logging:
@@ -1040,6 +1078,7 @@ logging:
 #### Common Issues
 
 1. **Connection Refused to SITMUN Backend**
+
    ```bash
    # Check if backend is running
    curl http://sitmun-backend:8080/actuator/health
@@ -1049,6 +1088,7 @@ logging:
    ```
 
 2. **Authentication Failures**
+
    ```bash
    # Check shared secret configuration
    echo $SITMUN_BACKEND_CONFIG_SECRET
@@ -1058,6 +1098,7 @@ logging:
    ```
 
 3. **Service Configuration Not Found**
+
    ```bash
    # Check backend configuration endpoint
    curl http://sitmun-backend:8080/api/config/proxy
@@ -1067,6 +1108,7 @@ logging:
    ```
 
 #### Debug Mode
+
 ```bash
 # Enable debug logging for integration issues
 export LOGGING_LEVEL_ORG_SITMUN_PROXY_MIDDLEWARE=DEBUG
