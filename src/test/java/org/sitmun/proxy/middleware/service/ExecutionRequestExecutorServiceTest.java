@@ -79,6 +79,7 @@ class ExecutionRequestExecutorServiceTest {
     Object body = response.getBody();
     assertThat(body).isNotNull().isInstanceOf(byte[].class);
     String text = new String((byte[]) body, StandardCharsets.UTF_8);
+    // Updated from 273 to 294 to reflect current external WMS service state
     assertThat(jsonTester.parse(text)).extracting("totalFeatures").isEqualTo(294);
   }
 

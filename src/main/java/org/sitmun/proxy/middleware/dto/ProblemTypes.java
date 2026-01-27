@@ -26,4 +26,3 @@ public final class ProblemTypes {
     // Prevent instantiation
   }
 }
-

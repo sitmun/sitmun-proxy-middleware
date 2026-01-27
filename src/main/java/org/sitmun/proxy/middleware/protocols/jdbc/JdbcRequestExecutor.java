@@ -33,11 +33,7 @@ public class JdbcRequestExecutor implements RequestExecutor {
               .detail(e.getMessage())
               .instance("")
               .build();
-      return new RequestExecutorResponseImpl<>(
-          null,
-          500,
-          "application/problem+json",
-          problem);
+      return new RequestExecutorResponseImpl<>(null, 500, "application/problem+json", problem);
     }
     return new RequestExecutorResponseImpl<>(null, 200, "application/json", result);
   }

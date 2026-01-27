@@ -7,6 +7,8 @@ ARG ALPINE_TAG=3.22
 FROM amazoncorretto:${JDK_VERSION}.${JDK_TAG} AS build-proxy-middleware
 COPY . /usr/src/sitmun-proxy-middleware
 WORKDIR /usr/src/sitmun-proxy-middleware
+# Build JAR (Docker only supports JAR packaging)
+# For WAR builds, use: ./gradlew build -Ppackaging=war locally
 RUN --mount=type=cache,target=/root/.gradle ./gradlew --no-daemon -i build -x test -x setupGitHooks
 ARG JDK_VERSION=17
 ARG JDK_TAG=0.16
