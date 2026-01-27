@@ -1,6 +1,6 @@
 # Stage 0, "build-proxy-middleware", based on OpenJDK 17, to build and compile the application
 ARG JDK_VERSION=17
-ARG JDK_TAG=0.16
+ARG JDK_TAG=0.17
 ARG ALPINE_TAG=3.22
 
 # Use OpenJDK 17 as base image
@@ -11,7 +11,7 @@ WORKDIR /usr/src/sitmun-proxy-middleware
 # For WAR builds, use: ./gradlew build -Ppackaging=war locally
 RUN --mount=type=cache,target=/root/.gradle ./gradlew --no-daemon -i build -x test -x setupGitHooks
 ARG JDK_VERSION=17
-ARG JDK_TAG=0.16
+ARG JDK_TAG=0.17
 ARG ALPINE_TAG=3.22
 
 # Stage 1, based on OpenJDK 17, to have only the compiled app
