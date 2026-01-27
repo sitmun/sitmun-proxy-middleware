@@ -50,4 +50,3 @@ public class ProblemDetail {
     return this;
   }
 }
-

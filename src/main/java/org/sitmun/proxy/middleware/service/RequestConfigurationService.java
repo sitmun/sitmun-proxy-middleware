@@ -2,7 +2,6 @@ package org.sitmun.proxy.middleware.service;
 
 import static org.sitmun.proxy.middleware.utils.LoggerUtils.logAsPrettyJson;
 
-import java.util.Date;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.sitmun.proxy.middleware.dto.ConfigProxyDto;
@@ -67,7 +66,9 @@ public class RequestConfigurationService {
                 .detail("Request not valid")
                 .instance(configUrl)
                 .build();
-        return ResponseEntity.status(401).contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON).body(problem);
+        return ResponseEntity.status(401)
+            .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+            .body(problem);
       }
     } else {
       return response;
@@ -90,7 +91,9 @@ public class RequestConfigurationService {
               .detail(e.getMessage())
               .instance(configUrl)
               .build();
-      return ResponseEntity.status(e.getStatusCode()).contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON).body(problem);
+      return ResponseEntity.status(e.getStatusCode())
+          .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+          .body(problem);
     } catch (Exception e) {
       log.error("Error getting response: {}", e.getMessage(), e);
       org.sitmun.proxy.middleware.dto.ProblemDetail problem =
@@ -101,7 +104,9 @@ public class RequestConfigurationService {
               .detail(e.getMessage())
               .instance(configUrl)
               .build();
-      return ResponseEntity.status(500).contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON).body(problem);
+      return ResponseEntity.status(500)
+          .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+          .body(problem);
     }
   }
 }

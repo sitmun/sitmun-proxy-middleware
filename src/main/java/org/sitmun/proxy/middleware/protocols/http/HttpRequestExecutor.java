@@ -1,7 +1,6 @@
 package org.sitmun.proxy.middleware.protocols.http;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,11 +84,7 @@ public class HttpRequestExecutor implements RequestExecutor {
               .detail("Error with the request to final service")
               .instance("")
               .build();
-      return new RequestExecutorResponseImpl<>(
-          baseUrl,
-          503,
-          "application/problem+json",
-          problem);
+      return new RequestExecutorResponseImpl<>(baseUrl, 503, "application/problem+json", problem);
     }
   }
 

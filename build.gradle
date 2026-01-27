@@ -20,7 +20,20 @@ repositories {
 }
 
 
+def packaging = (project.findProperty('packaging') ?: 'jar')
+
+if (packaging == 'war') {
+  apply plugin: 'war'
+}
+
+
 dependencies {
+
+  // If packaging as WAR, use provided Tomcat runtime
+  if (packaging == 'war') {
+    providedRuntime libs.spring.boot.starter.tomcat
+  }
+
   // Spring Boot Starters
   implementation libs.spring.boot.starter.web
   implementation libs.spring.boot.starter.jdbc

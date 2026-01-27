@@ -9,9 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.0-rc.1] - 2026-01-21
 
+### Added
+
+- Parametrizable build output: Support for building JAR or WAR packages via `-Ppackaging` property
+- ServletInitializer for WAR deployment to external servlet containers
+- RFC 9457 Problem Details for standardized HTTP error responses
+- ProblemDetail and ProblemTypes classes for structured error handling
+
 ### Changed
 
-- Prepare release candidate documentation
+- Error responses now use RFC 9457 Problem Details format (`application/problem+json`)
+- Migrated from ErrorResponseDto to ProblemDetail across all error handlers
+- Updated test assertions to reflect external service changes
+
+### Notes
+
+- Docker builds only support JAR format (default)
+- WAR builds are intended for deployment to external application servers (Tomcat, WildFly, etc.)
 
 ## [1.1.1] - 2025-08-28
 
