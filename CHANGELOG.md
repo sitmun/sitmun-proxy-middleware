@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-02-16
+
 ### Changed
 
 - Build configuration: override Axion SCM version with explicit `1.2.2` in `build.gradle`.
@@ -113,7 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Various bug fixes and improvements from development phase
 
-[Unreleased]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.0...HEAD
+[Unreleased]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.2...HEAD
 
 [1.2.2]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.0...sitmun-proxy-middleware/1.2.2
 
