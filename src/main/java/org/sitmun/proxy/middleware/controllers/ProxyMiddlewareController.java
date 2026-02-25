@@ -20,10 +20,10 @@ public class ProxyMiddlewareController {
 
   @GetMapping("/{appId}/{terId}/{type}/{typeId}")
   public ResponseEntity<?> getService(
-      @PathVariable("appId") Integer appId,
-      @PathVariable("terId") Integer terId,
-      @PathVariable("type") String type,
-      @PathVariable("typeId") Integer typeId,
+      @PathVariable Integer appId,
+      @PathVariable Integer terId,
+      @PathVariable String type,
+      @PathVariable Integer typeId,
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
       @RequestParam(required = false) Map<String, String> params,
       HttpServletRequest request) {
@@ -37,10 +37,10 @@ public class ProxyMiddlewareController {
       value = "/{appId}/{terId}/{type}/{typeId}",
       consumes = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity<?> postService(
-      @PathVariable("appId") Integer appId,
-      @PathVariable("terId") Integer terId,
-      @PathVariable("type") String type,
-      @PathVariable("typeId") Integer typeId,
+      @PathVariable Integer appId,
+      @PathVariable Integer terId,
+      @PathVariable String type,
+      @PathVariable Integer typeId,
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
       @RequestParam(required = false) Map<String, String> params,
       HttpServletRequest request,

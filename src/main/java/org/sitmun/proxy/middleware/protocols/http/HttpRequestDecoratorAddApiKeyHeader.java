@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class HttpRequestDecoratorAddApiKeyHeader implements RequestDecorator {
 
-  private static final String API_KEY_HEADER = "X-API-Key";
+  static final String API_KEY_HEADER = "X-API-Key";
 
   @Override
   public boolean accept(Object target, Context context) {

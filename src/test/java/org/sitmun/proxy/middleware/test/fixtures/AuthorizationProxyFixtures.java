@@ -13,7 +13,12 @@ public class AuthorizationProxyFixtures {
         .parameters(getWmsParameters())
         .security(
             basicAuthentication
-                ? new HttpSecurityDto("basic", "http", "userServ", "passwordServ")
+                ? HttpSecurityDto.builder()
+                    .type("basic")
+                    .scheme("http")
+                    .username("userServ")
+                    .password("passwordServ")
+                    .build()
                 : null)
         .uri("https://sitmun.diba.cat/arcgis/services/PUBLIC/DTE50/MapServer/WmsServer")
         .build();

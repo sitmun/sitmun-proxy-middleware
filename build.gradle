@@ -48,6 +48,9 @@ dependencies {
   // HTTP Client
   implementation libs.okhttp3
 
+  // URI Templates
+  implementation libs.handyUriTemplates
+
   // Database Drivers
   implementation libs.postgresql
   implementation libs.oracle.jdbc
