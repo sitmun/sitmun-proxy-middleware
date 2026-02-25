@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.sitmun.proxy.middleware.protocols.http.HttpContextSecurity;
 
+import java.util.Map;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,4 +21,6 @@ public class HttpSecurityDto implements HttpContextSecurity {
   private String username;
 
   private String password;
+
+  private Map<String, String> headers;
 }
