@@ -18,7 +18,9 @@ public class ProxyMiddlewareConstants {
   /** Config/request type for WMS services. Must match backend DomainConstants.Services.TYPE_WMS. */
   public static final String TYPE_WMS = "WMS";
 
-  /** Config/request type for WMTS services. Must match backend DomainConstants.Services.TYPE_WMTS. */
+  /**
+   * Config/request type for WMTS services. Must match backend DomainConstants.Services.TYPE_WMTS.
+   */
   public static final String TYPE_WMTS = "WMTS";
 
   /** Config/request type for SQL tasks. Must match backend DomainConstants.Tasks.PROXY_TYPE_SQL. */
