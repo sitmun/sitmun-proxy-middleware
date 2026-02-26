@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-02-26
+
+### Added
+
+- PreparedStatement execution support for parameterized SQL requests.
+- API key and URI template support for API Padro integrations.
+
+### Changed
+
+- Extended proxy DTO/decorator flow to support authenticated external API calls with headers and API keys.
+
 ## [1.2.2] - 2026-02-16
 
 ### Changed
@@ -115,7 +126,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Various bug fixes and improvements from development phase
 
-[Unreleased]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.2...HEAD
+[Unreleased]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.3...HEAD
+
+[1.2.3]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.2...sitmun-proxy-middleware/1.2.3
 
 [1.2.2]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.0...sitmun-proxy-middleware/1.2.2
 
