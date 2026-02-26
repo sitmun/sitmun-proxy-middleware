@@ -11,6 +11,7 @@ import okhttp3.ResponseBody;
 import org.sitmun.proxy.middleware.service.RequestExecutor;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponse;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponseImpl;
+import org.sitmun.proxy.middleware.utils.UriTemplateExpander;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
@@ -89,39 +90,84 @@ public class HttpRequestExecutor implements RequestExecutor {
   }
 
   public String getUrl() {
-    if (!parameters.isEmpty()) {
-      UriComponents components = UriComponentsBuilder.fromUriString(url).build();
+    if (parameters.isEmpty()) {
+      return url;
+    }
+
+    // Check if URL contains URI template variables
+    if (UriTemplateExpander.hasTemplateVariables(url)) {
+      // Expand template variables and get which ones were used
+      UriTemplateExpander.ExpandedResult result =
+          UriTemplateExpander.expandWithUsedVariables(url, parameters);
+      String expandedUrl = result.getUri();
+
+      // If all parameters were used in template expansion, return the expanded URL
+      if (result.getUsedVariables().size() == parameters.size()) {
+        return expandedUrl;
+      }
+
+      // Some parameters weren't used in template, add them as query parameters
+      UriComponents components = UriComponentsBuilder.fromUriString(expandedUrl).build();
 
       MultiValueMap<String, String> queryParams =
           new LinkedMultiValueMap<>(components.getQueryParams().size());
 
       components.getQueryParams().forEach((k, v) -> queryParams.put(k.toUpperCase(), v));
+
+      // Add remaining parameters that weren't used in template expansion
       parameters.forEach(
           (k, v) -> {
-            String upperKey = k.toUpperCase();
-            List<String> existingValues = queryParams.get(upperKey);
-            if (existingValues == null || !existingValues.contains(v)) {
-              queryParams.add(upperKey, v);
+            if (!result.getUsedVariables().contains(k)) {
+              String upperKey = k.toUpperCase();
+              List<String> existingValues = queryParams.get(upperKey);
+              if (existingValues == null || !existingValues.contains(v)) {
+                queryParams.add(upperKey, v);
+              }
             }
           });
 
       String path = components.getPath() != null ? components.getPath() : "";
 
-      UriComponentsBuilder builder =
-          UriComponentsBuilder.newInstance()
-              .scheme(components.getScheme())
-              .host(components.getHost())
-              .port(components.getPort())
-              .path(path)
-              .queryParams(queryParams);
-
       log.info("path: {}", components.getPath());
       log.info("query: {}", queryParams);
 
-      return builder.toUriString();
-    } else {
-      return url;
+      return UriComponentsBuilder.newInstance()
+          .scheme(components.getScheme())
+          .host(components.getHost())
+          .port(components.getPort())
+          .path(path)
+          .queryParams(queryParams)
+          .toUriString();
     }
+
+    // No template variables, just add parameters as query strings
+    UriComponents components = UriComponentsBuilder.fromUriString(url).build();
+
+    MultiValueMap<String, String> queryParams =
+        new LinkedMultiValueMap<>(components.getQueryParams().size());
+
+    components.getQueryParams().forEach((k, v) -> queryParams.put(k.toUpperCase(), v));
+    parameters.forEach(
+        (k, v) -> {
+          String upperKey = k.toUpperCase();
+          List<String> existingValues = queryParams.get(upperKey);
+          if (existingValues == null || !existingValues.contains(v)) {
+            queryParams.add(upperKey, v);
+          }
+        });
+
+    String path = components.getPath() != null ? components.getPath() : "";
+
+    log.info("path: {}", components.getPath());
+    log.info("query: {}", queryParams);
+
+    return UriComponentsBuilder.newInstance()
+        .scheme(components.getScheme())
+        .host(components.getHost())
+        .port(components.getPort())
+        .path(path)
+        .queryParams(queryParams)
+        .toUriString();
   }
 
   public String describe() {

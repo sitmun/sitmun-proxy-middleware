@@ -1,11 +1,15 @@
 package org.sitmun.proxy.middleware.service;
 
+import static org.sitmun.proxy.middleware.config.ProxyMiddlewareConstants.PROXY_MIDDLEWARE_KEY;
+import static org.sitmun.proxy.middleware.dto.ProblemTypes.*;
 import static org.sitmun.proxy.middleware.utils.LoggerUtils.logAsPrettyJson;
+import static org.springframework.http.MediaType.*;
 
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.sitmun.proxy.middleware.dto.ConfigProxyDto;
 import org.sitmun.proxy.middleware.dto.ConfigProxyRequestDto;
+import org.sitmun.proxy.middleware.dto.ProblemDetail;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -58,17 +62,15 @@ public class RequestConfigurationService {
         log.info("Requesting data from the final service");
         return requestExecutorService.executeRequest(url, configProxyDto.getPayload());
       } else {
-        org.sitmun.proxy.middleware.dto.ProblemDetail problem =
-            org.sitmun.proxy.middleware.dto.ProblemDetail.builder()
-                .type(org.sitmun.proxy.middleware.dto.ProblemTypes.PROXY_UNAUTHORIZED)
+        ProblemDetail problem =
+            ProblemDetail.builder()
+                .type(PROXY_UNAUTHORIZED)
                 .status(401)
                 .title("Unauthorized")
                 .detail("Request not valid")
                 .instance(configUrl)
                 .build();
-        return ResponseEntity.status(401)
-            .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
-            .body(problem);
+        return ResponseEntity.status(401).contentType(APPLICATION_PROBLEM_JSON).body(problem);
       }
     } else {
       return response;
@@ -77,36 +79,34 @@ public class RequestConfigurationService {
 
   private ResponseEntity<?> configRequest(ConfigProxyRequestDto configRequest) {
     HttpHeaders requestHeaders = new HttpHeaders();
-    requestHeaders.add("X-SITMUN-Proxy-Key", this.secret);
+    requestHeaders.add(PROXY_MIDDLEWARE_KEY, this.secret);
     HttpEntity<ConfigProxyRequestDto> httpEntity = new HttpEntity<>(configRequest, requestHeaders);
     try {
       return restTemplate.exchange(configUrl, HttpMethod.POST, httpEntity, ConfigProxyDto.class);
     } catch (HttpClientErrorException e) {
       log.error("Error getting response: {}", e.getMessage(), e);
-      org.sitmun.proxy.middleware.dto.ProblemDetail problem =
-          org.sitmun.proxy.middleware.dto.ProblemDetail.builder()
-              .type(org.sitmun.proxy.middleware.dto.ProblemTypes.PROXY_BACKEND_ERROR)
+      ProblemDetail problem =
+          ProblemDetail.builder()
+              .type(PROXY_BACKEND_ERROR)
               .status(e.getStatusCode().value())
               .title("Backend Error")
               .detail(e.getMessage())
               .instance(configUrl)
               .build();
       return ResponseEntity.status(e.getStatusCode())
-          .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+          .contentType(APPLICATION_PROBLEM_JSON)
           .body(problem);
     } catch (Exception e) {
       log.error("Error getting response: {}", e.getMessage(), e);
-      org.sitmun.proxy.middleware.dto.ProblemDetail problem =
-          org.sitmun.proxy.middleware.dto.ProblemDetail.builder()
-              .type(org.sitmun.proxy.middleware.dto.ProblemTypes.PROXY_CONFIG_ERROR)
+      ProblemDetail problem =
+          ProblemDetail.builder()
+              .type(PROXY_CONFIG_ERROR)
               .status(500)
               .title("Proxy Configuration Error")
               .detail(e.getMessage())
               .instance(configUrl)
               .build();
-      return ResponseEntity.status(500)
-          .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
-          .body(problem);
+      return ResponseEntity.status(500).contentType(APPLICATION_PROBLEM_JSON).body(problem);
     }
   }
 }

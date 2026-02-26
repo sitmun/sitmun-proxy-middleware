@@ -13,7 +13,12 @@ public class AuthorizationProxyFixtures {
         .parameters(getWmsParameters())
         .security(
             basicAuthentication
-                ? new HttpSecurityDto("basic", "http", "userServ", "passwordServ")
+                ? HttpSecurityDto.builder()
+                    .type("basic")
+                    .scheme("http")
+                    .username("userServ")
+                    .password("passwordServ")
+                    .build()
                 : null)
         .uri("https://sitmun.diba.cat/arcgis/services/PUBLIC/DTE50/MapServer/WmsServer")
         .build();
@@ -97,6 +102,30 @@ public class AuthorizationProxyFixtures {
         .user("admin")
         .password("admin")
         .sql(getSql(filtered))
+        .build();
+  }
+
+  public static JdbcPayloadDto inMemoryH2DatabaseWithParameters() {
+    return JdbcPayloadDto.builder()
+        .driver("org.h2.Driver")
+        .uri(
+            "jdbc:h2:mem:prepared_integration;INIT=CREATE TABLE IF NOT EXISTS t (id INT, a VARCHAR(255))\\;INSERT INTO t VALUES (1,'x')\\;INSERT INTO t VALUES (2,'y')")
+        .user("admin")
+        .password("admin")
+        .sql("SELECT * FROM t WHERE a=?")
+        .parameters(java.util.List.of("x"))
+        .build();
+  }
+
+  public static JdbcPayloadDto inMemoryH2DatabaseWithoutParameters() {
+    return JdbcPayloadDto.builder()
+        .driver("org.h2.Driver")
+        .uri(
+            "jdbc:h2:mem:prepared_fallback;INIT=CREATE TABLE IF NOT EXISTS t (id INT, a VARCHAR(255))\\;INSERT INTO t VALUES (1,'x')\\;INSERT INTO t VALUES (2,'y')")
+        .user("admin")
+        .password("admin")
+        .sql("SELECT * FROM t")
+        .parameters(java.util.List.of())
         .build();
   }
 }

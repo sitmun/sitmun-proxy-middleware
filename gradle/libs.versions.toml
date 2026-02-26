@@ -13,6 +13,7 @@ h2 = "2.2.224"
 json = "20240303"
 jjwt = "0.12.6"
 okhttp3 = "4.12.0"
+handy-uri-templates = "2.1.8"
 
 [libraries]
 spring-boot-starter-web = { group = "org.springframework.boot", name = "spring-boot-starter-web" }
@@ -31,6 +32,9 @@ jjwt-jackson = { group = "io.jsonwebtoken", name = "jjwt-jackson", version.ref =
 
 # HTTP Client
 okhttp3 = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp3" }
+
+# URI Templates
+handyUriTemplates = { group = "com.damnhandy", name = "handy-uri-templates", version.ref = "handy-uri-templates" }
 
 # Database Drivers
 postgresql = { group = "org.postgresql", name = "postgresql" }

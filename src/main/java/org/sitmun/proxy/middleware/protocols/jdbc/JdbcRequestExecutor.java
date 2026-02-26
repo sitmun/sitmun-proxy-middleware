@@ -16,6 +16,7 @@ public class JdbcRequestExecutor implements RequestExecutor {
 
   private Connection connection;
   private String sql;
+  private List<String> parameters;
 
   @SuppressWarnings("unchecked")
   @Override
@@ -38,16 +39,28 @@ public class JdbcRequestExecutor implements RequestExecutor {
     return new RequestExecutorResponseImpl<>(null, 200, "application/json", result);
   }
 
-  private void executeStatement(Connection connection, List<Map<String, Object>> result) {
-    try (Statement stmt = connection.createStatement()) {
-      retrieveResultSetMetadata(stmt, result);
-    } catch (SQLException e) {
-      log.error("Error in connection: {}", e.getMessage(), e);
+  private void executeStatement(Connection connection, List<Map<String, Object>> result)
+      throws SQLException {
+    if (parameters == null || parameters.isEmpty()) {
+      try (Statement stmt = connection.createStatement();
+          ResultSet resultSet = stmt.executeQuery(sql)) {
+        retrieveResultSetMetadata(resultSet, result);
+      }
+      return;
+    }
+
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      for (int i = 0; i < parameters.size(); i++) {
+        stmt.setString(i + 1, parameters.get(i));
+      }
+      try (ResultSet resultSet = stmt.executeQuery()) {
+        retrieveResultSetMetadata(resultSet, result);
+      }
     }
   }
 
-  private void retrieveResultSetMetadata(Statement stmt, List<Map<String, Object>> result) {
-    try (ResultSet resultSet = stmt.executeQuery(sql)) {
+  private void retrieveResultSetMetadata(ResultSet resultSet, List<Map<String, Object>> result) {
+    try {
       ResultSetMetaData metadata = resultSet.getMetaData();
       while (resultSet.next()) {
         Map<String, Object> row = new HashMap<>();
@@ -63,6 +76,14 @@ public class JdbcRequestExecutor implements RequestExecutor {
   }
 
   public String describe() {
-    return "JdbcRequest{" + "connection=" + connection + ", sql='" + sql + '\'' + '}';
+    return "JdbcRequest{"
+        + "connection="
+        + connection
+        + ", sql='"
+        + sql
+        + '\''
+        + ", parameters="
+        + (parameters != null ? parameters.size() : 0)
+        + '}';
   }
 }
