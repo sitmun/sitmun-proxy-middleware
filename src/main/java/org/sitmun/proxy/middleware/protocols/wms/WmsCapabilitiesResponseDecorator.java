@@ -1,6 +1,7 @@
 package org.sitmun.proxy.middleware.protocols.wms;
 
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.sitmun.proxy.middleware.decorator.Context;
 import org.sitmun.proxy.middleware.decorator.ResponseDecorator;
@@ -30,12 +31,28 @@ public class WmsCapabilitiesResponseDecorator implements ResponseDecorator {
       RequestExecutorResponseImpl<byte[]> requestExecutionResponseImpl1 =
           (RequestExecutorResponseImpl<byte[]>) response;
       String s = new String(requestExecutionResponseImpl1.getBody(), StandardCharsets.UTF_8);
-      String output =
-          s.replaceAll(wmsPayloadDto.getUri(), requestExecutionResponseImpl1.getBaseUrl());
+      String fullUri = wmsPayloadDto.getUri();
+      String baseUri = fullUri.split("\\?")[0];
+      
+      log.debug("WMS PAYLOAD FULL URI: {}", fullUri);
+      log.debug("WMS PAYLOAD BASE URI: {}", baseUri);
+      log.debug("REQ EXEC RES URL: {}", requestExecutionResponseImpl1.getBaseUrl());
+      
+      String baseUrl = requestExecutionResponseImpl1.getBaseUrl();
+
+      String servicePath = baseUri.replaceAll("/(?:wms|wfs|wcs|ows)/?$", "");
+      
+      log.info("GEOSERVER PATH: {}", servicePath);
+
+      Pattern pattern = Pattern.compile(
+          Pattern.quote(servicePath) + "(?:/(?:wms|wfs|wcs|ows))?(?=[?'\"]|\\s|$)",
+          Pattern.CASE_INSENSITIVE);
+      String output = pattern.matcher(s).replaceAll(baseUrl);
+      
       log.info(
           "Replacement of {} by {} in GetCapabilities response",
-          wmsPayloadDto.getUri(),
-          requestExecutionResponseImpl1.getBaseUrl());
+          servicePath,
+          baseUrl);
       requestExecutionResponseImpl1.setBody(output.getBytes(StandardCharsets.UTF_8));
     }
   }
