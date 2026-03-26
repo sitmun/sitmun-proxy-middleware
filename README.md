@@ -409,7 +409,7 @@ sitmun:
     config:
       url: http://some.url
       secret: some-secret
-  wms:
+  ogc:
     capabilities:
       # OGC service path suffixes recognized when rewriting URLs in GetCapabilities responses.
       service-paths:

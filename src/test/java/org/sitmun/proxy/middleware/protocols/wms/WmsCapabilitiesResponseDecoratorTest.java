@@ -71,12 +71,6 @@ class WmsCapabilitiesResponseDecoratorTest {
   static Stream<Arguments> primaryReplacementCases() {
     return Stream.of(
       Arguments.of(
-        "replaces /wms suffix",
-        GEOSERVER + "/wms?SERVICE=WMS&REQUEST=GetCapabilities",
-        onlineResourceWrap(GEOSERVER + "/wms?SERVICE=WMS"),
-        PROXY_URL + "?SERVICE=WMS",
-        GEOSERVER),
-      Arguments.of(
         "replaces /wfs suffix",
         SERVICE_URI,
         onlineResourceWrap(GEOSERVER + "/wfs?SERVICE=WFS"),
@@ -95,35 +89,16 @@ class WmsCapabilitiesResponseDecoratorTest {
         PROXY_URL + "?SERVICE=WMS",
         null),
       Arguments.of(
-        "replaces URL without OGC suffix",
-        SERVICE_URI,
-        onlineResourceWrap(GEOSERVER + "?REQUEST=GetCapabilities"),
-        PROXY_URL + "?REQUEST=GetCapabilities",
-        null),
-      Arguments.of(
         "replaces when single-quoted",
         SERVICE_URI,
         "<OnlineResource xlink:href='" + GEOSERVER + "/wms?SERVICE=WMS'/>",
         PROXY_URL + "?SERVICE=WMS",
         null),
       Arguments.of(
-        "replaces all occurrences",
-        SERVICE_URI,
-        "<Get>" + onlineResourceWrap(GEOSERVER + "/wms?SERVICE=WMS") + "</Get>"
-          + "<Post>" + onlineResourceWrap(GEOSERVER + "/wms?SERVICE=WMS") + "</Post>",
-        PROXY_URL + "?SERVICE=WMS",
-        GEOSERVER),
-      Arguments.of(
         "removes query string from URI before matching",
         GEOSERVER + "/wms?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0",
         onlineResourceWrap(GEOSERVER + "/wms?SERVICE=WMS"),
         PROXY_URL + "?SERVICE=WMS",
-        null),
-      Arguments.of(
-        "does NOT replace non-quoted matches",
-        GEOSERVER + "/wms",
-        "<Description>See " + GEOSERVER + "/wms for details</Description>",
-        GEOSERVER + "/wms",
         null),
       Arguments.of(
         "does NOT replace a partial path match (/geoserver-v2)",
@@ -183,7 +158,7 @@ class WmsCapabilitiesResponseDecoratorTest {
   @DisplayName("replaces all occurrences of multiple extra sources in the same document")
   void replacesMultipleExtraSources() {
     properties.setExtraSources(List.of(BAD_CAPABILITIES_HOST, "http://192.168.1.10:8080/geoserver"));
-    var resp = response(
+    final RequestExecutorResponseImpl<byte[]> resp = response(
       "<a href=\"" + BAD_CAPABILITIES_HOST + "/wms?SERVICE=WMS\"/>"
         + "<b href=\"http://192.168.1.10:8080/geoserver/wms?SERVICE=WMS\"/>");
     decorator.addBehavior(resp, capabilitiesPayload(SERVICE_URI));
@@ -197,7 +172,7 @@ class WmsCapabilitiesResponseDecoratorTest {
   @DisplayName("replaces both the primary source and the extra source when both appear in the same document")
   void replacesBothPrimaryAndExtraSource() {
     properties.setExtraSources(List.of(BAD_CAPABILITIES_HOST));
-    var resp = response(
+    final RequestExecutorResponseImpl<byte[]> resp = response(
       "<Get>" + onlineResourceWrap(GEOSERVER + "/wms?SERVICE=WMS") + "</Get>"
         + "<Post>" + onlineResourceWrap(BAD_CAPABILITIES_HOST + "/wms?SERVICE=WMS") + "</Post>");
     decorator.addBehavior(resp, capabilitiesPayload(SERVICE_URI));
@@ -207,12 +182,73 @@ class WmsCapabilitiesResponseDecoratorTest {
       .contains(PROXY_URL + "?SERVICE=WMS");
   }
 
+  @Test
+  @DisplayName("replaces all quoted URLs in a full WMS GetCapabilities response")
+  void fullWmsCapabilitiesExample() {
+    String inputXml =
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+        + "<WMS_Capabilities version=\"1.3.0\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n"
+        + "\n"
+        + "  <Service>\n"
+        + "    <Name>WMS</Name>\n"
+        + "    <Title>My GeoServer</Title>\n"
+        + "    <OnlineResource xlink:href=\"" + GEOSERVER + "?SERVICE=WMS\"/>\n"
+        + "  </Service>\n"
+        + "\n"
+        + "  <Capability>\n"
+        + "    <Request>\n"
+        + "\n"
+        + "      <GetCapabilities>\n"
+        + "        <DCPType><HTTP>\n"
+        + "          <Get><OnlineResource  xlink:href=\"" + GEOSERVER + "/wms?SERVICE=WMS&amp;REQUEST=GetCapabilities\"/></Get>\n"
+        + "          <Post><OnlineResource xlink:href=\"" + GEOSERVER + "/wms?SERVICE=WMS&amp;REQUEST=GetCapabilities\"/></Post>\n"
+        + "        </HTTP></DCPType>\n"
+        + "      </GetCapabilities>\n"
+        + "\n"
+        + "      <GetMap>\n"
+        + "        <DCPType><HTTP>\n"
+        + "          <Get><OnlineResource xlink:href=\"" + GEOSERVER + "/wms?SERVICE=WMS&amp;REQUEST=GetMap\"/></Get>\n"
+        + "        </HTTP></DCPType>\n"
+        + "      </GetMap>\n"
+        + "\n"
+        + "      <GetFeatureInfo>\n"
+        + "        <DCPType><HTTP>\n"
+        + "          <Get><OnlineResource xlink:href=\"" + GEOSERVER + "/wms?SERVICE=WMS&amp;REQUEST=GetFeatureInfo\"/></Get>\n"
+        + "        </HTTP></DCPType>\n"
+        + "      </GetFeatureInfo>\n"
+        + "\n"
+        + "    </Request>\n"
+        + "\n"
+        + "    <Layer>\n"
+        + "      <Abstract>Direct access at " + GEOSERVER + "/wms (internal only)</Abstract>\n"
+        + "    </Layer>\n"
+        + "  </Capability>\n"
+        + "\n"
+        + "</WMS_Capabilities>";
+
+    final RequestExecutorResponseImpl<byte[]> resp = response(inputXml);
+    decorator.addBehavior(resp, capabilitiesPayload(SERVICE_URI));
+    String result = bodyOf(resp);
+
+    // All quoted service URLs must be rewritten to the proxy URL,
+    // no quoted occurrence of the original service base should remain,
+    // and unquoted URLs in plain text (Abstract) must NOT be replaced.
+    assertThat(result)
+        .contains("xlink:href=\"" + PROXY_URL + "?SERVICE=WMS\"")
+        .contains("xlink:href=\"" + PROXY_URL + "?SERVICE=WMS&amp;REQUEST=GetCapabilities\"")
+        .contains("xlink:href=\"" + PROXY_URL + "?SERVICE=WMS&amp;REQUEST=GetMap\"")
+        .contains("xlink:href=\"" + PROXY_URL + "?SERVICE=WMS&amp;REQUEST=GetFeatureInfo\"")
+        .doesNotContain("\"" + GEOSERVER)
+        .doesNotContain("'" + GEOSERVER)
+        .contains("Direct access at " + GEOSERVER + "/wms (internal only)");
+  }
+
   @ParameterizedTest(name = "{0}")
   @MethodSource("servicePathCases")
   void servicePathBehavior(String name, List<String> servicePaths, String payloadUri,
       String xmlBody, String shouldContain) {
     properties.setServicePaths(servicePaths);
-    var resp = response(xmlBody);
+    final RequestExecutorResponseImpl<byte[]> resp = response(xmlBody);
     decorator.addBehavior(resp, capabilitiesPayload(payloadUri));
     assertThat(bodyOf(resp)).contains(shouldContain);
   }
