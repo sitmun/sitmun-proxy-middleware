@@ -368,13 +368,14 @@ Response:
 
 ### Environment Variables
 
-| Variable | Description | Required | Default |
-|----------|-------------|----------|---------|
-| `SITMUN_BACKEND_CONFIG_URL` | URL to backend configuration service | Yes | - |
-| `SITMUN_BACKEND_CONFIG_SECRET` | Secret key for configuration access | Yes | - |
-| `SERVER_PORT` | Application port | No | 8080 |
-| `SPRING_PROFILES_ACTIVE` | Spring profile to use | No | prod |
-
+| Variable | Description | Required | Default           |
+|----------|-------------|----------|-------------------|
+| `SITMUN_BACKEND_CONFIG_URL` | URL to backend configuration service | Yes | -                 |
+| `SITMUN_BACKEND_CONFIG_SECRET` | Secret key for configuration access | Yes | -                 |
+| `SERVER_PORT` | Application port | No | 8080              |
+| `SPRING_PROFILES_ACTIVE` | Spring profile to use | No | prod              |
+| `SITMUN_OGC_CAPABILITIES_SERVICE_PATHS` | Comma-separated OGC service path suffixes recognized when rewriting URLs in `GetCapabilities` responses | No | `wms,wfs,wcs,ows` |
+| `SITMUN_OGC_CAPABILITIES_EXTRA_SOURCES` | Comma-separated list of additional source URL prefixes to replace with the proxy URL in `GetCapabilities` responses. Use this when the backend exposes an internal address (e.g. `localhost`, a private IP) that differs from the URL configured in SITMUN | No | Empty list |
 ### Profiles
 
 #### Development Profile (`dev`)
@@ -408,6 +409,18 @@ sitmun:
     config:
       url: http://some.url
       secret: some-secret
+  wms:
+    capabilities:
+      # OGC service path suffixes recognized when rewriting URLs in GetCapabilities responses.
+      service-paths:
+        - wms
+        - wfs
+        - wcs
+        - ows
+      # Optional extra source URL prefixes to replace with the proxy URL (empty list by default).
+      extra-sources:
+       - http://localhost:3000
+       - http://internal-geoserver:8080/geoserver
 
 # Actuator Configuration
 management:
@@ -1119,6 +1132,26 @@ The Proxy Middleware supports different service types that can be configured in 
     "password": "protected_pass"
   }
 }
+```
+
+##### GetCapabilities URL Rewriting
+
+When a `GetCapabilities` request is proxied, the response body is post-processed to replace internal service URLs with the public proxy URL. This prevents the proxy being ignored on future requests.
+
+Two replacement steps are applied:
+
+1. **Default source**: the base URL configured in SITMUN (stripping query string and trailing OGC suffix). All its occurrences in the response body are replaced.
+2. **Extra sources**: any additional URL prefixes declared in `extra-sources` are also replaced. This covers cases where the capabilities response URLs differ from the URL stored in SITMUN. Only address before OGC suffix is taken into account.
+
+Only URLs in quoted attributes are replaced, avoiding false positives.
+
+**Example environment variables:**
+```bash
+# Override recognized OGC suffixes (optional, defaults to wms,wfs,wcs,ows)
+SITMUN_OGC_CAPABILITIES_SERVICE_PATHS=wms,wfs,wcs,ows
+
+# Replace custom addresses found in the capabilities body (optional, defaults to empty list)
+SITMUN_OGC_CAPABILITIES_EXTRA_SOURCES=http://localhost:3000,http://internal-geoserver:8080/geoserver
 ```
 
 #### JDBC Services
