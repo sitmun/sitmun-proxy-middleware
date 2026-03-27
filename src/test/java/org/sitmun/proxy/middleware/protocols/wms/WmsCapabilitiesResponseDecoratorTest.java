@@ -198,57 +198,56 @@ class WmsCapabilitiesResponseDecoratorTest {
   @DisplayName("replaces all quoted URLs in a full WMS GetCapabilities response")
   void fullWmsCapabilitiesExample() {
     String inputXml =
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-            + "<WMS_Capabilities version=\"1.3.0\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n"
-            + "\n"
-            + "  <Service>\n"
-            + "    <Name>WMS</Name>\n"
-            + "    <Title>My GeoServer</Title>\n"
-            + "    <OnlineResource xlink:href=\""
-            + GEOSERVER
-            + "?SERVICE=WMS\"/>\n"
-            + "  </Service>\n"
-            + "\n"
-            + "  <Capability>\n"
-            + "    <Request>\n"
-            + "\n"
-            + "      <GetCapabilities>\n"
-            + "        <DCPType><HTTP>\n"
-            + "          <Get><OnlineResource  xlink:href=\""
-            + GEOSERVER
-            + "/wms?SERVICE=WMS&amp;REQUEST=GetCapabilities\"/></Get>\n"
-            + "          <Post><OnlineResource xlink:href=\""
-            + GEOSERVER
-            + "/wms?SERVICE=WMS&amp;REQUEST=GetCapabilities\"/></Post>\n"
-            + "        </HTTP></DCPType>\n"
-            + "      </GetCapabilities>\n"
-            + "\n"
-            + "      <GetMap>\n"
-            + "        <DCPType><HTTP>\n"
-            + "          <Get><OnlineResource xlink:href=\""
-            + GEOSERVER
-            + "/wms?SERVICE=WMS&amp;REQUEST=GetMap\"/></Get>\n"
-            + "        </HTTP></DCPType>\n"
-            + "      </GetMap>\n"
-            + "\n"
-            + "      <GetFeatureInfo>\n"
-            + "        <DCPType><HTTP>\n"
-            + "          <Get><OnlineResource xlink:href=\""
-            + GEOSERVER
-            + "/wms?SERVICE=WMS&amp;REQUEST=GetFeatureInfo\"/></Get>\n"
-            + "        </HTTP></DCPType>\n"
-            + "      </GetFeatureInfo>\n"
-            + "\n"
-            + "    </Request>\n"
-            + "\n"
-            + "    <Layer>\n"
-            + "      <Abstract>Direct access at "
-            + GEOSERVER
-            + "/wms (internal only)</Abstract>\n"
-            + "    </Layer>\n"
-            + "  </Capability>\n"
-            + "\n"
-            + "</WMS_Capabilities>";
+        String.format(
+            """
+      <?xml version="1.0" encoding="UTF-8"?>
+      <WMS_Capabilities version="1.3.0"
+      	xmlns:xlink="http://www.w3.org/1999/xlink">
+      	<Service>
+      		<Name>WMS</Name>
+      		<Title>My GeoServer</Title>
+      		<OnlineResource xlink:href="%s?SERVICE=WMS"/>
+      	</Service>
+      	<Capability>
+      		<Request>
+      			<GetCapabilities>
+      				<DCPType>
+      					<HTTP>
+      						<Get>
+      							<OnlineResource  xlink:href="%s/wms?SERVICE=WMS&REQUEST=GetCapabilities"/>
+      						</Get>
+      						<Post>
+      							<OnlineResource xlink:href="%s/wms?SERVICE=WMS&amp;REQUEST=GetCapabilities"/>
+      						</Post>
+      					</HTTP>
+      				</DCPType>
+      			</GetCapabilities>
+      			<GetMap>
+      				<DCPType>
+      					<HTTP>
+      						<Get>
+      							<OnlineResource xlink:href="%s/wms?SERVICE=WMS&amp;REQUEST=GetMap"/>
+      						</Get>
+      					</HTTP>
+      				</DCPType>
+      			</GetMap>
+      			<GetFeatureInfo>
+      				<DCPType>
+      					<HTTP>
+      						<Get>
+      							<OnlineResource xlink:href="%s/wms?SERVICE=WMS&amp;REQUEST=GetFeatureInfo"/>
+      						</Get>
+      					</HTTP>
+      				</DCPType>
+      			</GetFeatureInfo>
+      		</Request>
+      		<Layer>
+      			<Abstract>Direct access at %s/wms (internal only)</Abstract>
+      		</Layer>
+      	</Capability>
+      </WMS_Capabilities>
+      """,
+            GEOSERVER, GEOSERVER, GEOSERVER, GEOSERVER, GEOSERVER, GEOSERVER);
 
     final RequestExecutorResponseImpl<byte[]> resp = response(inputXml);
     decorator.addBehavior(resp, capabilitiesPayload(SERVICE_URI));
