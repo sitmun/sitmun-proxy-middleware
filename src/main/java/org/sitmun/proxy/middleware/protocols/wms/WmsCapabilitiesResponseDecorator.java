@@ -61,13 +61,16 @@ public class WmsCapabilitiesResponseDecorator implements ResponseDecorator {
     }
   }
 
-  /**
-   * Replaces all quoted occurrences of {@code source}
-   */
+  /** Replaces all quoted occurrences of {@code source} */
   private String replace(String content, String source, String servicePathSuffixes, String target) {
-    Pattern pattern = Pattern.compile(
-        "(?<=[\"'])" + Pattern.quote(source) + "(?:/(?:" + servicePathSuffixes + "))?(?=[?\"'\\s]|$)",
-        Pattern.CASE_INSENSITIVE);
+    Pattern pattern =
+        Pattern.compile(
+            "(?<=[\"'])"
+                + Pattern.quote(source)
+                + "(?:/(?:"
+                + servicePathSuffixes
+                + "))?(?=[?\"'\\s]|$)",
+            Pattern.CASE_INSENSITIVE);
     String result = pattern.matcher(content).replaceAll(target);
     if (!result.equals(content)) {
       log.info("Replacement of {} by {} in GetCapabilities response", source, target);
