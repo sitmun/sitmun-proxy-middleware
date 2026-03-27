@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `HttpRequestDecoratorAddApiKeyHeaders` for multiple API-key headers from backend security payload.
+- `HttpSecurityConstants` for shared OpenAPI-style security literals used by HTTP security DTOs and decorators.
+- `SensitiveDataMasking` for masked HTTP debug logging (e.g. OkHttp headers).
+- `HttpContextSecurityContractTest` and `HttpRequestExecutorQueryParameterCasingRegressionTest`.
+
+### Changed
+
+- `HttpSecurityDto` implements `HttpContextSecurity`; supports a custom header map for API keys alongside Basic auth.
+- `HttpRequestExecutor` masks sensitive values in debug logs; query parameter handling aligned with casing regression tests.
+- `RequestConfigurationService` / `RequestExecutorService` wiring for expanded HTTP security decorators.
+- `HttpRequestDecoratorAddBasicSecurity`, `HttpRequestDecoratorAddApiKeyHeader`, and related tests updated for the security contract.
+
 ## [1.2.5] - 2026-03-11
 
 ### Changed
@@ -94,7 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrated to Spring Boot 3.5.4 & Java 17
 - Migrated dependencies to Version Catalog
 - Reorganized codebase into protocol-based architecture (http, jdbc, wms)
-- Completely rewrote documentation with detailed architecture guide
+- Completely rewrote documentation with a detailed architecture guide
 - Improved test organization with protocol-specific test classes
 - Restructured Docker configuration with environment-specific configs
 
@@ -119,7 +133,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - OkHttp 4.12.0-based HTTP client
 - Request sanitization and access control
 - Error handling with proper HTTP status codes
-- Comprehensive test suite with H2 database for testing
+- Comprehensive test suite with an H2 database for testing
 - Decorator-based architecture with HTTP and JDBC context support
 
 ### Changed
@@ -130,7 +144,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Various bug fixes and improvements from development phase
+- Various bug fixes and improvements from the development phase
 
 [Unreleased]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.5...HEAD
 

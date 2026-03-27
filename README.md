@@ -326,10 +326,10 @@ spring.profiles.active=prod
 
 ### Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/proxy/{appId}/{terId}/{type}/{typeId}` | GET | Proxy request to protected service |
-| `/actuator/health` | GET | Application health status |
+| Endpoint                                 | Method | Description                        |
+|------------------------------------------|--------|------------------------------------|
+| `/proxy/{appId}/{terId}/{type}/{typeId}` | GET    | Proxy request to protected service |
+| `/actuator/health`                       | GET    | Application health status          |
 
 ### Usage Examples
 
@@ -359,21 +359,21 @@ Response:
 
 - `appId`: Application identifier (Integer)
 - `terId`: Territory identifier (Integer)
-- `type`: Service type (wms, sql) (String)
+- `type`: Service type (WMS, SQL) (String)
 - `typeId`: Service instance identifier (Integer)
-- `Authorization`: Bearer token (optional, automatically extracts token from "Bearer " prefix)
-- Query parameters: Passed through to target service (Map<String, String>)
+- `Authorization`: Bearer token (optional, automatically extracts token from `Bearer ` prefix)
+- Query parameters: Passed through to a target service (Map<String, String>)
 
 ## Configuration
 
 ### Environment Variables
 
-| Variable | Description | Required | Default |
-|----------|-------------|----------|---------|
-| `SITMUN_BACKEND_CONFIG_URL` | URL to backend configuration service | Yes | - |
-| `SITMUN_BACKEND_CONFIG_SECRET` | Secret key for configuration access | Yes | - |
-| `SERVER_PORT` | Application port | No | 8080 |
-| `SPRING_PROFILES_ACTIVE` | Spring profile to use | No | prod |
+| Variable                       | Description                          | Required | Default |
+|--------------------------------|--------------------------------------|----------|---------|
+| `SITMUN_BACKEND_CONFIG_URL`    | URL to backend configuration service | Yes      | -       |
+| `SITMUN_BACKEND_CONFIG_SECRET` | Secret key for configuration access  | Yes      | -       |
+| `SERVER_PORT`                  | Application port                     | No       | 8080    |
+| `SPRING_PROFILES_ACTIVE`       | Spring profile to use                | No       | prod    |
 
 ### Profiles
 
@@ -573,7 +573,7 @@ server:
 - **`RequestExecutorService`**: Handles request execution logic and protocol routing
 - **`RequestExecutorFactory`**: Factory for creating request execution instances based on service type
 - **Protocol Implementations**:
-  - **HTTP**: `HttpRequestExecutor`, `HttpClientFactoryService`, `HttpRequestDecoratorAddBasicSecurity`, `HttpRequestDecoratorAddEndpoint`
+  - **HTTP**: `HttpRequestExecutor`, `HttpClientFactoryService`, `HttpRequestDecoratorAddBasicSecurity`, `HttpRequestDecoratorAddApiKeyHeader`, `HttpRequestDecoratorAddApiKeyHeaders`, `HttpRequestDecoratorAddEndpoint`, `HttpSecurityConstants`
   - **JDBC**: `JdbcRequestExecutor`, `JdbcRequestDecoratorAddConnection`, `JdbcRequestDecoratorAddQuery`
   - **WMS**: `WmsCapabilitiesResponseDecorator` for WMS capabilities processing
 - **Decorator Pattern**: Flexible request/response modification through `RequestDecorator` and `ResponseDecorator` interfaces
@@ -598,6 +598,9 @@ The service uses the decorator pattern to modify requests and responses:
 ```java
 // Request decorators
 HttpRequestDecoratorAddBasicSecurity    // Adds basic authentication to HTTP requests
+HttpRequestDecoratorAddApiKeyHeader     // Adds a single API key header
+HttpRequestDecoratorAddApiKeyHeaders    // Adds multiple API key headers from payload
+HttpSecurityConstants                   // OpenAPI-style literals shared by HTTP security DTO/decorators
 HttpRequestDecoratorAddEndpoint         // Adds endpoint configuration to HTTP requests
 JdbcRequestDecoratorAddConnection       // Adds database connection to JDBC requests
 JdbcRequestDecoratorAddQuery           // Adds query configuration to JDBC requests
@@ -748,7 +751,7 @@ sitmun-proxy-middleware/
 - **`RequestExecutorService`**: Handles request execution logic and protocol routing
 - **`RequestExecutorFactory`**: Factory for creating request execution instances based on service type
 - **Protocol Implementations**:
-  - **HTTP**: `HttpRequestExecutor`, `HttpClientFactoryService`, `HttpRequestDecoratorAddBasicSecurity`, `HttpRequestDecoratorAddEndpoint`
+  - **HTTP**: `HttpRequestExecutor`, `HttpClientFactoryService`, `HttpRequestDecoratorAddBasicSecurity`, `HttpRequestDecoratorAddApiKeyHeader`, `HttpRequestDecoratorAddApiKeyHeaders`, `HttpRequestDecoratorAddEndpoint`, `HttpSecurityConstants`
   - **JDBC**: `JdbcRequestExecutor`, `JdbcRequestDecoratorAddConnection`, `JdbcRequestDecoratorAddQuery`
   - **WMS**: `WmsCapabilitiesResponseDecorator` for WMS capabilities processing
 - **Decorator Pattern**: Flexible request/response modification through `RequestDecorator` and `ResponseDecorator` interfaces
@@ -970,8 +973,8 @@ Security features:
 
 #### Actuator Endpoints
 
-| Endpoint | Description | Access |
-|----------|-------------|--------|
+| Endpoint           | Description               | Access |
+|--------------------|---------------------------|--------|
 | `/actuator/health` | Application health status | Public |
 
 **Health Check Response:**

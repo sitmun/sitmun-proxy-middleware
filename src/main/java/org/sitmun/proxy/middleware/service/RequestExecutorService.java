@@ -31,17 +31,18 @@ public class RequestExecutorService {
 
   public <T> ResponseEntity<T> executeRequest(String baseUrl, Context context) {
     lastContext = context;
-    log.info("Executing request with context: {}", context.describe());
+    log.debug("Executing request with context: {}", context.describe());
 
     RequestExecutor request = requestExecutorFactory.create(baseUrl, context);
-    log.info("Default request: {}", request.describe());
+    log.debug("Default request: {}", request.describe());
 
+    log.debug("Applying {} request decorator(s)", requestDecorators.size());
     requestDecorators.forEach(d -> d.apply(request, context));
 
-    log.info("Final request: {}", request.describe());
+    log.debug("Final request: {}", request.describe());
     lastRequestExecutor = request;
 
-    log.info("Executing request after applying context: {}", context.describe());
+    log.debug("Executing outbound request; context: {}", context.describe());
     RequestExecutorResponse<T> response = request.execute();
     responseDecorators.forEach(d -> d.apply(response, context));
     lastResponse = response;

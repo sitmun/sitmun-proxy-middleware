@@ -12,12 +12,32 @@ public class HttpRequestDecoratorAddBasicSecurity implements RequestDecorator {
   @Override
   public boolean accept(Object target, Context context) {
     if (context instanceof HttpContext ctx) {
-      return ctx.getSecurity() != null
-          && StringUtils.hasText(ctx.getSecurity().getUsername())
-          && StringUtils.hasText(ctx.getSecurity().getPassword());
-    } else {
+      return acceptsHttpBasic(ctx.getSecurity());
+    }
+    return false;
+  }
+
+  /**
+   * HTTP Basic when credentials are present and {@code type}/{@code scheme} match backend OpenAPI
+   * semantics ({@code http}/{@code basic}), or are omitted (legacy). Never when {@code type} is
+   * {@code apiKey}.
+   */
+  static boolean acceptsHttpBasic(HttpContextSecurity security) {
+    if (security == null
+        || !StringUtils.hasText(security.getUsername())
+        || !StringUtils.hasText(security.getPassword())) {
       return false;
     }
+    if (StringUtils.hasText(security.getType())
+        && HttpSecurityConstants.TYPE_API_KEY.equalsIgnoreCase(security.getType().trim())) {
+      return false;
+    }
+    if (StringUtils.hasText(security.getType())
+        && !HttpSecurityConstants.TYPE_HTTP.equalsIgnoreCase(security.getType().trim())) {
+      return false;
+    }
+    return !StringUtils.hasText(security.getScheme())
+        || HttpSecurityConstants.SCHEME_BASIC.equalsIgnoreCase(security.getScheme().trim());
   }
 
   @Override
@@ -28,10 +48,12 @@ public class HttpRequestDecoratorAddBasicSecurity implements RequestDecorator {
         httpContext
             .getSecurity()
             .getUsername()
-            .concat(":")
+            .concat(HttpSecurityConstants.BASIC_CREDENTIAL_SEPARATOR)
             .concat(httpContext.getSecurity().getPassword());
     String authEncode = encodeAuthorization(authString);
-    request.setHeader("Authorization", "Basic ".concat(authEncode));
+    request.setHeader(
+        HttpSecurityConstants.HEADER_AUTHORIZATION,
+        HttpSecurityConstants.AUTH_SCHEME_BASIC_PREFIX.concat(authEncode));
   }
 
   private String encodeAuthorization(String authorization) {
