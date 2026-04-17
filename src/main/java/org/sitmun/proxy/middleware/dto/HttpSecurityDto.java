@@ -30,4 +30,7 @@ public class HttpSecurityDto implements HttpContextSecurity {
 
   /** Custom HTTP headers (e.g. X-API-Key). It may be null. */
   private Map<String, String> headers;
+
+  /** Custom URL query parameters for API key authentication. It may be null. */
+  private Map<String, String> queryParams;
 }

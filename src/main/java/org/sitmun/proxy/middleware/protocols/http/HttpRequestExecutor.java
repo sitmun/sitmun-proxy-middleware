@@ -36,6 +36,10 @@ public class HttpRequestExecutor implements RequestExecutor {
     headers.put(header, value);
   }
 
+  public void addParameter(String name, String value) {
+    parameters.put(name, value);
+  }
+
   public void setParameters(Map<String, String> parameters) {
     if (parameters != null && !parameters.isEmpty()) {
       this.parameters.putAll(parameters);
