@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sitmun.proxy.middleware.dto.ProblemDetail;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponse;
+import org.sitmun.proxy.middleware.utils.logging.SensitiveDataMasking;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("HttpRequestExecutor tests")
@@ -161,8 +162,8 @@ class HttpRequestExecutorTest {
 
     // Then
     assertThat(result)
-        .contains("QUERY=test")
-        .contains("LIMIT=10")
+        .contains("query=test")
+        .contains("limit=10")
         .startsWith("https://api.example.com/search");
   }
 
@@ -184,15 +185,15 @@ class HttpRequestExecutorTest {
 
     // Then
     assertThat(result)
-        .contains("EXISTING=value")
-        .contains("QUERY=test")
-        .contains("LIMIT=10")
+        .contains("existing=value")
+        .contains("query=test")
+        .contains("limit=10")
         .startsWith("https://api.example.com/search");
   }
 
   @Test
-  @DisplayName("Should handle case-insensitive parameter keys")
-  void shouldHandleCaseInsensitiveParameterKeys() {
+  @DisplayName("Should keep distinct parameter keys that differ only by case")
+  void shouldKeepDistinctParameterKeysThatDifferOnlyByCase() {
     // Given
     String baseUrl = "https://api.example.com";
     httpRequestExecutor = new HttpRequestExecutor(baseUrl, httpClient);
@@ -207,9 +208,8 @@ class HttpRequestExecutorTest {
     String result = httpRequestExecutor.getUrl();
 
     // Then
-    // The implementation converts all keys to uppercase
     assertThat(result)
-        .contains("PARAM=value1")
+        .contains("param=value1")
         .contains("PARAM=value2")
         .startsWith("https://api.example.com/search");
   }
@@ -231,7 +231,7 @@ class HttpRequestExecutorTest {
 
     // Then
     // Should not add duplicate parameter with same value
-    assertThat(result).contains("PARAM=value1").startsWith("https://api.example.com/search");
+    assertThat(result).contains("param=value1").startsWith("https://api.example.com/search");
   }
 
   @Test
@@ -267,10 +267,10 @@ class HttpRequestExecutorTest {
 
     // Then
     assertThat(result)
-        .contains("TYPE=admin")
-        .contains("ACTIVE=true")
-        .contains("LIMIT=20")
-        .contains("OFFSET=0")
+        .contains("type=admin")
+        .contains("active=true")
+        .contains("limit=20")
+        .contains("offset=0")
         .startsWith("https://api.example.com/v1/users/search");
   }
 
@@ -290,14 +290,14 @@ class HttpRequestExecutorTest {
     String result = httpRequestExecutor.getUrl();
 
     // Then
-    assertThat(result).contains("QUERY=test").startsWith("https://api.example.com:8080/search");
+    assertThat(result).contains("query=test").startsWith("https://api.example.com:8080/search");
   }
 
   @Test
   @DisplayName("Should set and retrieve headers correctly")
   void shouldSetAndRetrieveHeadersCorrectly() {
     // Given
-    httpRequestExecutor.setHeader("Authorization", "Bearer token123");
+    httpRequestExecutor.setHeader(HttpSecurityConstants.HEADER_AUTHORIZATION, "Bearer token123");
     httpRequestExecutor.setHeader("Content-Type", "application/json");
     httpRequestExecutor.setHeader("Accept", "application/json");
 
@@ -306,7 +306,7 @@ class HttpRequestExecutorTest {
 
     // Then
     assertThat(description)
-        .contains("Authorization=Bearer token123")
+        .contains("Authorization=Bearer " + SensitiveDataMasking.REDACTED)
         .contains("Content-Type=application/json")
         .contains("Accept=application/json");
   }
@@ -332,7 +332,7 @@ class HttpRequestExecutorTest {
   void shouldProvideDescriptiveStringRepresentation() {
     // Given
     httpRequestExecutor.setUrl("https://api.example.com/test");
-    httpRequestExecutor.setHeader("Authorization", "Bearer token");
+    httpRequestExecutor.setHeader(HttpSecurityConstants.HEADER_AUTHORIZATION, "Bearer token");
     Map<String, String> parameters = new HashMap<>();
     parameters.put("query", "test");
     httpRequestExecutor.setParameters(parameters);
@@ -344,7 +344,7 @@ class HttpRequestExecutorTest {
     assertThat(description)
         .contains("HttpRequest{")
         .contains("url='https://api.example.com/test'")
-        .contains("Authorization=Bearer token")
+        .contains("Authorization=Bearer " + SensitiveDataMasking.REDACTED)
         .contains("query=test")
         .contains("baseUrl=http://test-service.com");
   }
@@ -382,5 +382,101 @@ class HttpRequestExecutorTest {
 
     // Then
     assertThat(result).isEqualTo("https://api.example.com/search");
+  }
+
+  @Test
+  @DisplayName("Should return expanded URL when all parameters map to template variables")
+  void shouldReturnExpandedUrlWhenAllParametersMapToTemplateVariables() {
+    // Given — early return when usedVariables.size() == parameters.size()
+    String baseUrl = "https://api.example.com";
+    httpRequestExecutor = new HttpRequestExecutor(baseUrl, httpClient);
+    httpRequestExecutor.setUrl("https://api.example.com/users/{id}");
+
+    Map<String, String> parameters = new HashMap<>();
+    parameters.put("id", "42");
+    httpRequestExecutor.setParameters(parameters);
+
+    // When
+    String result = httpRequestExecutor.getUrl();
+
+    // Then
+    assertThat(result).isEqualTo("https://api.example.com/users/42");
+    assertThat(result).doesNotContain("?ID=").doesNotContain("&ID=");
+  }
+
+  @Test
+  @DisplayName("Should merge non-template parameters when URL has template variables")
+  void shouldMergeNonTemplateParametersWhenUrlHasTemplateVariables() {
+    // Given
+    String baseUrl = "https://api.example.com";
+    httpRequestExecutor = new HttpRequestExecutor(baseUrl, httpClient);
+    httpRequestExecutor.setUrl("https://api.example.com/users/{id}");
+
+    Map<String, String> parameters = new HashMap<>();
+    parameters.put("id", "42");
+    parameters.put("limit", "10");
+    httpRequestExecutor.setParameters(parameters);
+
+    // When
+    String result = httpRequestExecutor.getUrl();
+
+    // Then
+    assertThat(result)
+        .contains("limit=10")
+        .startsWith("https://api.example.com/users/42")
+        .doesNotContain("?ID=")
+        .doesNotContain("&ID=");
+  }
+
+  @Test
+  @DisplayName("Should not re-append template-bound parameters as query when merging")
+  void shouldNotReAppendTemplateBoundParametersAsQueryWhenMerging() {
+    // Given
+    String baseUrl = "https://api.example.com";
+    httpRequestExecutor = new HttpRequestExecutor(baseUrl, httpClient);
+    httpRequestExecutor.setUrl("https://api.example.com/v1/{resource}/{id}");
+
+    Map<String, String> parameters = new HashMap<>();
+    parameters.put("resource", "items");
+    parameters.put("id", "7");
+    parameters.put("offset", "0");
+    httpRequestExecutor.setParameters(parameters);
+
+    // When
+    String result = httpRequestExecutor.getUrl();
+
+    // Then
+    assertThat(result)
+        .contains("offset=0")
+        .startsWith("https://api.example.com/v1/items/7")
+        .doesNotContain("?RESOURCE=")
+        .doesNotContain("&RESOURCE=")
+        .doesNotContain("?ID=")
+        .doesNotContain("&ID=");
+  }
+
+  @Test
+  @DisplayName("Should merge template-expanded URL with existing query string")
+  void shouldMergeTemplateExpandedUrlWithExistingQueryString() {
+    // Given
+    String baseUrl = "https://api.example.com";
+    httpRequestExecutor = new HttpRequestExecutor(baseUrl, httpClient);
+    httpRequestExecutor.setUrl("https://api.example.com/search/{term}?fmt=json");
+
+    Map<String, String> parameters = new HashMap<>();
+    parameters.put("term", "alpha");
+    parameters.put("page", "2");
+    httpRequestExecutor.setParameters(parameters);
+
+    // When
+    String result = httpRequestExecutor.getUrl();
+
+    // Then
+    assertThat(result)
+        .contains("fmt=json")
+        .contains("page=2")
+        .startsWith("https://api.example.com/search/alpha")
+        .doesNotContain("?TERM=")
+        .doesNotContain("&TERM=");
   }
 }

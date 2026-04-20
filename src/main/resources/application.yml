@@ -1,8 +1,7 @@
-# Logging Configuration
+# Logging Configuration (set org.sitmun or org.sitmun.proxy.middleware via env, e.g. Docker)
 logging:
   level:
     ROOT: INFO
-    org.sitmun.proxy.middleware: INFO
 
 # Sitmun Proxy Configuration
 sitmun:

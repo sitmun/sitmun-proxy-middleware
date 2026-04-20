@@ -2,7 +2,7 @@ package org.sitmun.proxy.middleware.protocols.http;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static org.sitmun.proxy.middleware.protocols.http.HttpRequestDecoratorAddApiKeyHeader.API_KEY_HEADER;
+import static org.sitmun.proxy.middleware.protocols.http.HttpSecurityConstants.HEADER_X_API_KEY;
 
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sitmun.proxy.middleware.decorator.Context;
+import org.sitmun.proxy.middleware.utils.logging.SensitiveDataMasking;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("HttpRequestDecoratorAddApiKeyHeader tests")
@@ -36,7 +37,7 @@ class HttpRequestDecoratorAddApiKeyHeaderTest {
   void shouldAcceptWhenContextHasApiKeyHeader() {
     // Given
     when(httpContext.getSecurity()).thenReturn(security);
-    when(security.getHeaders()).thenReturn(Map.of(API_KEY_HEADER, "test-api-key"));
+    when(security.getHeaders()).thenReturn(Map.of(HEADER_X_API_KEY, "test-api-key"));
 
     // When
     boolean result = decorator.accept(requestExecutor, httpContext);
@@ -102,13 +103,16 @@ class HttpRequestDecoratorAddApiKeyHeaderTest {
     // Given
     String apiKey = "test-api-key";
     when(httpContext.getSecurity()).thenReturn(security);
-    when(security.getHeaders()).thenReturn(Map.of(API_KEY_HEADER, apiKey));
+    when(security.getHeaders()).thenReturn(Map.of(HEADER_X_API_KEY, apiKey));
 
     // When
     decorator.addBehavior(requestExecutor, httpContext);
 
     // Then
-    String description = requestExecutor.describe();
-    assertThat(description).contains(API_KEY_HEADER).contains(apiKey);
+    assertThat(requestExecutor.getHeader(HEADER_X_API_KEY)).isEqualTo(apiKey);
+    assertThat(requestExecutor.describe())
+        .contains(HEADER_X_API_KEY)
+        .contains(SensitiveDataMasking.REDACTED)
+        .doesNotContain(apiKey);
   }
 }

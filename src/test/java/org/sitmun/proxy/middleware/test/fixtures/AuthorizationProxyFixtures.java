@@ -2,6 +2,7 @@ package org.sitmun.proxy.middleware.test.fixtures;
 
 import java.util.HashMap;
 import org.sitmun.proxy.middleware.dto.HttpSecurityDto;
+import org.sitmun.proxy.middleware.protocols.http.HttpSecurityConstants;
 import org.sitmun.proxy.middleware.protocols.jdbc.JdbcPayloadDto;
 import org.sitmun.proxy.middleware.protocols.wms.WmsPayloadDto;
 
@@ -14,8 +15,8 @@ public class AuthorizationProxyFixtures {
         .security(
             basicAuthentication
                 ? HttpSecurityDto.builder()
-                    .type("basic")
-                    .scheme("http")
+                    .type(HttpSecurityConstants.TYPE_HTTP)
+                    .scheme(HttpSecurityConstants.SCHEME_BASIC)
                     .username("userServ")
                     .password("passwordServ")
                     .build()
@@ -37,7 +38,7 @@ public class AuthorizationProxyFixtures {
         .method("GET")
         .parameters(getWmsParameters())
         .uri(
-            "https://sitmun.diba.cat/arcgis/services/PUBLIC/DTE50/MapServer/WmsServer?service=WMS&")
+            "https://sitmun.diba.cat/arcgis/services/PUBLIC/DTE50/MapServer/WmsServer?SERVICE=WMS&")
         .build();
   }
 
