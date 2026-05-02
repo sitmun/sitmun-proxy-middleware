@@ -9,6 +9,14 @@ sitmun:
     config:
       url: http://some.url
       secret: some-secret
+  ogc:
+    capabilities:
+      service-paths:
+        - wms
+        - wfs
+        - wcs
+        - ows
+      extra-sources: []
 
 # Actuator Configuration
 management:

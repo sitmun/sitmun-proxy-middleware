@@ -253,7 +253,7 @@ cp build/libs/sitmun-proxy-middleware.war /path/to/tomcat/webapps/ROOT.war
 
 Unlike JAR files, WAR files cannot use command-line arguments. Configure the active profile using one of these methods:
 
-**Method 1: Environment Variable (Recommended)**
+**Method 1: Environment Variable (Recommended):**
 
 Set the environment variable in your servlet container:
 
@@ -266,7 +266,7 @@ export SPRING_PROFILES_ACTIVE=prod
 Environment="SPRING_PROFILES_ACTIVE=prod"
 ```
 
-**Method 2: System Property**
+**Method 2: System Property:**
 
 Add to your servlet container's startup script:
 
@@ -275,11 +275,11 @@ Add to your servlet container's startup script:
 export JAVA_OPTS="$JAVA_OPTS -Dspring.profiles.active=prod"
 ```
 
-**Method 3: JNDI (Enterprise Deployments)**
+**Method 3: JNDI (Enterprise Deployments):**
 
 For application servers like WildFly or WebSphere, configure via JNDI or server configuration.
 
-**Method 4: application.properties in WAR**
+**Method 4: application.properties in WAR:**
 
 You can also include a `WEB-INF/classes/application.properties` file in the WAR with:
 
@@ -361,19 +361,21 @@ Response:
 - `terId`: Territory identifier (Integer)
 - `type`: Service type (WMS, SQL) (String)
 - `typeId`: Service instance identifier (Integer)
-- `Authorization`: Bearer token (optional, automatically extracts token from `Bearer ` prefix)
+- `Authorization`: Bearer token (optional, automatically extracts token from `Bearer` prefix)
 - Query parameters: Passed through to a target service (Map<String, String>)
 
 ## Configuration
 
 ### Environment Variables
 
-| Variable                       | Description                          | Required | Default |
-|--------------------------------|--------------------------------------|----------|---------|
-| `SITMUN_BACKEND_CONFIG_URL`    | URL to backend configuration service | Yes      | -       |
-| `SITMUN_BACKEND_CONFIG_SECRET` | Secret key for configuration access  | Yes      | -       |
-| `SERVER_PORT`                  | Application port                     | No       | 8080    |
-| `SPRING_PROFILES_ACTIVE`       | Spring profile to use                | No       | prod    |
+| Variable | Description | Required | Default |
+| --- | --- | --- | --- |
+| `SITMUN_BACKEND_CONFIG_URL` | URL to backend configuration service | Yes | - |
+| `SITMUN_BACKEND_CONFIG_SECRET` | Secret key for configuration access | Yes | - |
+| `SERVER_PORT` | Application port | No | 8080 |
+| `SPRING_PROFILES_ACTIVE` | Spring profile to use | No | prod |
+| `SITMUN_OGC_CAPABILITIES_SERVICE_PATHS` | Comma-separated OGC service path suffixes recognized when rewriting URLs in `GetCapabilities` responses | No | `wms,wfs,wcs,ows` |
+| `SITMUN_OGC_CAPABILITIES_EXTRA_SOURCES` | Comma-separated list of additional source URL prefixes to replace with the proxy URL in `GetCapabilities` responses. Use this when the backend exposes an internal address (e.g. `localhost`, a private IP) that differs from the URL configured in SITMUN | No | Empty list |
 
 ### Profiles
 
@@ -408,6 +410,18 @@ sitmun:
     config:
       url: http://some.url
       secret: some-secret
+  ogc:
+    capabilities:
+      # OGC service path suffixes recognized when rewriting URLs in GetCapabilities responses.
+      service-paths:
+        - wms
+        - wfs
+        - wcs
+        - ows
+      # Optional extra source URL prefixes to replace with the proxy URL (empty list by default).
+      extra-sources:
+       - http://localhost:3000
+       - http://internal-geoserver:8080/geoserver
 
 # Actuator Configuration
 management:
@@ -545,7 +559,7 @@ server:
 
 ### System Architecture
 
-```
+```text
 ┌─────────────────┐    ┌─────────────────────┐    ┌─────────────────┐
 │   SITMUN Map    │───▶│  Proxy Middleware   │───▶│ Protected       │
 │     Viewer      │    │                     │    │   Services      │
@@ -687,7 +701,7 @@ java -jar build/libs/sitmun-proxy-middleware.jar --spring.profiles.active=prod
 
 ### Project Structure
 
-```
+```text
 sitmun-proxy-middleware/
 ├── src/
 │   ├── main/
@@ -910,7 +924,7 @@ Automated Git hooks run on every commit:
 
 Follow the conventional commit format:
 
-```
+```text
 <type>(<scope>): <description>
 
 [optional body]
@@ -1122,6 +1136,27 @@ The Proxy Middleware supports different service types that can be configured in 
     "password": "protected_pass"
   }
 }
+```
+
+##### GetCapabilities URL Rewriting
+
+When a `GetCapabilities` request is proxied, the response body is post-processed to replace internal service URLs with the public proxy URL. This prevents the proxy being ignored on future requests.
+
+Two replacement steps are applied:
+
+1. **Default source**: the base URL configured in SITMUN (stripping query string and trailing OGC suffix). All its occurrences in the response body are replaced.
+2. **Extra sources**: any additional URL prefixes declared in `extra-sources` are also replaced. This covers cases where the capabilities response URLs differ from the URL stored in SITMUN. Only address before OGC suffix is taken into account.
+
+Only URLs in quoted attributes are replaced, avoiding false positives.
+
+**Example environment variables:**
+
+```bash
+# Override recognized OGC suffixes (optional, defaults to wms,wfs,wcs,ows)
+SITMUN_OGC_CAPABILITIES_SERVICE_PATHS=wms,wfs,wcs,ows
+
+# Replace custom addresses found in the capabilities body (optional, defaults to empty list)
+SITMUN_OGC_CAPABILITIES_EXTRA_SOURCES=http://localhost:3000,http://internal-geoserver:8080/geoserver
 ```
 
 #### JDBC Services
