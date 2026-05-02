@@ -20,10 +20,11 @@ public class WmsCapabilitiesResponseDecorator implements ResponseDecorator {
   @Override
   public boolean accept(Object target, Context context) {
     if (context instanceof WmsPayloadDto wmsPayloadDto) {
-      return wmsPayloadDto
-          .getParameters()
-          .getOrDefault("REQUEST", "")
-          .equalsIgnoreCase("GetCapabilities");
+      var parameters = wmsPayloadDto.getParameters();
+      if (parameters == null) {
+        return false;
+      }
+      return parameters.getOrDefault("REQUEST", "").equalsIgnoreCase("GetCapabilities");
     }
     return false;
   }

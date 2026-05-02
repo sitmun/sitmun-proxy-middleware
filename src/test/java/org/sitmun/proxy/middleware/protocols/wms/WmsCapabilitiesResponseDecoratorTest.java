@@ -3,15 +3,22 @@ package org.sitmun.proxy.middleware.protocols.wms;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.sitmun.proxy.middleware.decorator.Context;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponseImpl;
 
 @DisplayName("WmsCapabilitiesResponseDecorator")
@@ -40,6 +47,10 @@ class WmsCapabilitiesResponseDecoratorTest {
         .method("GET")
         .parameters(Map.of("REQUEST", "GetCapabilities", "SERVICE", "WMS"))
         .build();
+  }
+
+  private static WmsPayloadDto wmsPayloadDto(Map<String, String> parameters) {
+    return WmsPayloadDto.builder().uri(SERVICE_URI).method("GET").parameters(parameters).build();
   }
 
   private RequestExecutorResponseImpl<byte[]> response(String xmlBody) {
@@ -291,5 +302,66 @@ class WmsCapabilitiesResponseDecoratorTest {
             GEOSERVER + "/wms",
             onlineResourceWrap(GEOSERVER + "/ows?SERVICE=WMS"),
             GEOSERVER + "/ows?SERVICE=WMS"));
+  }
+
+  @Nested
+  @DisplayName("accept")
+  @ExtendWith(MockitoExtension.class)
+  class Accept {
+
+    @Mock private Context nonWmsContext;
+
+    @Test
+    @DisplayName("returns true when REQUEST is GetCapabilities")
+    void returnsTrueWhenRequestIsGetCapabilities() {
+      assertThat(decorator.accept(null, wmsPayloadDto(Map.of("REQUEST", "GetCapabilities"))))
+          .isTrue();
+    }
+
+    @ParameterizedTest(name = "REQUEST={0}")
+    @CsvSource({"GetCapabilities", "getcapabilities", "GETCAPABILITIES"})
+    @DisplayName("returns true when REQUEST value matches GetCapabilities case-insensitively")
+    void returnsTrueWhenRequestValueIsCaseInsensitive(String requestValue) {
+      assertThat(decorator.accept(null, wmsPayloadDto(Map.of("REQUEST", requestValue)))).isTrue();
+    }
+
+    @Test
+    @DisplayName("returns false when REQUEST is not GetCapabilities")
+    void returnsFalseWhenRequestIsGetMap() {
+      assertThat(decorator.accept(null, wmsPayloadDto(Map.of("REQUEST", "GetMap")))).isFalse();
+    }
+
+    @Test
+    @DisplayName("returns false when REQUEST key is absent")
+    void returnsFalseWhenRequestKeyMissing() {
+      assertThat(decorator.accept(null, wmsPayloadDto(Map.of("SERVICE", "WMS")))).isFalse();
+    }
+
+    @Test
+    @DisplayName("returns false when parameters map is empty")
+    void returnsFalseWhenParametersEmpty() {
+      assertThat(decorator.accept(null, wmsPayloadDto(Collections.emptyMap()))).isFalse();
+    }
+
+    @Test
+    @DisplayName("treats null parameters the same as an empty parameter map")
+    void nullParametersSameAsEmptyParameters() {
+      WmsPayloadDto nullParameters = new WmsPayloadDto();
+      nullParameters.setParameters(null);
+
+      WmsPayloadDto emptyParameters = new WmsPayloadDto();
+      emptyParameters.setParameters(Collections.emptyMap());
+
+      Object target = new Object();
+      assertThat(decorator.accept(target, nullParameters))
+          .isEqualTo(decorator.accept(target, emptyParameters))
+          .isFalse();
+    }
+
+    @Test
+    @DisplayName("returns false when context is not WmsPayloadDto")
+    void returnsFalseWhenContextIsNotWmsPayloadDto() {
+      assertThat(decorator.accept(null, nonWmsContext)).isFalse();
+    }
   }
 }
