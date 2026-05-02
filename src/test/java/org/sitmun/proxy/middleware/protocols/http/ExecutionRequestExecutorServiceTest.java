@@ -25,6 +25,7 @@ class ExecutionRequestExecutorServiceTest {
 
   @Autowired private HttpClientFactoryService httpClientFactoryService;
 
+  @SuppressWarnings("unused")
   private JacksonTester<Object> jsonTester;
 
   @BeforeAll

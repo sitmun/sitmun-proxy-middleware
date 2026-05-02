@@ -1,9 +1,12 @@
 package org.sitmun.proxy.middleware.protocols.http;
 
-import static org.assertj.core.api.Fail.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 
-import java.io.IOException;
 import java.util.List;
+import javax.net.ssl.SSLHandshakeException;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.assertj.core.util.Lists;
@@ -15,17 +18,22 @@ class HttpClientFactoryServiceTest {
 
   @Test
   @DisplayName("Fail with SSLHandshakeException")
-  void failWithASSLHandhakeException() {
-    String url = "https://self-signed.badssl.com ";
+  void failWithSSLHandshakeException() {
+    String url = "https://self-signed.badssl.com";
     List<String> unsafeAllowedHosts = Lists.list();
     HttpClient client = new HttpClientFactoryService(unsafeAllowedHosts);
 
     Request request = new Request.Builder().url(url).header("Accept", "*/*").build();
 
-    try (Response response = client.executeRequest(request)) {
-      fail("Unexpected exception");
-    } catch (IOException e) {
-    }
+    assertThatThrownBy(
+            () -> {
+              try (Response ignored = client.executeRequest(request)) {
+                fail(
+                    "Expected IOException when using safe client against self-signed certificate,"
+                        + " but request completed");
+              }
+            })
+        .isInstanceOf(SSLHandshakeException.class);
   }
 
   @Test
@@ -37,11 +45,8 @@ class HttpClientFactoryServiceTest {
     HttpClient client = new HttpClientFactoryService(unsafeAllowedHosts);
 
     Request request = new Request.Builder().url(url).header("Accept", "*/*").build();
-    try (Response response = client.executeRequest(request)) {
-      // Do nothing
-    } catch (IOException e) {
-      fail("Unexpected exception");
-    }
+    assertConnectsToSelfSignedHost(
+        client, request, "TLS to self-signed host with wildcard allow list");
   }
 
   @Test
@@ -53,11 +58,19 @@ class HttpClientFactoryServiceTest {
     HttpClient client = new HttpClientFactoryService(unsafeAllowedHosts);
 
     Request request = new Request.Builder().url(url).header("Accept", "*/*").build();
+    assertConnectsToSelfSignedHost(
+        client, request, "TLS to self-signed host with explicit host allow list");
+  }
 
-    try (Response response = client.executeRequest(request)) {
-      // Do nothing
-    } catch (IOException e) {
-      fail("Unexpected exception");
-    }
+  private static void assertConnectsToSelfSignedHost(
+      HttpClient client, Request request, String context) {
+    assertThatCode(
+            () -> {
+              try (Response response = client.executeRequest(request)) {
+                assertThat(response.isSuccessful()).as(context).isTrue();
+              }
+            })
+        .as(context)
+        .doesNotThrowAnyException();
   }
 }

@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.sitmun.proxy.middleware.decorator.Context;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("HttpRequestDecoratorAddApiKeyHeaders tests")
@@ -24,7 +23,6 @@ class HttpRequestDecoratorAddApiKeyHeadersTest {
 
   @Mock private HttpContext httpContext;
   @Mock private HttpContextSecurity security;
-  @Mock private Context nonHttpContext;
 
   @BeforeEach
   void setUp() {

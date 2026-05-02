@@ -1,10 +1,7 @@
 package org.sitmun.proxy.middleware.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.when;
 import static org.sitmun.proxy.middleware.config.ProxyMiddlewareConstants.PROXY_MIDDLEWARE_KEY;
 import static org.sitmun.proxy.middleware.config.ProxyMiddlewareConstants.TYPE_SQL;
 import static org.sitmun.proxy.middleware.config.ProxyMiddlewareConstants.TYPE_WMS;
@@ -60,7 +57,6 @@ class RequestConfigurationServiceTest {
     // Given
     Integer appId = 1;
     Integer terId = 2;
-    String type = TYPE_WMS;
     Integer typeId = 3;
     String token = "test-token";
     Map<String, String> params = new HashMap<>();
@@ -81,7 +77,7 @@ class RequestConfigurationServiceTest {
     // When
     ResponseEntity<?> result =
         requestConfigurationService.doRequest(
-            appId, terId, type, typeId, token, params, TEST_URL, null);
+            appId, terId, TYPE_WMS, typeId, token, params, TEST_URL, null);
 
     // Then
     assertThat(result).isEqualTo(executorResponse);
@@ -93,7 +89,6 @@ class RequestConfigurationServiceTest {
     // Given
     Integer appId = 1;
     Integer terId = 2;
-    String type = TYPE_WMS;
     Integer typeId = 3;
     String token = "test-token";
     Map<String, String> params = new HashMap<>();
@@ -107,7 +102,7 @@ class RequestConfigurationServiceTest {
     // When
     ResponseEntity<?> result =
         requestConfigurationService.doRequest(
-            appId, terId, type, typeId, token, params, TEST_URL, null);
+            appId, terId, TYPE_WMS, typeId, token, params, TEST_URL, null);
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
@@ -127,7 +122,6 @@ class RequestConfigurationServiceTest {
     // Given
     Integer appId = 1;
     Integer terId = 2;
-    String type = TYPE_WMS;
     Integer typeId = 3;
     String token = "test-token";
     Map<String, String> params = new HashMap<>();
@@ -142,7 +136,7 @@ class RequestConfigurationServiceTest {
     // When
     ResponseEntity<?> result =
         requestConfigurationService.doRequest(
-            appId, terId, type, typeId, token, params, TEST_URL, null);
+            appId, terId, TYPE_WMS, typeId, token, params, TEST_URL, null);
 
     // Then
     assertThat(result).isEqualTo(configResponse);
@@ -154,7 +148,6 @@ class RequestConfigurationServiceTest {
     // Given
     Integer appId = 1;
     Integer terId = 2;
-    String type = TYPE_WMS;
     Integer typeId = 3;
     String token = "test-token";
     Map<String, String> params = new HashMap<>();
@@ -169,7 +162,7 @@ class RequestConfigurationServiceTest {
     // When
     ResponseEntity<?> result =
         requestConfigurationService.doRequest(
-            appId, terId, type, typeId, token, params, TEST_URL, null);
+            appId, terId, TYPE_WMS, typeId, token, params, TEST_URL, null);
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -189,7 +182,6 @@ class RequestConfigurationServiceTest {
     // Given
     Integer appId = 1;
     Integer terId = 2;
-    String type = TYPE_WMS;
     Integer typeId = 3;
     String token = "test-token";
     Map<String, String> params = new HashMap<>();
@@ -203,7 +195,7 @@ class RequestConfigurationServiceTest {
     // When
     ResponseEntity<?> result =
         requestConfigurationService.doRequest(
-            appId, terId, type, typeId, token, params, TEST_URL, null);
+            appId, terId, TYPE_WMS, typeId, token, params, TEST_URL, null);
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -223,7 +215,6 @@ class RequestConfigurationServiceTest {
     // Given
     Integer appId = 1;
     Integer terId = 2;
-    String type = TYPE_WMS;
     Integer typeId = 3;
     String token = "test-token";
     Map<String, String> params = new HashMap<>();
@@ -244,7 +235,7 @@ class RequestConfigurationServiceTest {
     // When
     ResponseEntity<?> result =
         requestConfigurationService.doRequest(
-            appId, terId, type, typeId, token, params, TEST_URL, null);
+            appId, terId, TYPE_WMS, typeId, token, params, TEST_URL, null);
 
     // Then
     assertThat(result).isEqualTo(executorResponse);
@@ -256,7 +247,6 @@ class RequestConfigurationServiceTest {
     // Given
     Integer appId = 1;
     Integer terId = 2;
-    String type = TYPE_WMS;
     Integer typeId = 3;
     String token = "test-token";
 
@@ -274,7 +264,7 @@ class RequestConfigurationServiceTest {
     // When
     ResponseEntity<?> result =
         requestConfigurationService.doRequest(
-            appId, terId, type, typeId, token, null, TEST_URL, null);
+            appId, terId, TYPE_WMS, typeId, token, null, TEST_URL, null);
 
     // Then
     assertThat(result).isEqualTo(executorResponse);
@@ -286,7 +276,6 @@ class RequestConfigurationServiceTest {
     // Given
     Integer appId = 1;
     Integer terId = 2;
-    String type = TYPE_WMS;
     Integer typeId = 3;
     String token = "test-token";
     Map<String, String> params = new HashMap<>();
@@ -305,7 +294,7 @@ class RequestConfigurationServiceTest {
     // When
     ResponseEntity<?> result =
         requestConfigurationService.doRequest(
-            appId, terId, type, typeId, token, params, TEST_URL, null);
+            appId, terId, TYPE_WMS, typeId, token, params, TEST_URL, null);
 
     // Then
     assertThat(result).isEqualTo(executorResponse);
@@ -317,7 +306,6 @@ class RequestConfigurationServiceTest {
     // Given
     Integer appId = 1;
     Integer terId = 2;
-    String type = TYPE_WMS;
     Integer typeId = 3;
     String token = "test-token";
     Map<String, String> params = new HashMap<>();
@@ -338,7 +326,7 @@ class RequestConfigurationServiceTest {
     // When
     ResponseEntity<?> result =
         requestConfigurationService.doRequest(
-            appId, terId, type, typeId, token, params, TEST_URL, body);
+            appId, terId, TYPE_WMS, typeId, token, params, TEST_URL, body);
 
     // Then
     assertThat(result).isEqualTo(executorResponse);
@@ -361,7 +349,6 @@ class RequestConfigurationServiceTest {
     // Given
     Integer appId = 1;
     Integer terId = 2;
-    String type = TYPE_WMS;
     Integer typeId = 3;
     String token = "test-token";
     Map<String, String> params = new HashMap<>();
@@ -380,7 +367,7 @@ class RequestConfigurationServiceTest {
     // When
     ResponseEntity<?> result =
         requestConfigurationService.doRequest(
-            appId, terId, type, typeId, token, params, TEST_URL, body);
+            appId, terId, TYPE_WMS, typeId, token, params, TEST_URL, body);
 
     // Then
     assertThat(result).isEqualTo(executorResponse);
@@ -392,7 +379,6 @@ class RequestConfigurationServiceTest {
     // Given
     Integer appId = 1;
     Integer terId = 2;
-    String type = TYPE_WMS;
     Integer typeId = 3;
     String token = "test-token";
     Map<String, String> params = new HashMap<>();
@@ -408,7 +394,7 @@ class RequestConfigurationServiceTest {
     // When
     ResponseEntity<?> result =
         requestConfigurationService.doRequest(
-            appId, terId, type, typeId, token, params, TEST_URL, body);
+            appId, terId, TYPE_WMS, typeId, token, params, TEST_URL, body);
 
     // Then
     assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -492,7 +478,6 @@ class RequestConfigurationServiceTest {
     // Given
     Integer appId = 1;
     Integer terId = 2;
-    String type = TYPE_SQL;
     Integer typeId = 23;
     String token = "user-token";
     Map<String, String> params = new HashMap<>();
@@ -509,7 +494,7 @@ class RequestConfigurationServiceTest {
 
     // When
     requestConfigurationService.doRequest(
-        appId, terId, type, typeId, token, params, TEST_URL, null);
+        appId, terId, TYPE_SQL, typeId, token, params, TEST_URL, null);
 
     // Then: Verify the X-SITMUN-Proxy-Key header is present
     var httpEntityCaptor = org.mockito.ArgumentCaptor.forClass(HttpEntity.class);

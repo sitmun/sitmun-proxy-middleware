@@ -609,7 +609,7 @@ server:
 
 The service uses the decorator pattern to modify requests and responses:
 
-```java
+```text
 // Request decorators
 HttpRequestDecoratorAddBasicSecurity    // Adds basic authentication to HTTP requests
 HttpRequestDecoratorAddApiKeyHeader     // Adds a single API key header
