@@ -28,4 +28,7 @@ public interface HttpContextSecurity {
    * is configured.
    */
   Map<String, String> getHeaders();
+
+  /** Custom URL query parameters for API key authentication. May be null if none is configured. */
+  Map<String, String> getQueryParams();
 }

@@ -49,6 +49,12 @@ public class HttpRequestExecutor implements RequestExecutor {
     }
   }
 
+  public void addParameter(String key, String value) {
+    if (StringUtils.hasText(key) && value != null) {
+      this.parameters.put(key, value);
+    }
+  }
+
   @SuppressWarnings("unchecked")
   @Override
   public RequestExecutorResponse<?> execute() {
