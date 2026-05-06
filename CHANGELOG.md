@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Microsoft SQL Server JDBC driver (`mssql-jdbc`) alongside PostgreSQL and Oracle for JDBC proxy connections.
 - `HttpRequestDecoratorAddQueryParamSecurity` to append `HttpContextSecurity#getQueryParams()` onto the outbound URL (OpenAPI-style API key in query).
 - `HttpSecurityDto#queryParams` and `HttpContextSecurity#getQueryParams()` for security query parameters alongside headers.
 - `HttpRequestExecutor#addParameter` to merge individual query parameters (used by the query-param security decorator).

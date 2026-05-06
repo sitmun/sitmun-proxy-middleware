@@ -54,6 +54,7 @@ dependencies {
   // Database Drivers
   implementation libs.postgresql
   implementation libs.oracle.jdbc
+  implementation libs.mssql.jdbc
 
   // Development tools (excluded from production builds)
   developmentOnly libs.spring.boot.devtools
