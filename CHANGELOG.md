@@ -9,17 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `HttpRequestDecoratorAddApiKeyHeaders` for multiple API-key headers from backend security payload.
+- `HttpRequestDecoratorAddQueryParamSecurity` to append `HttpContextSecurity#getQueryParams()` onto the outbound URL (OpenAPI-style API key in query).
+- `HttpSecurityDto#queryParams` and `HttpContextSecurity#getQueryParams()` for security query parameters alongside headers.
+- `HttpRequestExecutor#addParameter` to merge individual query parameters (used by the query-param security decorator).
+- `HttpRequestDecoratorAddHeaderSecurity` (replaces `HttpRequestDecoratorAddApiKeyHeader`) to forward the full security header map.
 - `HttpSecurityConstants` for shared OpenAPI-style security literals used by HTTP security DTOs and decorators.
 - `SensitiveDataMasking` for masked HTTP debug logging (e.g. OkHttp headers).
-- `HttpContextSecurityContractTest` and `HttpRequestExecutorQueryParameterCasingRegressionTest`.
+- Unit tests: `HttpContextSecurityContractTest`, `HttpRequestDecoratorAddHeaderSecurityTest`, `HttpRequestDecoratorAddQueryParamSecurityTest`, and `HttpRequestExecutorTest` coverage for `addParameter`.
 
 ### Changed
 
-- `HttpSecurityDto` implements `HttpContextSecurity`; supports a custom header map for API keys alongside Basic auth.
-- `HttpRequestExecutor` masks sensitive values in debug logs; query parameter handling aligned with casing regression tests.
-- `RequestConfigurationService` / `RequestExecutorService` wiring for expanded HTTP security decorators.
-- `HttpRequestDecoratorAddBasicSecurity`, `HttpRequestDecoratorAddApiKeyHeader`, and related tests updated for the security contract.
+- `HttpSecurityDto` implements `HttpContextSecurity`; supports custom header and query-param maps for API keys alongside Basic auth. `describeForLog()` includes sorted query parameter names (values never logged).
+- `HttpRequestExecutor` masks sensitive values in debug logs.
+- `HttpRequestDecoratorAddApiKeyHeaders` applies headers when `type` is `apiKey` (unchanged; complements header-map forwarding).
+- `HttpRequestDecoratorAddBasicSecurity` and related tests updated for the security contract.
 
 ## [1.2.5] - 2026-03-11
 

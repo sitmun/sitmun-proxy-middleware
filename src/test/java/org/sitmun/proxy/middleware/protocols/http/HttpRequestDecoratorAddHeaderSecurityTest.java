@@ -15,10 +15,10 @@ import org.sitmun.proxy.middleware.decorator.Context;
 import org.sitmun.proxy.middleware.utils.logging.SensitiveDataMasking;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("HttpRequestDecoratorAddApiKeyHeader tests")
-class HttpRequestDecoratorAddApiKeyHeaderTest {
+@DisplayName("HttpRequestDecoratorAddHeaderSecurity tests")
+class HttpRequestDecoratorAddHeaderSecurityTest {
 
-  private HttpRequestDecoratorAddApiKeyHeader decorator;
+  private HttpRequestDecoratorAddHeaderSecurity decorator;
   private HttpRequestExecutor requestExecutor;
 
   @Mock private HttpContext httpContext;
@@ -27,89 +27,72 @@ class HttpRequestDecoratorAddApiKeyHeaderTest {
 
   @BeforeEach
   void setUp() {
-    decorator = new HttpRequestDecoratorAddApiKeyHeader();
+    decorator = new HttpRequestDecoratorAddHeaderSecurity();
     requestExecutor = new HttpRequestExecutor("http://test.com", null);
   }
 
   @Test
-  @DisplayName(
-      "Should accept when context is HttpContext with security and headers containing X-API-Key")
-  void shouldAcceptWhenContextHasApiKeyHeader() {
-    // Given
+  @DisplayName("Should accept when context is HttpContext with security and non-empty headers")
+  void shouldAcceptWhenContextHasHeaders() {
     when(httpContext.getSecurity()).thenReturn(security);
     when(security.getHeaders()).thenReturn(Map.of(HEADER_X_API_KEY, "test-api-key"));
 
-    // When
-    boolean result = decorator.accept(requestExecutor, httpContext);
+    assertThat(decorator.accept(requestExecutor, httpContext)).isTrue();
+  }
 
-    // Then
-    assertThat(result).isTrue();
+  @Test
+  @DisplayName("Should accept for any non-empty header map (not limited to X-API-Key)")
+  void shouldAcceptWhenHeadersAreNotApiKeyNamed() {
+    when(httpContext.getSecurity()).thenReturn(security);
+    when(security.getHeaders()).thenReturn(Map.of("Other-Header", "value"));
+
+    assertThat(decorator.accept(requestExecutor, httpContext)).isTrue();
   }
 
   @Test
   @DisplayName("Should not accept when context is not HttpContext")
   void shouldNotAcceptWhenContextIsNotHttpContext() {
-    // When
-    boolean result = decorator.accept(requestExecutor, nonHttpContext);
-
-    // Then
-    assertThat(result).isFalse();
+    assertThat(decorator.accept(requestExecutor, nonHttpContext)).isFalse();
   }
 
   @Test
   @DisplayName("Should not accept when context is HttpContext with null security")
   void shouldNotAcceptWhenSecurityIsNull() {
-    // Given
     when(httpContext.getSecurity()).thenReturn(null);
 
-    // When
-    boolean result = decorator.accept(requestExecutor, httpContext);
-
-    // Then
-    assertThat(result).isFalse();
+    assertThat(decorator.accept(requestExecutor, httpContext)).isFalse();
   }
 
   @Test
   @DisplayName("Should not accept when getHeaders() is null")
   void shouldNotAcceptWhenHeadersIsNull() {
-    // Given
     when(httpContext.getSecurity()).thenReturn(security);
     when(security.getHeaders()).thenReturn(null);
 
-    // When
-    boolean result = decorator.accept(requestExecutor, httpContext);
-
-    // Then
-    assertThat(result).isFalse();
+    assertThat(decorator.accept(requestExecutor, httpContext)).isFalse();
   }
 
   @Test
-  @DisplayName("Should not accept when headers do not contain X-API-Key")
-  void shouldNotAcceptWhenHeadersMissingApiKey() {
-    // Given
+  @DisplayName("Should not accept when headers map is empty")
+  void shouldNotAcceptWhenHeadersEmpty() {
     when(httpContext.getSecurity()).thenReturn(security);
-    when(security.getHeaders()).thenReturn(Map.of("Other-Header", "value"));
+    when(security.getHeaders()).thenReturn(Map.of());
 
-    // When
-    boolean result = decorator.accept(requestExecutor, httpContext);
-
-    // Then
-    assertThat(result).isFalse();
+    assertThat(decorator.accept(requestExecutor, httpContext)).isFalse();
   }
 
   @Test
-  @DisplayName("Should add X-API-Key header when adding behavior")
-  void shouldAddApiKeyHeaderWhenAddingBehavior() {
-    // Given
+  @DisplayName("Should add all configured headers when adding behavior")
+  void shouldAddAllHeadersWhenAddingBehavior() {
     String apiKey = "test-api-key";
     when(httpContext.getSecurity()).thenReturn(security);
-    when(security.getHeaders()).thenReturn(Map.of(HEADER_X_API_KEY, apiKey));
+    when(security.getHeaders())
+        .thenReturn(Map.of(HEADER_X_API_KEY, apiKey, "X-Other", "other-value"));
 
-    // When
     decorator.addBehavior(requestExecutor, httpContext);
 
-    // Then
     assertThat(requestExecutor.getHeader(HEADER_X_API_KEY)).isEqualTo(apiKey);
+    assertThat(requestExecutor.getHeader("X-Other")).isEqualTo("other-value");
     assertThat(requestExecutor.describe())
         .contains(HEADER_X_API_KEY)
         .contains(SensitiveDataMasking.REDACTED)

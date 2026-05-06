@@ -68,7 +68,8 @@ class HttpContextSecurityContractTest {
                 .headers(java.util.Map.of(HEADER_X_API_KEY, "secret"))
                 .build()
                 .describeForLog())
-        .contains("type=apiKey", "headerNames=[%s]".formatted(HEADER_X_API_KEY))
+        .contains(
+            "type=apiKey", "headerNames=[%s]".formatted(HEADER_X_API_KEY), "queryParamNames=[]")
         .doesNotContain("secret");
     assertThat(
             HttpSecurityDto.builder()
@@ -76,7 +77,7 @@ class HttpContextSecurityContractTest {
                 .headers(java.util.Map.of())
                 .build()
                 .describeForLog())
-        .isEqualTo("type=apiKey, headerNames=[]");
+        .isEqualTo("type=apiKey, headerNames=[], queryParamNames=[]");
     assertThat(
             HttpSecurityDto.builder()
                 .type(TYPE_HTTP)
@@ -85,7 +86,7 @@ class HttpContextSecurityContractTest {
                 .password("zqp9x")
                 .build()
                 .describeForLog())
-        .isEqualTo("type=http, scheme=basic, username=alice, password=set")
+        .isEqualTo("type=http, scheme=basic, username=alice, password=set, queryParamNames=[]")
         .doesNotContain("zqp9x");
   }
 

@@ -192,6 +192,45 @@ class HttpRequestExecutorTest {
   }
 
   @Test
+  @DisplayName("Should merge addParameter entries with existing query parameters")
+  void shouldMergeAddParameterWithExistingQueryParameters() {
+    httpRequestExecutor = new HttpRequestExecutor("https://api.example.com", httpClient);
+    httpRequestExecutor.setUrl("https://api.example.com/search?existing=value");
+    httpRequestExecutor.addParameter("query", "test");
+    httpRequestExecutor.addParameter("limit", "10");
+
+    assertThat(httpRequestExecutor.getUrl())
+        .contains("existing=value")
+        .contains("query=test")
+        .contains("limit=10")
+        .startsWith("https://api.example.com/search");
+  }
+
+  @Test
+  @DisplayName("Should ignore addParameter with blank key or null value")
+  void shouldIgnoreInvalidAddParameter() {
+    httpRequestExecutor = new HttpRequestExecutor("https://api.example.com", httpClient);
+    httpRequestExecutor.setUrl("https://api.example.com/search");
+    httpRequestExecutor.addParameter("", "x");
+    httpRequestExecutor.addParameter("   ", "x");
+    httpRequestExecutor.addParameter("k", null);
+    httpRequestExecutor.addParameter("valid", "1");
+
+    assertThat(httpRequestExecutor.getUrl()).contains("valid=1").doesNotContain("k=");
+  }
+
+  @Test
+  @DisplayName("Last addParameter value wins for same key")
+  void addParameterOverwritesSameKey() {
+    httpRequestExecutor = new HttpRequestExecutor("https://api.example.com", httpClient);
+    httpRequestExecutor.setUrl("https://api.example.com/search");
+    httpRequestExecutor.addParameter("k", "first");
+    httpRequestExecutor.addParameter("k", "second");
+
+    assertThat(httpRequestExecutor.getUrl()).contains("k=second").doesNotContain("k=first");
+  }
+
+  @Test
   @DisplayName("Should keep distinct parameter keys that differ only by case")
   void shouldKeepDistinctParameterKeysThatDifferOnlyByCase() {
     // Given

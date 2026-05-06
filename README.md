@@ -587,7 +587,7 @@ server:
 - **`RequestExecutorService`**: Handles request execution logic and protocol routing
 - **`RequestExecutorFactory`**: Factory for creating request execution instances based on service type
 - **Protocol Implementations**:
-  - **HTTP**: `HttpRequestExecutor`, `HttpClientFactoryService`, `HttpRequestDecoratorAddBasicSecurity`, `HttpRequestDecoratorAddApiKeyHeader`, `HttpRequestDecoratorAddApiKeyHeaders`, `HttpRequestDecoratorAddEndpoint`, `HttpSecurityConstants`
+  - **HTTP**: `HttpRequestExecutor`, `HttpClientFactoryService`, `HttpRequestDecoratorAddBasicSecurity`, `HttpRequestDecoratorAddHeaderSecurity`, `HttpRequestDecoratorAddApiKeyHeaders`, `HttpRequestDecoratorAddQueryParamSecurity`, `HttpRequestDecoratorAddEndpoint`, `HttpSecurityConstants`
   - **JDBC**: `JdbcRequestExecutor`, `JdbcRequestDecoratorAddConnection`, `JdbcRequestDecoratorAddQuery`
   - **WMS**: `WmsCapabilitiesResponseDecorator` for WMS capabilities processing
 - **Decorator Pattern**: Flexible request/response modification through `RequestDecorator` and `ResponseDecorator` interfaces
@@ -611,10 +611,11 @@ The service uses the decorator pattern to modify requests and responses:
 
 ```text
 // Request decorators
-HttpRequestDecoratorAddBasicSecurity    // Adds basic authentication to HTTP requests
-HttpRequestDecoratorAddApiKeyHeader     // Adds a single API key header
-HttpRequestDecoratorAddApiKeyHeaders    // Adds multiple API key headers from payload
-HttpSecurityConstants                   // OpenAPI-style literals shared by HTTP security DTO/decorators
+HttpRequestDecoratorAddBasicSecurity       // Adds basic authentication to HTTP requests
+HttpRequestDecoratorAddHeaderSecurity      // Forwards all security header map entries to the request
+HttpRequestDecoratorAddApiKeyHeaders       // When type is apiKey, forwards non-empty header map
+HttpRequestDecoratorAddQueryParamSecurity // Appends security query parameters to the request URL
+HttpSecurityConstants                      // OpenAPI-style literals shared by HTTP security DTO/decorators
 HttpRequestDecoratorAddEndpoint         // Adds endpoint configuration to HTTP requests
 JdbcRequestDecoratorAddConnection       // Adds database connection to JDBC requests
 JdbcRequestDecoratorAddQuery           // Adds query configuration to JDBC requests
@@ -765,7 +766,7 @@ sitmun-proxy-middleware/
 - **`RequestExecutorService`**: Handles request execution logic and protocol routing
 - **`RequestExecutorFactory`**: Factory for creating request execution instances based on service type
 - **Protocol Implementations**:
-  - **HTTP**: `HttpRequestExecutor`, `HttpClientFactoryService`, `HttpRequestDecoratorAddBasicSecurity`, `HttpRequestDecoratorAddApiKeyHeader`, `HttpRequestDecoratorAddApiKeyHeaders`, `HttpRequestDecoratorAddEndpoint`, `HttpSecurityConstants`
+  - **HTTP**: `HttpRequestExecutor`, `HttpClientFactoryService`, `HttpRequestDecoratorAddBasicSecurity`, `HttpRequestDecoratorAddHeaderSecurity`, `HttpRequestDecoratorAddApiKeyHeaders`, `HttpRequestDecoratorAddQueryParamSecurity`, `HttpRequestDecoratorAddEndpoint`, `HttpSecurityConstants`
   - **JDBC**: `JdbcRequestExecutor`, `JdbcRequestDecoratorAddConnection`, `JdbcRequestDecoratorAddQuery`
   - **WMS**: `WmsCapabilitiesResponseDecorator` for WMS capabilities processing
 - **Decorator Pattern**: Flexible request/response modification through `RequestDecorator` and `ResponseDecorator` interfaces

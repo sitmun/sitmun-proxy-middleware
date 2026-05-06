@@ -26,8 +26,8 @@ public final class HttpSecurityConstants {
   public static final String BASIC_CREDENTIAL_SEPARATOR = ":";
 
   /**
-   * Typical API key header name (matches backend-core examples and JSON payloads). Used by {@link
-   * HttpRequestDecoratorAddApiKeyHeader} for legacy single-header configuration.
+   * Typical API key header name (matches backend-core examples and JSON payloads). May appear as a
+   * key in {@link HttpContextSecurity#getHeaders()}.
    */
   public static final String HEADER_X_API_KEY = "X-API-Key";
 }

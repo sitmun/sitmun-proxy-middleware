@@ -2,7 +2,7 @@ package org.sitmun.proxy.middleware.protocols.http;
 
 import java.util.Map;
 
-/** HTTP request security configuration (e.g. Basic auth, API key headers). */
+/** HTTP request security configuration (e.g. Basic auth, API key in headers or query). */
 public interface HttpContextSecurity {
 
   /**

@@ -5,8 +5,13 @@ import org.sitmun.proxy.middleware.decorator.Context;
 import org.sitmun.proxy.middleware.decorator.RequestDecorator;
 import org.springframework.stereotype.Component;
 
+/**
+ * Applies all entries from {@link HttpContextSecurity#getHeaders()} to the outbound request. Values
+ * come from the proxy HTTP security payload (e.g. OpenAPI {@code apiKey} in header), not from
+ * browser response security headers (HSTS, CSP, etc.).
+ */
 @Component
-public class HttpRequestDecoratorAddApiKeyHeader implements RequestDecorator {
+public class HttpRequestDecoratorAddHeaderSecurity implements RequestDecorator {
 
   @Override
   public boolean accept(Object target, Context context) {
