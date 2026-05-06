@@ -14,8 +14,9 @@ import org.sitmun.proxy.middleware.protocols.http.HttpSecurityConstants;
 import org.springframework.util.StringUtils;
 
 /**
- * DTO for HTTP request security (Basic auth and/or custom headers). See {@link
- * org.sitmun.proxy.middleware.protocols.http.HttpSecurityConstants} for shared OpenAPI literals.
+ * DTO for HTTP request security (Basic auth, custom headers, and/or API key query parameters). See
+ * {@link org.sitmun.proxy.middleware.protocols.http.HttpSecurityConstants} for shared OpenAPI
+ * literals.
  */
 @Getter
 @Setter
@@ -39,12 +40,15 @@ public class HttpSecurityDto implements HttpContextSecurity {
   /** Custom HTTP headers (e.g. API key header). It may be null. */
   private Map<String, String> headers;
 
+  /** Custom URL query parameters for API key authentication. It may be null. */
+  private Map<String, String> queryParams;
+
   /**
-   * Debug-oriented summary: {@link HttpSecurityConstants#TYPE_API_KEY} → header names (and username
-   * if erroneously set); {@link HttpSecurityConstants#TYPE_HTTP} (including legacy blank type with
-   * credentials) → scheme, username (literal when set), and password presence; other types → same
-   * plus header names. Passwords and header values are never logged. Mismatched fields add {@code
-   * warn=[...]}.
+   * Debug-oriented summary: {@link HttpSecurityConstants#TYPE_API_KEY} → header and query param
+   * names (and username if erroneously set); {@link HttpSecurityConstants#TYPE_HTTP} (including
+   * legacy blank type with credentials) → scheme, username (literal when set), and password
+   * presence; other types → same plus header and query param names. Passwords and header/query
+   * values are never logged. Mismatched fields add {@code warn=[...]}.
    */
   public String describeForLog() {
     if (isApiKeyType()) {
@@ -67,7 +71,13 @@ public class HttpSecurityDto implements HttpContextSecurity {
     if (StringUtils.hasText(password)) {
       warns.add("apiKeyWithPassword");
     }
-    String base = "type=" + nullToLog(type) + ", headerNames=" + formatHeaderNameList();
+    String base =
+        "type="
+            + nullToLog(type)
+            + ", headerNames="
+            + formatHeaderNameList()
+            + ", queryParamNames="
+            + formatQueryParamNameList();
     if (StringUtils.hasText(username)) {
       base += ", username=" + username;
     }
@@ -87,7 +97,9 @@ public class HttpSecurityDto implements HttpContextSecurity {
             + ", username="
             + usernameForLog(username)
             + ", password="
-            + presence(password);
+            + presence(password)
+            + ", queryParamNames="
+            + formatQueryParamNameList();
     return appendWarns(base, warns);
   }
 
@@ -106,7 +118,9 @@ public class HttpSecurityDto implements HttpContextSecurity {
             + ", password="
             + presence(password)
             + ", headerNames="
-            + formatHeaderNameList();
+            + formatHeaderNameList()
+            + ", queryParamNames="
+            + formatQueryParamNameList();
     return appendWarns(base, warns);
   }
 
@@ -152,6 +166,13 @@ public class HttpSecurityDto implements HttpContextSecurity {
       return "[]";
     }
     return "[" + headers.keySet().stream().sorted().collect(Collectors.joining(", ")) + "]";
+  }
+
+  private String formatQueryParamNameList() {
+    if (queryParams == null || queryParams.isEmpty()) {
+      return "[]";
+    }
+    return "[" + queryParams.keySet().stream().sorted().collect(Collectors.joining(", ")) + "]";
   }
 
   private static String appendWarns(String base, List<String> warns) {
