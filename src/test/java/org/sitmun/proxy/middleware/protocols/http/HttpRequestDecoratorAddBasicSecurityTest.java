@@ -2,7 +2,14 @@ package org.sitmun.proxy.middleware.protocols.http;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static org.sitmun.proxy.middleware.protocols.http.HttpSecurityConstants.AUTH_SCHEME_BASIC_PREFIX;
+import static org.sitmun.proxy.middleware.protocols.http.HttpSecurityConstants.BASIC_CREDENTIAL_SEPARATOR;
+import static org.sitmun.proxy.middleware.protocols.http.HttpSecurityConstants.HEADER_AUTHORIZATION;
+import static org.sitmun.proxy.middleware.protocols.http.HttpSecurityConstants.SCHEME_BASIC;
+import static org.sitmun.proxy.middleware.protocols.http.HttpSecurityConstants.TYPE_API_KEY;
+import static org.sitmun.proxy.middleware.protocols.http.HttpSecurityConstants.TYPE_HTTP;
 
+import java.util.Base64;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -138,8 +145,45 @@ class HttpRequestDecoratorAddBasicSecurityTest {
     decorator.addBehavior(requestExecutor, httpContext);
 
     // Then
-    String description = requestExecutor.describe();
-    assertThat(description).contains("Authorization=Basic").contains("dGVzdHVzZXI6dGVzdHBhc3M=");
+    assertThat(requestExecutor.getHeader(HEADER_AUTHORIZATION))
+        .isEqualTo(
+            AUTH_SCHEME_BASIC_PREFIX
+                + Base64.getEncoder()
+                    .encodeToString((username + BASIC_CREDENTIAL_SEPARATOR + password).getBytes()));
+  }
+
+  @Test
+  @DisplayName("Should not accept when type is apiKey even with username and password")
+  void shouldNotAcceptWhenTypeIsApiKey() {
+    when(httpContext.getSecurity()).thenReturn(security);
+    when(security.getType()).thenReturn(TYPE_API_KEY);
+    when(security.getUsername()).thenReturn("u");
+    when(security.getPassword()).thenReturn("p");
+
+    assertThat(decorator.accept(requestExecutor, httpContext)).isFalse();
+  }
+
+  @Test
+  @DisplayName("Should not accept oauth/bearer style type with credentials")
+  void shouldNotAcceptOauthStyleType() {
+    when(httpContext.getSecurity()).thenReturn(security);
+    when(security.getType()).thenReturn("oauth");
+    when(security.getUsername()).thenReturn("u");
+    when(security.getPassword()).thenReturn("p");
+
+    assertThat(decorator.accept(requestExecutor, httpContext)).isFalse();
+  }
+
+  @Test
+  @DisplayName("Should accept explicit http/basic OpenAPI-style security")
+  void shouldAcceptExplicitHttpBasic() {
+    when(httpContext.getSecurity()).thenReturn(security);
+    when(security.getType()).thenReturn(TYPE_HTTP);
+    when(security.getScheme()).thenReturn(SCHEME_BASIC);
+    when(security.getUsername()).thenReturn("u");
+    when(security.getPassword()).thenReturn("p");
+
+    assertThat(decorator.accept(requestExecutor, httpContext)).isTrue();
   }
 
   @Test

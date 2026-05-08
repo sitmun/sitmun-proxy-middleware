@@ -45,6 +45,7 @@ class JdbcRequestExecutorTest {
     assertEquals(200, responseEntity.getStatusCode().value());
     @SuppressWarnings("unchecked")
     List<Map<String, Object>> body = (List<Map<String, Object>>) responseEntity.getBody();
+    assertNotNull(body);
     assertEquals(1, body.size());
     assertEquals(1, body.get(0).get("value"));
 
@@ -82,6 +83,7 @@ class JdbcRequestExecutorTest {
     assertEquals(200, responseEntity.getStatusCode().value());
     @SuppressWarnings("unchecked")
     List<Map<String, Object>> body = (List<Map<String, Object>>) responseEntity.getBody();
+    assertNotNull(body);
     assertEquals(1, body.size());
     assertEquals("ok", body.get(0).get("value"));
 

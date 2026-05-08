@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.6] - 2026-05-08
+
+### Added
+
+- Microsoft SQL Server JDBC driver (`mssql-jdbc`) alongside PostgreSQL and Oracle for JDBC proxy connections.
+- `HttpRequestDecoratorAddQueryParamSecurity` to append `HttpContextSecurity#getQueryParams()` onto the outbound URL (OpenAPI-style API key in query).
+- `HttpSecurityDto#queryParams` and `HttpContextSecurity#getQueryParams()` for security query parameters alongside headers.
+- `HttpRequestExecutor#addParameter` to merge individual query parameters (used by the query-param security decorator).
+- `HttpRequestDecoratorAddHeaderSecurity` (replaces `HttpRequestDecoratorAddApiKeyHeader`) to forward the full security header map.
+- `HttpSecurityConstants` for shared OpenAPI-style security literals used by HTTP security DTOs and decorators.
+- `SensitiveDataMasking` for masked HTTP debug logging (e.g. OkHttp headers).
+- Unit tests: `HttpContextSecurityContractTest`, `HttpRequestDecoratorAddHeaderSecurityTest`, `HttpRequestDecoratorAddQueryParamSecurityTest`, and `HttpRequestExecutorTest` coverage for `addParameter`.
+
+### Changed
+
+- `HttpSecurityDto` implements `HttpContextSecurity`; supports custom header and query-param maps for API keys alongside Basic auth. `describeForLog()` includes sorted query parameter names (values never logged).
+- `HttpRequestExecutor` masks sensitive values in debug logs.
+- `HttpRequestDecoratorAddApiKeyHeaders` applies headers when `type` is `apiKey` (unchanged; complements header-map forwarding).
+- `HttpRequestDecoratorAddBasicSecurity` and related tests updated for the security contract.
+
 ## [1.2.5] - 2026-03-11
 
 ### Changed
@@ -94,7 +114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrated to Spring Boot 3.5.4 & Java 17
 - Migrated dependencies to Version Catalog
 - Reorganized codebase into protocol-based architecture (http, jdbc, wms)
-- Completely rewrote documentation with detailed architecture guide
+- Completely rewrote documentation with a detailed architecture guide
 - Improved test organization with protocol-specific test classes
 - Restructured Docker configuration with environment-specific configs
 
@@ -119,7 +139,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - OkHttp 4.12.0-based HTTP client
 - Request sanitization and access control
 - Error handling with proper HTTP status codes
-- Comprehensive test suite with H2 database for testing
+- Comprehensive test suite with an H2 database for testing
 - Decorator-based architecture with HTTP and JDBC context support
 
 ### Changed
@@ -130,9 +150,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Various bug fixes and improvements from development phase
+- Various bug fixes and improvements from the development phase
 
-[Unreleased]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.5...HEAD
+[Unreleased]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.6...HEAD
+
+[1.2.6]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.5...sitmun-proxy-middleware/1.2.6
 
 [1.2.5]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.3...sitmun-proxy-middleware/1.2.5
 

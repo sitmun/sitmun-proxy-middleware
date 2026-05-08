@@ -109,14 +109,6 @@ public class HttpClientFactoryService implements HttpClient {
     unsafeClient = createUnsafeClient();
   }
 
-  public void addInterceptor(Interceptor interceptor) {
-    if (!interceptors.contains(interceptor)) {
-      interceptors.add(interceptor);
-      safeClient = createSafeClient();
-      unsafeClient = createUnsafeClient();
-    }
-  }
-
   public void addInterceptors(Interceptor... interceptor) {
     for (Interceptor i : interceptor) {
       if (!interceptors.contains(i)) {
@@ -125,13 +117,5 @@ public class HttpClientFactoryService implements HttpClient {
     }
     safeClient = createSafeClient();
     unsafeClient = createUnsafeClient();
-  }
-
-  public void removeInterceptor(Interceptor interceptor) {
-    if (interceptors.contains(interceptor)) {
-      interceptors.remove(interceptor);
-      safeClient = createSafeClient();
-      unsafeClient = createUnsafeClient();
-    }
   }
 }

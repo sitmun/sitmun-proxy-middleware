@@ -6,6 +6,7 @@ import lombok.Getter;
 import okhttp3.Interceptor;
 import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
+import org.sitmun.proxy.middleware.protocols.http.HttpSecurityConstants;
 
 @Getter
 public class CheckBasicAuthorization implements Interceptor {
@@ -14,9 +15,15 @@ public class CheckBasicAuthorization implements Interceptor {
   @NotNull
   @Override
   public Response intercept(@NotNull Chain chain) throws IOException {
-    String authorization = chain.request().header("Authorization");
-    if (authorization != null && authorization.startsWith("Basic")) {
-      expectation = new String(Base64.getDecoder().decode(authorization.substring(6)));
+    String authorization = chain.request().header(HttpSecurityConstants.HEADER_AUTHORIZATION);
+    if (authorization != null
+        && authorization.startsWith(HttpSecurityConstants.AUTH_SCHEME_BASIC_PREFIX.trim())) {
+      expectation =
+          new String(
+              Base64.getDecoder()
+                  .decode(
+                      authorization.substring(
+                          HttpSecurityConstants.AUTH_SCHEME_BASIC_PREFIX.length())));
     }
     return chain.proceed(chain.request());
   }

@@ -11,7 +11,7 @@ public class ProxyMiddlewareConstants {
 
   /**
    * Header name for authenticating proxy middleware requests to the backend configuration API. This
-   * must match SecurityConstants.PROXY_MIDDLEWARE_KEY in backend-core.
+   * must match SecurityConstants.PROXY_MIDDLEWARE_KEY in SITMUN backend core.
    */
   public static final String PROXY_MIDDLEWARE_KEY = "X-SITMUN-Proxy-Key";
 

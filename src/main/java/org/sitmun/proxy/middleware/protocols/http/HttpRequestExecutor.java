@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.RequestBody;
@@ -12,6 +13,7 @@ import org.sitmun.proxy.middleware.service.RequestExecutor;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponse;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponseImpl;
 import org.sitmun.proxy.middleware.utils.UriTemplateExpander;
+import org.sitmun.proxy.middleware.utils.logging.SensitiveDataMasking;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
@@ -36,9 +38,20 @@ public class HttpRequestExecutor implements RequestExecutor {
     headers.put(header, value);
   }
 
+  /** Returns the header value set on this executor (for tests). */
+  public String getHeader(String name) {
+    return headers.get(name);
+  }
+
   public void setParameters(Map<String, String> parameters) {
     if (parameters != null && !parameters.isEmpty()) {
       this.parameters.putAll(parameters);
+    }
+  }
+
+  public void addParameter(String key, String value) {
+    if (StringUtils.hasText(key) && value != null) {
+      this.parameters.put(key, value);
     }
   }
 
@@ -57,17 +70,16 @@ public class HttpRequestExecutor implements RequestExecutor {
     }
 
     if (body != null) {
-      RequestBody requestBody =
-          RequestBody.create((String) body, okhttp3.MediaType.parse("text/xml"));
+      RequestBody requestBody = RequestBody.create(body, okhttp3.MediaType.parse("text/xml"));
       builder.post(requestBody);
     }
 
     okhttp3.Request httpRequest = builder.build();
 
-    log.info("Executing request to: {}", httpRequest.url());
-    log.info("Method: {}", httpRequest.method());
-    log.info("Headers: {}", httpRequest.headers());
-    log.info("Base URL: {}", baseUrl);
+    log.debug("Executing request to: {}", httpRequest.url());
+    log.debug("Method: {}", httpRequest.method());
+    log.debug("Headers (masked): {}", maskOkHttpHeaders(httpRequest.headers()));
+    log.debug("Base URL: {}", baseUrl);
 
     try (okhttp3.Response r = httpClient.executeRequest(httpRequest)) {
       ResponseBody body = r.body();
@@ -108,51 +120,30 @@ public class HttpRequestExecutor implements RequestExecutor {
 
       // Some parameters weren't used in template, add them as query parameters
       UriComponents components = UriComponentsBuilder.fromUriString(expandedUrl).build();
-
-      MultiValueMap<String, String> queryParams =
-          new LinkedMultiValueMap<>(components.getQueryParams().size());
-
-      components.getQueryParams().forEach((k, v) -> queryParams.put(k.toUpperCase(), v));
-
-      // Add remaining parameters that weren't used in template expansion
-      parameters.forEach(
-          (k, v) -> {
-            if (!result.getUsedVariables().contains(k)) {
-              String upperKey = k.toUpperCase();
-              List<String> existingValues = queryParams.get(upperKey);
-              if (existingValues == null || !existingValues.contains(v)) {
-                queryParams.add(upperKey, v);
-              }
-            }
-          });
-
-      String path = components.getPath() != null ? components.getPath() : "";
-
-      log.info("path: {}", components.getPath());
-      log.info("query: {}", queryParams);
-
-      return UriComponentsBuilder.newInstance()
-          .scheme(components.getScheme())
-          .host(components.getHost())
-          .port(components.getPort())
-          .path(path)
-          .queryParams(queryParams)
-          .toUriString();
+      return rebuildUrlWithMergedQueryParams(
+          components, k -> !result.getUsedVariables().contains(k));
     }
 
     // No template variables, just add parameters as query strings
     UriComponents components = UriComponentsBuilder.fromUriString(url).build();
+    return rebuildUrlWithMergedQueryParams(components, k -> true);
+  }
 
+  private String rebuildUrlWithMergedQueryParams(
+      UriComponents components, Predicate<String> includeParameterKey) {
     MultiValueMap<String, String> queryParams =
         new LinkedMultiValueMap<>(components.getQueryParams().size());
 
-    components.getQueryParams().forEach((k, v) -> queryParams.put(k.toUpperCase(), v));
+    queryParams.putAll(components.getQueryParams());
+
     parameters.forEach(
         (k, v) -> {
-          String upperKey = k.toUpperCase();
-          List<String> existingValues = queryParams.get(upperKey);
+          if (!includeParameterKey.test(k)) {
+            return;
+          }
+          List<String> existingValues = queryParams.get(k);
           if (existingValues == null || !existingValues.contains(v)) {
-            queryParams.add(upperKey, v);
+            queryParams.add(k, v);
           }
         });
 
@@ -176,11 +167,19 @@ public class HttpRequestExecutor implements RequestExecutor {
         + url
         + '\''
         + ", headers="
-        + headers
+        + SensitiveDataMasking.formatMaskedMap(headers)
         + ", parameters="
         + parameters
         + ", baseUrl="
         + baseUrl
         + '}';
+  }
+
+  private static String maskOkHttpHeaders(okhttp3.Headers h) {
+    Map<String, String> map = new HashMap<>();
+    for (String name : h.names()) {
+      map.put(name, h.get(name));
+    }
+    return SensitiveDataMasking.formatMaskedMap(map);
   }
 }

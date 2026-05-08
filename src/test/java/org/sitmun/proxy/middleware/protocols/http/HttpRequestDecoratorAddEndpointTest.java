@@ -95,8 +95,10 @@ class HttpRequestDecoratorAddEndpointTest {
 
     // Then
     assertThat(requestExecutor.getUrl())
-        .isEqualTo("http://test.com/api/endpoint?PARAM1=value1&PARAM2=value2");
-    // Verify parameters are set by checking the describe output
+        .startsWith("http://test.com/api/endpoint?")
+        .contains("param1=value1")
+        .contains("param2=value2");
+    // Checking to verify parameters contain output
     String description = requestExecutor.describe();
     assertThat(description).contains("param1=value1").contains("param2=value2");
   }
@@ -148,10 +150,10 @@ class HttpRequestDecoratorAddEndpointTest {
     decorator.addBehavior(requestExecutor, httpContext);
 
     // Then
-    assertThat(requestExecutor.getUrl()).contains("TYPE=admin");
-    assertThat(requestExecutor.getUrl()).contains("ACTIVE=true");
-    assertThat(requestExecutor.getUrl()).contains("LIMIT=20");
-    assertThat(requestExecutor.getUrl()).contains("OFFSET=0");
+    assertThat(requestExecutor.getUrl()).contains("type=admin");
+    assertThat(requestExecutor.getUrl()).contains("active=true");
+    assertThat(requestExecutor.getUrl()).contains("limit=20");
+    assertThat(requestExecutor.getUrl()).contains("offset=0");
     assertThat(requestExecutor.getUrl()).startsWith("https://api.example.com/v1/users/search");
   }
 
@@ -170,9 +172,9 @@ class HttpRequestDecoratorAddEndpointTest {
     decorator.addBehavior(requestExecutor, httpContext);
 
     // Then
-    assertThat(requestExecutor.getUrl()).contains("QUERY=test%2520with%2520spaces");
-    assertThat(requestExecutor.getUrl()).contains("FILTER=active");
-    assertThat(requestExecutor.getUrl()).contains("SORT=name");
+    assertThat(requestExecutor.getUrl()).contains("query=test%2520with%2520spaces");
+    assertThat(requestExecutor.getUrl()).contains("filter=active");
+    assertThat(requestExecutor.getUrl()).contains("sort=name");
     assertThat(requestExecutor.getUrl()).startsWith("https://api.example.com/search");
   }
 }

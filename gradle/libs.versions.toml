@@ -39,6 +39,7 @@ handyUriTemplates = { group = "com.damnhandy", name = "handy-uri-templates", ver
 # Database Drivers
 postgresql = { group = "org.postgresql", name = "postgresql" }
 oracle-jdbc = { group = "com.oracle.database.jdbc", name = "ojdbc11-production" }
+mssql-jdbc = { group = "com.microsoft.sqlserver", name = "mssql-jdbc" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }

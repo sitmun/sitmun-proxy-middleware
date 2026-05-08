@@ -16,3 +16,11 @@ sitmun:
     config:
       url: http://localhost:8080/api/config/proxy
       secret: 9ef80c644166846897f6a87d3cf6ab204d144229
+  ogc:
+    capabilities:
+      service-paths:
+        - wms
+        - wfs
+        - wcs
+        - ows
+      extra-sources: []

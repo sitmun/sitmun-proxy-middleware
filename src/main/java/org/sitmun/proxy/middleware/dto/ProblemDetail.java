@@ -37,16 +37,4 @@ public class ProblemDetail {
 
   /** Extension members for additional context. */
   @Builder.Default private Map<String, Object> properties = new HashMap<>();
-
-  /**
-   * Add an extension property.
-   *
-   * @param key property name
-   * @param value property value
-   * @return this instance for chaining
-   */
-  public ProblemDetail addProperty(String key, Object value) {
-    this.properties.put(key, value);
-    return this;
-  }
 }
