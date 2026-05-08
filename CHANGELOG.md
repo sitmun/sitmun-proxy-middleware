@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.6] - 2026-05-08
+
 ### Added
 
 - Microsoft SQL Server JDBC driver (`mssql-jdbc`) alongside PostgreSQL and Oracle for JDBC proxy connections.
@@ -150,7 +152,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Various bug fixes and improvements from the development phase
 
-[Unreleased]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.5...HEAD
+[Unreleased]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.6...HEAD
+
+[1.2.6]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.5...sitmun-proxy-middleware/1.2.6
 
 [1.2.5]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.3...sitmun-proxy-middleware/1.2.5
 
