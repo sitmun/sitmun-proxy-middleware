@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.7] - 2026-06-05
+
+### Changed
+
+- Release alignment to `1.2.7` across build metadata and documentation badges.
+
 ## [1.2.6] - 2026-05-08
 
 ### Added
@@ -152,7 +158,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Various bug fixes and improvements from the development phase
 
-[Unreleased]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.6...HEAD
+[Unreleased]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.7...HEAD
+
+[1.2.7]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.6...sitmun-proxy-middleware/1.2.7
 
 [1.2.6]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.5...sitmun-proxy-middleware/1.2.6
 
