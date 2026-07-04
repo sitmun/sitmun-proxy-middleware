@@ -1,5 +1,5 @@
 [![License: EUPL v1.2](https://img.shields.io/badge/License-EUPL%20v1.2-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-1.2.7-blue.svg)
+![Version](https://img.shields.io/badge/version-1.2.8-SNAPSHOT-blue.svg)
 
 # SITMUN Proxy Middleware
 
