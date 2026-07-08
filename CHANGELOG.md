@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- Require `SITMUN_BACKEND_CONFIG_SECRET` from the environment; removed the committed fallback. `ProxySecretValidator` fails startup when the shared secret is blank or shorter than 32 characters. The Gradle `test` task supplies a deterministic non-placeholder value.
+
 ## [1.2.7] - 2026-06-05
 
 ### Changed
