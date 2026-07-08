@@ -15,7 +15,7 @@ sitmun:
   backend:
     config:
       url: http://localhost:8080/api/config/proxy
-      secret: 9ef80c644166846897f6a87d3cf6ab204d144229
+      secret: test-only-insecure-middleware-secret
   ogc:
     capabilities:
       service-paths:

@@ -127,7 +127,7 @@ This service integrates with the [SITMUN Backend Core](https://github.com/sitmun
    # Create .env file
    cat > .env << EOF
    SITMUN_BACKEND_CONFIG_URL=http://localhost:9001/api/config/proxy
-   SITMUN_BACKEND_CONFIG_SECRET=your-secret-key
+   SITMUN_BACKEND_CONFIG_SECRET=<32+ char random value>
    EOF
    ```
 
@@ -371,11 +371,13 @@ Response:
 | Variable | Description | Required | Default |
 | --- | --- | --- | --- |
 | `SITMUN_BACKEND_CONFIG_URL` | URL to backend configuration service | Yes | - |
-| `SITMUN_BACKEND_CONFIG_SECRET` | Secret key for configuration access | Yes | - |
+| `SITMUN_BACKEND_CONFIG_SECRET` | Shared secret for backend configuration access (min 32 chars; startup-validated). Must match the backend's `SITMUN_PROXY_MIDDLEWARE_SECRET` | Yes | - |
 | `SERVER_PORT` | Application port | No | 8080 |
 | `SPRING_PROFILES_ACTIVE` | Spring profile to use | No | prod |
 | `SITMUN_OGC_CAPABILITIES_SERVICE_PATHS` | Comma-separated OGC service path suffixes recognized when rewriting URLs in `GetCapabilities` responses | No | `wms,wfs,wcs,ows` |
 | `SITMUN_OGC_CAPABILITIES_EXTRA_SOURCES` | Comma-separated list of additional source URL prefixes to replace with the proxy URL in `GetCapabilities` responses. Use this when the backend exposes an internal address (e.g. `localhost`, a private IP) that differs from the URL configured in SITMUN | No | Empty list |
+
+`SITMUN_BACKEND_CONFIG_SECRET` has no fallback default. Startup is fail-fast: `ProxySecretValidator` rejects a blank or shorter-than-32-character `sitmun.backend.config.secret` with an `IllegalStateException`, and a missing environment variable fails placeholder resolution before the context starts.
 
 ### Profiles
 
@@ -409,7 +411,7 @@ sitmun:
   backend:
     config:
       url: http://some.url
-      secret: some-secret
+      secret: ${SITMUN_BACKEND_CONFIG_SECRET}
   ogc:
     capabilities:
       # OGC service path suffixes recognized when rewriting URLs in GetCapabilities responses.
@@ -498,7 +500,7 @@ sitmun:
   backend:
     config:
       url: http://sitmun-backend:8080
-      secret: ${SITMUN_BACKEND_CONFIG_SECRET:your-secret-key-here}
+      secret: ${SITMUN_BACKEND_CONFIG_SECRET}
 
 # Server Configuration
 server:
