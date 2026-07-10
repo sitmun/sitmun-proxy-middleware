@@ -113,8 +113,7 @@ class HttpRequestDecoratorAddBodyTest {
     decorator.addBehavior(requestExecutor, httpContext);
 
     // Then
-    String description = requestExecutor.describe();
-    assertThat(description).contains("Content-Type=application/xml");
+    assertThat(requestExecutor.getHeader("Content-Type")).isEqualTo("application/xml");
   }
 
   @Test
@@ -129,8 +128,7 @@ class HttpRequestDecoratorAddBodyTest {
     decorator.addBehavior(requestExecutor, httpContext);
 
     // Then
-    String description = requestExecutor.describe();
-    assertThat(description).contains("Content-Type=application/xml");
+    assertThat(requestExecutor.getHeader("Content-Type")).isEqualTo("application/xml");
   }
 
   @Test
@@ -154,8 +152,7 @@ class HttpRequestDecoratorAddBodyTest {
     decorator.addBehavior(requestExecutor, httpContext);
 
     // Then
-    String description = requestExecutor.describe();
-    assertThat(description).contains("Content-Type=application/xml");
+    assertThat(requestExecutor.getHeader("Content-Type")).isEqualTo("application/xml");
   }
 
   @Test

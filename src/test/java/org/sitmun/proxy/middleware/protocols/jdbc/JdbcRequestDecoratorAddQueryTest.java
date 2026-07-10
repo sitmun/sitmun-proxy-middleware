@@ -1,6 +1,6 @@
 package org.sitmun.proxy.middleware.protocols.jdbc;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -22,8 +22,9 @@ class JdbcRequestDecoratorAddQueryTest {
     decorator.addBehavior(executor, payload);
 
     String describe = executor.describe();
-    assertTrue(describe.contains("SELECT * FROM test WHERE id=?"));
-    assertTrue(describe.contains("parameters=1"));
+    assertThat(describe)
+        .contains("sqlPresent=true", "parameterCount=1")
+        .doesNotContain("SELECT * FROM test WHERE id=?", "123");
   }
 
   @Test
@@ -31,6 +32,6 @@ class JdbcRequestDecoratorAddQueryTest {
   void acceptReturnsTrueForJdbcContexts() {
     JdbcRequestDecoratorAddQuery decorator = new JdbcRequestDecoratorAddQuery();
     JdbcPayloadDto payload = JdbcPayloadDto.builder().sql("SELECT 1").build();
-    assertTrue(decorator.accept(new JdbcRequestExecutor(), payload));
+    assertThat(decorator.accept(new JdbcRequestExecutor(), payload)).isTrue();
   }
 }

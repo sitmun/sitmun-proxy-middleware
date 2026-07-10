@@ -44,11 +44,8 @@ public class HttpSecurityDto implements HttpContextSecurity {
   private Map<String, String> queryParams;
 
   /**
-   * Debug-oriented summary: {@link HttpSecurityConstants#TYPE_API_KEY} → header and query param
-   * names (and username if erroneously set); {@link HttpSecurityConstants#TYPE_HTTP} (including
-   * legacy blank type with credentials) → scheme, username (literal when set), and password
-   * presence; other types → same plus header and query param names. Passwords and header/query
-   * values are never logged. Mismatched fields add {@code warn=[...]}.
+   * Debug-oriented summary containing only field presence and header/query parameter names.
+   * Credential values are never logged. Mismatched fields add {@code warn=[...]}.
    */
   public String describeForLog() {
     if (isApiKeyType()) {
@@ -79,7 +76,7 @@ public class HttpSecurityDto implements HttpContextSecurity {
             + ", queryParamNames="
             + formatQueryParamNameList();
     if (StringUtils.hasText(username)) {
-      base += ", username=" + username;
+      base += ", username=" + presence(username);
     }
     return appendWarns(base, warns);
   }
@@ -146,7 +143,7 @@ public class HttpSecurityDto implements HttpContextSecurity {
   }
 
   private static String usernameForLog(String value) {
-    return StringUtils.hasText(value) ? value : "unset";
+    return presence(value);
   }
 
   private static String presence(String value) {

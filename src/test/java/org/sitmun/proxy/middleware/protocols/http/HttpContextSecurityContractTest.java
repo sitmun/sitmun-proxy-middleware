@@ -86,8 +86,8 @@ class HttpContextSecurityContractTest {
                 .password("zqp9x")
                 .build()
                 .describeForLog())
-        .isEqualTo("type=http, scheme=basic, username=alice, password=set, queryParamNames=[]")
-        .doesNotContain("zqp9x");
+        .isEqualTo("type=http, scheme=basic, username=set, password=set, queryParamNames=[]")
+        .doesNotContain("alice", "zqp9x");
   }
 
   @Test

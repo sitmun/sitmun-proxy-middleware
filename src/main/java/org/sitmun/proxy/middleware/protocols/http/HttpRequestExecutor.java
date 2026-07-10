@@ -1,5 +1,7 @@
 package org.sitmun.proxy.middleware.protocols.http;
 
+import static org.sitmun.proxy.middleware.dto.ProxyProblemResponses.upstreamAuthorizationFailure;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +15,6 @@ import org.sitmun.proxy.middleware.service.RequestExecutor;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponse;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponseImpl;
 import org.sitmun.proxy.middleware.utils.UriTemplateExpander;
-import org.sitmun.proxy.middleware.utils.logging.SensitiveDataMasking;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
@@ -76,19 +77,23 @@ public class HttpRequestExecutor implements RequestExecutor {
 
     okhttp3.Request httpRequest = builder.build();
 
-    log.debug("Executing request to: {}", httpRequest.url());
-    log.debug("Method: {}", httpRequest.method());
-    log.debug("Headers (masked): {}", maskOkHttpHeaders(httpRequest.headers()));
-    log.debug("Base URL: {}", baseUrl);
+    log.debug(
+        "Executing upstream request: method={} headerNames={}",
+        httpRequest.method(),
+        httpRequest.headers().names());
 
     try (okhttp3.Response r = httpClient.executeRequest(httpRequest)) {
+      if (r.code() == 401 || r.code() == 403) {
+        return new RequestExecutorResponseImpl<>(
+            baseUrl, 502, "application/problem+json", upstreamAuthorizationFailure());
+      }
       ResponseBody body = r.body();
       if (body == null)
         return new RequestExecutorResponseImpl<>(baseUrl, r.code(), r.header("content-type"), null);
       return new RequestExecutorResponseImpl<>(
           baseUrl, r.code(), r.header("content-type"), body.bytes());
     } catch (IOException e) {
-      log.error("Error getting response: {}", e.getMessage(), e);
+      log.error("Upstream request failed with exception type {}", e.getClass().getSimpleName());
       org.sitmun.proxy.middleware.dto.ProblemDetail problem =
           org.sitmun.proxy.middleware.dto.ProblemDetail.builder()
               .type(org.sitmun.proxy.middleware.dto.ProblemTypes.PROXY_SERVICE_ERROR)
@@ -149,8 +154,7 @@ public class HttpRequestExecutor implements RequestExecutor {
 
     String path = components.getPath() != null ? components.getPath() : "";
 
-    log.info("path: {}", components.getPath());
-    log.info("query: {}", queryParams);
+    log.debug("Built upstream request with {} query parameter names", queryParams.size());
 
     return UriComponentsBuilder.newInstance()
         .scheme(components.getScheme())
@@ -163,23 +167,12 @@ public class HttpRequestExecutor implements RequestExecutor {
 
   public String describe() {
     return "HttpRequest{"
-        + "url='"
-        + url
-        + '\''
-        + ", headers="
-        + SensitiveDataMasking.formatMaskedMap(headers)
-        + ", parameters="
-        + parameters
-        + ", baseUrl="
-        + baseUrl
+        + "method="
+        + (body == null ? "GET" : "POST")
+        + ", headerNames="
+        + headers.keySet()
+        + ", parameterNames="
+        + parameters.keySet()
         + '}';
-  }
-
-  private static String maskOkHttpHeaders(okhttp3.Headers h) {
-    Map<String, String> map = new HashMap<>();
-    for (String name : h.names()) {
-      map.put(name, h.get(name));
-    }
-    return SensitiveDataMasking.formatMaskedMap(map);
   }
 }

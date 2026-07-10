@@ -642,9 +642,22 @@ WmsCapabilitiesResponseDecorator       // Modifies WMS capabilities responses
 
 ### Error Handling
 
-- **HTTP Status Codes**: Proper status code mapping
-- **Error Response Format**: Consistent error response structure
-- **Logging**: Comprehensive error logging
+| Failure source | Status | Client meaning |
+| --- | --- | --- |
+| Malformed middleware request or Bearer header | `400` | Invalid request; keep the SITMUN session. |
+| Backend configuration authentication failure | `401` | Refresh the short-lived proxy token once. |
+| Backend configuration resource denial | `403` | Keep the session and report denied access. |
+| Upstream WMS/WFS/HTTP authentication failure | `502` | Upstream service/configuration failure, never SITMUN session expiry. |
+
+- Proxy-generated errors use `application/problem+json`, instance `/proxy`, and an `origin`
+  property identifying `proxy-request`, `backend-config`, or `upstream-service`.
+- Malformed Bearer headers return `400` without forwarding the request.
+- Backend configuration `401`/`403` responses retain only trusted SITMUN problem type/title
+  identity; their detail, instance, body, and `WWW-Authenticate` header are not forwarded.
+- Upstream service `401`/`403` responses deliberately return `502`. The proxy is the upstream
+  client, so forwarding those statuses would incorrectly signal that the viewer session failed.
+- Logs retain request method, field names, counts, and presence while omitting credentials,
+  connection URLs, SQL, parameter values, upstream URLs, and exception messages.
 
 ## Development
 

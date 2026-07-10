@@ -7,6 +7,8 @@ import static org.sitmun.proxy.middleware.config.ProxyMiddlewareConstants.TYPE_S
 import static org.sitmun.proxy.middleware.config.ProxyMiddlewareConstants.TYPE_WMS;
 import static org.sitmun.proxy.middleware.config.ProxyMiddlewareConstants.TYPE_WMTS;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Assertions;
@@ -18,6 +20,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sitmun.proxy.middleware.dto.ConfigProxyDto;
 import org.sitmun.proxy.middleware.dto.ConfigProxyRequestDto;
@@ -27,6 +30,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
@@ -38,6 +42,7 @@ class RequestConfigurationServiceTest {
 
   @Mock private RestTemplate restTemplate;
   @Mock private RequestExecutorService requestExecutorService;
+  @Spy private ObjectMapper objectMapper = new ObjectMapper();
 
   @InjectMocks private RequestConfigurationService requestConfigurationService;
 
@@ -84,8 +89,8 @@ class RequestConfigurationServiceTest {
   }
 
   @Test
-  @DisplayName("Should return 401 error when configuration response body is null")
-  void shouldReturn401ErrorWhenConfigurationResponseBodyIsNull() {
+  @DisplayName("Should return gateway error when configuration response body is null")
+  void shouldReturnGatewayErrorWhenConfigurationResponseBodyIsNull() {
     // Given
     Integer appId = 1;
     Integer terId = 2;
@@ -105,15 +110,16 @@ class RequestConfigurationServiceTest {
             appId, terId, TYPE_WMS, typeId, token, params, TEST_URL, null);
 
     // Then
-    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
     assertThat(result.getBody()).isInstanceOf(ProblemDetail.class);
 
     ProblemDetail problemDetail = (ProblemDetail) result.getBody();
     Assertions.assertNotNull(problemDetail);
-    assertThat(problemDetail.getStatus()).isEqualTo(401);
-    assertThat(problemDetail.getTitle()).isEqualTo("Unauthorized");
-    assertThat(problemDetail.getDetail()).isEqualTo("Request not valid");
-    assertThat(problemDetail.getInstance()).isEqualTo(CONFIG_URL);
+    assertThat(problemDetail.getStatus()).isEqualTo(502);
+    assertThat(problemDetail.getTitle()).isEqualTo("Proxy Configuration Error");
+    assertThat(problemDetail.getDetail()).isEqualTo("Backend configuration response was empty");
+    assertThat(problemDetail.getInstance()).isEqualTo("/proxy");
+    assertThat(problemDetail.getProperties()).containsEntry("origin", "backend-config");
   }
 
   @Test
@@ -172,8 +178,61 @@ class RequestConfigurationServiceTest {
     Assertions.assertNotNull(problemDetail);
     assertThat(problemDetail.getStatus()).isEqualTo(400);
     assertThat(problemDetail.getTitle()).isEqualTo("Backend Error");
-    assertThat(problemDetail.getDetail()).isEqualTo("400 Bad Request");
-    assertThat(problemDetail.getInstance()).isEqualTo(CONFIG_URL);
+    assertThat(problemDetail.getDetail()).isEqualTo("Backend configuration request failed");
+    assertThat(problemDetail.getInstance()).isEqualTo("/proxy");
+    assertThat(problemDetail.getProperties()).containsEntry("origin", "backend-config");
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "401, https://sitmun.org/problems/invalid-token, Invalid token",
+    "403, https://sitmun.org/problems/access-denied, Access denied"
+  })
+  @DisplayName("Should preserve sanitized backend authorization problem identity")
+  void shouldPreserveSanitizedBackendAuthorizationProblemIdentity(
+      int status, String type, String title) {
+    // Given
+    String hostileProblem =
+        """
+        {
+          "type": "%s",
+          "status": %d,
+          "title": "%s",
+          "detail": "hostile backend detail",
+          "instance": "https://hostile.example/private"
+        }
+        """
+            .formatted(type, status, title);
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_PROBLEM_JSON);
+    headers.set(HttpHeaders.WWW_AUTHENTICATE, "Bearer realm=\"private\"");
+    HttpClientErrorException exception =
+        HttpClientErrorException.create(
+            HttpStatus.valueOf(status),
+            title,
+            headers,
+            hostileProblem.getBytes(StandardCharsets.UTF_8),
+            StandardCharsets.UTF_8);
+
+    when(restTemplate.exchange(
+            eq(CONFIG_URL), eq(HttpMethod.POST), any(HttpEntity.class), eq(ConfigProxyDto.class)))
+        .thenThrow(exception);
+
+    // When
+    ResponseEntity<?> result =
+        requestConfigurationService.doRequest(1, 2, TYPE_WMS, 3, "token", Map.of(), TEST_URL, null);
+
+    // Then
+    assertThat(result.getStatusCode().value()).isEqualTo(status);
+    assertThat(result.getHeaders()).doesNotContainKey(HttpHeaders.WWW_AUTHENTICATE);
+    assertThat(result.getBody()).isInstanceOf(ProblemDetail.class);
+    ProblemDetail problem = (ProblemDetail) result.getBody();
+    assertThat(problem.getType()).isEqualTo(type);
+    assertThat(problem.getStatus()).isEqualTo(status);
+    assertThat(problem.getTitle()).isEqualTo(title);
+    assertThat(problem.getDetail()).isEqualTo("Backend configuration request was rejected");
+    assertThat(problem.getInstance()).isEqualTo("/proxy");
+    assertThat(problem.getProperties()).containsEntry("origin", "backend-config");
   }
 
   @Test
@@ -198,15 +257,16 @@ class RequestConfigurationServiceTest {
             appId, terId, TYPE_WMS, typeId, token, params, TEST_URL, null);
 
     // Then
-    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
     assertThat(result.getBody()).isInstanceOf(ProblemDetail.class);
 
     ProblemDetail problemDetail = (ProblemDetail) result.getBody();
     Assertions.assertNotNull(problemDetail);
-    assertThat(problemDetail.getStatus()).isEqualTo(500);
+    assertThat(problemDetail.getStatus()).isEqualTo(502);
     assertThat(problemDetail.getTitle()).isEqualTo("Proxy Configuration Error");
-    assertThat(problemDetail.getDetail()).isEqualTo("Network error");
-    assertThat(problemDetail.getInstance()).isEqualTo(CONFIG_URL);
+    assertThat(problemDetail.getDetail()).isEqualTo("Backend configuration service is unavailable");
+    assertThat(problemDetail.getInstance()).isEqualTo("/proxy");
+    assertThat(problemDetail.getProperties()).containsEntry("origin", "backend-config");
   }
 
   @Test
@@ -404,8 +464,9 @@ class RequestConfigurationServiceTest {
     Assertions.assertNotNull(problemDetail);
     assertThat(problemDetail.getStatus()).isEqualTo(400);
     assertThat(problemDetail.getTitle()).isEqualTo("Backend Error");
-    assertThat(problemDetail.getDetail()).isEqualTo("400 Bad Request");
-    assertThat(problemDetail.getInstance()).isEqualTo(CONFIG_URL);
+    assertThat(problemDetail.getDetail()).isEqualTo("Backend configuration request failed");
+    assertThat(problemDetail.getInstance()).isEqualTo("/proxy");
+    assertThat(problemDetail.getProperties()).containsEntry("origin", "backend-config");
   }
 
   private ConfigProxyDto createValidConfigProxyDto() {

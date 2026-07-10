@@ -9,11 +9,15 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.sitmun.proxy.middleware.dto.ProblemDetail;
 import org.sitmun.proxy.middleware.service.RequestConfigurationService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 @ExtendWith(MockitoExtension.class)
@@ -120,6 +124,24 @@ class ProxyMiddlewareControllerTest {
         .doRequest(
             eq(appId), eq(terId), eq(type), eq(typeId), isNull(), any(), eq(requestUrl), isNull());
     assertThat(result.getStatusCode().value()).isEqualTo(200);
+  }
+
+  @Test
+  @DisplayName("GET: Bearer scheme is parsed case-insensitively")
+  void getServiceAcceptsCaseInsensitiveBearerScheme() {
+    String requestUrl = "http://localhost:8080/proxy/1/2/WMS/100";
+    when(httpServletRequest.getRequestURL()).thenReturn(new StringBuffer(requestUrl));
+    doReturn(ResponseEntity.ok("success"))
+        .when(requestConfigurationService)
+        .doRequest(1, 2, "WMS", 100, "test-token", Map.of(), requestUrl, null);
+
+    ResponseEntity<?> result =
+        proxyMiddlewareController.getService(
+            1, 2, "WMS", 100, "bEaReR test-token", Map.of(), httpServletRequest);
+
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+    verify(requestConfigurationService)
+        .doRequest(1, 2, "WMS", 100, "test-token", Map.of(), requestUrl, null);
   }
 
   @Test
@@ -247,5 +269,42 @@ class ProxyMiddlewareControllerTest {
     assertThat(paramsCaptor.getValue()).containsEntry("CRS", "EPSG:4326");
     assertThat(paramsCaptor.getValue()).containsEntry("FILTER", "name='Barcelona'");
     assertThat(result.getStatusCode().value()).isEqualTo(200);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "Bearer",
+        "Bearer ",
+        "Basic abc",
+        "abc",
+        " Bearer token",
+        "Bearer a b",
+        "Bearer token\n",
+        "Bearer token\r\n"
+      })
+  @DisplayName("GET: malformed Authorization headers return a controlled bad request")
+  void getServiceRejectsMalformedAuthorizationHeader(String authorization) {
+    ResponseEntity<?> response =
+        proxyMiddlewareController.getService(
+            1, 2, "WMS", 100, authorization, Map.of(), httpServletRequest);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(response.getBody()).isInstanceOf(ProblemDetail.class);
+    ProblemDetail problem = (ProblemDetail) response.getBody();
+    assertThat(problem.getStatus()).isEqualTo(400);
+    assertThat(problem.getDetail()).isEqualTo("Authorization header must contain one Bearer token");
+    verifyNoInteractions(requestConfigurationService);
+  }
+
+  @Test
+  @DisplayName("POST: malformed Authorization header returns a controlled bad request")
+  void postServiceRejectsMalformedAuthorizationHeader() {
+    ResponseEntity<?> response =
+        proxyMiddlewareController.postService(
+            1, 2, "WFS", 50, "Basic abc", Map.of(), httpServletRequest, "<xml/>");
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    verifyNoInteractions(requestConfigurationService);
   }
 }

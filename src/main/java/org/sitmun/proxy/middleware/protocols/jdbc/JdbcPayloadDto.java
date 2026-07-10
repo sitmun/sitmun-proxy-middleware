@@ -43,22 +43,9 @@ public class JdbcPayloadDto extends PayloadDto implements JdbcContext {
   @Override
   public String describe() {
     return "DatasourcePayloadDto{"
-        + "vary="
-        + getVary()
-        + ", uri='"
-        + uri
-        + '\''
-        + ", user='"
-        + user
-        + '\''
-        + ", password='****'"
-        + ", driver='"
-        + driver
-        + '\''
-        + ", sql='"
-        + sql
-        + '\''
-        + ", parameters="
+        + "varyCount="
+        + (getVary() == null ? 0 : getVary().size())
+        + ", parameterCount="
         + (parameters != null ? parameters.size() : 0)
         + '}';
   }

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- **Security**: validate Bearer headers without server errors, preserve sanitized backend 401/403 problem identity, deliberately map upstream authorization failures to non-session 502 problem responses, use fixed proxy instance/origin metadata, and omit backend/upstream URLs, credentials, SQL, parameter values, exception details, upstream bodies, and `WWW-Authenticate` from proxy responses and logs.
 - Require `SITMUN_BACKEND_CONFIG_SECRET` from the environment; removed the committed fallback. `ProxySecretValidator` fails startup when the shared secret is blank or shorter than 32 characters. The Gradle `test` task supplies a deterministic non-placeholder value.
 
 ## [1.2.7] - 2026-06-05
