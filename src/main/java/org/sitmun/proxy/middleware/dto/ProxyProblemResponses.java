@@ -31,6 +31,32 @@ public final class ProxyProblemResponses {
             .build());
   }
 
+  public static ResponseEntity<ProblemDetail> missingAuthorizationHeader() {
+    return response(
+        HttpStatus.UNAUTHORIZED,
+        ProblemDetail.builder()
+            .type(PROXY_UNAUTHORIZED)
+            .status(HttpStatus.UNAUTHORIZED.value())
+            .title("Unauthorized")
+            .detail("Authorization Bearer token is required")
+            .instance(PROXY_INSTANCE)
+            .properties(Map.of("origin", "proxy-request"))
+            .build());
+  }
+
+  public static ResponseEntity<ProblemDetail> proxyInvalidRequest(String detail) {
+    return response(
+        HttpStatus.BAD_REQUEST,
+        ProblemDetail.builder()
+            .type(PROXY_INVALID_REQUEST)
+            .status(HttpStatus.BAD_REQUEST.value())
+            .title("Invalid Request")
+            .detail(detail)
+            .instance(PROXY_INSTANCE)
+            .properties(Map.of("origin", "proxy-request"))
+            .build());
+  }
+
   public static ResponseEntity<ProblemDetail> emptyBackendConfiguration() {
     return response(
         HttpStatus.BAD_GATEWAY,

@@ -4,7 +4,7 @@ import static org.sitmun.proxy.middleware.dto.ProxyProblemResponses.invalidAutho
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
-import java.util.regex.Pattern;
+import org.sitmun.proxy.middleware.controllers.AuthorizationBearerParser.AuthorizationToken;
 import org.sitmun.proxy.middleware.service.RequestConfigurationService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -14,9 +14,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/proxy")
 public class ProxyMiddlewareController {
-
-  private static final Pattern BEARER_AUTHORIZATION =
-      Pattern.compile("(?i)^Bearer ([A-Za-z0-9\\-._~+/]+=*)$");
 
   private final RequestConfigurationService requestConfigurationService;
 
@@ -33,7 +30,7 @@ public class ProxyMiddlewareController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
       @RequestParam(required = false) Map<String, String> params,
       HttpServletRequest request) {
-    AuthorizationToken authorizationToken = parseAuthorization(authorization);
+    AuthorizationToken authorizationToken = AuthorizationBearerParser.parse(authorization, false);
     if (!authorizationToken.valid()) {
       return invalidAuthorizationHeader();
     }
@@ -54,7 +51,7 @@ public class ProxyMiddlewareController {
       @RequestParam(required = false) Map<String, String> params,
       HttpServletRequest request,
       @RequestBody(required = false) String body) {
-    AuthorizationToken authorizationToken = parseAuthorization(authorization);
+    AuthorizationToken authorizationToken = AuthorizationBearerParser.parse(authorization, false);
     if (!authorizationToken.valid()) {
       return invalidAuthorizationHeader();
     }
@@ -62,16 +59,4 @@ public class ProxyMiddlewareController {
     return requestConfigurationService.doRequest(
         appId, terId, type, typeId, authorizationToken.token(), params, url, body);
   }
-
-  private static AuthorizationToken parseAuthorization(String authorization) {
-    if (authorization == null) {
-      return new AuthorizationToken(true, null);
-    }
-    var matcher = BEARER_AUTHORIZATION.matcher(authorization);
-    return matcher.matches()
-        ? new AuthorizationToken(true, matcher.group(1))
-        : new AuthorizationToken(false, null);
-  }
-
-  private record AuthorizationToken(boolean valid, String token) {}
 }

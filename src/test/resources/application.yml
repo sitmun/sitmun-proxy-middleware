@@ -16,6 +16,18 @@ sitmun:
     config:
       url: http://localhost:8080/api/config/proxy
       secret: test-only-insecure-middleware-secret
+  mbtiles:
+    url: http://localhost:8081/mbtiles
+    job-handle-secret: test-only-insecure-mbtiles-job-handle-secret
+    job-handle-ttl: 1h
+    max-json-bytes: 65536
+    max-zoom-span: 12
+    allowed-srs:
+      - EPSG:4326
+      - EPSG:3857
+      - EPSG:25831
+    connect-timeout: 2s
+    read-timeout: 5s
   ogc:
     capabilities:
       service-paths:

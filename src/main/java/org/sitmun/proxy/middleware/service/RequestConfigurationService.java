@@ -60,10 +60,10 @@ public class RequestConfigurationService {
       String body) {
     String method = body == null ? "GET" : "POST";
     ConfigProxyRequestDto configProxyRequest =
-        new ConfigProxyRequestDto(appId, terId, type, typeId, method, params, body, token);
+        new ConfigProxyRequestDto(appId, terId, type, typeId, method, params, body);
     log.debug(
         "Proxy config request: appId={} terId={} type={} typeId={} method={} paramKeys={} "
-            + "upstreamRequestBodyPresent={} idTokenPresent={}",
+            + "upstreamRequestBodyPresent={} authorizationPresent={}",
         appId,
         terId,
         type,
@@ -73,7 +73,7 @@ public class RequestConfigurationService {
         body != null,
         StringUtils.hasText(token));
 
-    ResponseEntity<?> response = configRequest(configProxyRequest);
+    ResponseEntity<?> response = configRequest(configProxyRequest, token);
     if (response.getStatusCode().value() == 200) {
 
       ConfigProxyDto configProxyDto = (ConfigProxyDto) response.getBody();
@@ -97,13 +97,16 @@ public class RequestConfigurationService {
     }
   }
 
-  private ResponseEntity<?> configRequest(ConfigProxyRequestDto configRequest) {
+  private ResponseEntity<?> configRequest(ConfigProxyRequestDto configRequest, String token) {
     HttpHeaders requestHeaders = new HttpHeaders();
     requestHeaders.add(PROXY_MIDDLEWARE_KEY, this.secret);
+    if (StringUtils.hasText(token)) {
+      requestHeaders.setBearerAuth(token);
+    }
     log.debug(
-        "Calling backend config: outboundHeaders={} jsonBody idTokenPresent={} requestBodyPresent={}",
+        "Calling backend config: outboundHeaders={} authorizationPresent={} requestBodyPresent={}",
         SensitiveDataMasking.formatMaskedMap(Map.of(PROXY_MIDDLEWARE_KEY, secret)),
-        StringUtils.hasText(configRequest.getToken()),
+        StringUtils.hasText(token),
         StringUtils.hasText(configRequest.getRequestBody()));
     HttpEntity<ConfigProxyRequestDto> httpEntity = new HttpEntity<>(configRequest, requestHeaders);
     try {

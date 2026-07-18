@@ -486,8 +486,8 @@ class RequestConfigurationServiceTest {
 
   @Test
   @DisplayName(
-      "Request DTO includes all required fields for validateUserAccess (appId, terId, type, typeId, token)")
-  void requestDtoIncludesAllRequiredFieldsForValidation() {
+      "Request DTO includes required fields and sends Bearer token in Authorization header")
+  void requestDtoIncludesRequiredFieldsAndAuthorizationHeader() {
     // Given
     Integer appId = 1;
     Integer terId = 2;
@@ -529,8 +529,9 @@ class RequestConfigurationServiceTest {
     assertThat(requestDto.getTerId()).isEqualTo(terId);
     assertThat(requestDto.getType()).isEqualTo(type);
     assertThat(requestDto.getTypeId()).isEqualTo(typeId);
-    assertThat(requestDto.getToken()).isEqualTo(token);
     assertThat(requestDto.getParameters()).containsEntry("LAYERS", "test:layer");
+    assertThat(capturedEntity.getHeaders().getFirst(HttpHeaders.AUTHORIZATION))
+        .isEqualTo("Bearer " + token);
   }
 
   @Test
@@ -571,12 +572,13 @@ class RequestConfigurationServiceTest {
 
     assertThat(headers.containsKey(PROXY_MIDDLEWARE_KEY)).isTrue();
     assertThat(headers.getFirst(PROXY_MIDDLEWARE_KEY)).isEqualTo(SECRET);
+    assertThat(headers.getFirst(HttpHeaders.AUTHORIZATION)).isEqualTo("Bearer " + token);
   }
 
   @Test
   @DisplayName(
-      "Request with null token includes all other fields for validateUserAccess (public user case)")
-  void requestWithNullTokenIncludesOtherFieldsForValidation() {
+      "Request with null token omits Authorization header (public user case) and keeps body fields")
+  void requestWithNullTokenOmitsAuthorizationHeader() {
     // Given
     Integer appId = 1;
     Integer terId = 0;
@@ -597,7 +599,7 @@ class RequestConfigurationServiceTest {
     // When
     requestConfigurationService.doRequest(appId, terId, type, typeId, null, params, TEST_URL, null);
 
-    // Then: Verify all fields except token are present (token can be null for public users)
+    // Then: Verify all body fields are present and Authorization is absent for public users
     var httpEntityCaptor = org.mockito.ArgumentCaptor.forClass(HttpEntity.class);
     verify(restTemplate)
         .exchange(
@@ -615,6 +617,6 @@ class RequestConfigurationServiceTest {
     assertThat(requestDto.getTerId()).isEqualTo(terId);
     assertThat(requestDto.getType()).isEqualTo(type);
     assertThat(requestDto.getTypeId()).isEqualTo(typeId);
-    assertThat(requestDto.getToken()).isNull();
+    assertThat(capturedEntity.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)).isFalse();
   }
 }

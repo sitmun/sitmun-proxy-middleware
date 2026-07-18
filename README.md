@@ -326,10 +326,14 @@ spring.profiles.active=prod
 
 ### Endpoints
 
-| Endpoint                                 | Method | Description                        |
-|------------------------------------------|--------|------------------------------------|
-| `/proxy/{appId}/{terId}/{type}/{typeId}` | GET    | Proxy request to protected service |
-| `/actuator/health`                       | GET    | Application health status          |
+| Endpoint | Method | Description |
+| --- | --- | --- |
+| `/proxy/{appId}/{terId}/{type}/{typeId}` | GET/POST | Proxy request to protected service (Bearer optional) |
+| `/proxy/{appId}/{terId}/mbtiles/estimate` | POST | Estimate MBTiles size (Bearer required) |
+| `/proxy/{appId}/{terId}/mbtiles` | POST | Start MBTiles job; returns opaque `jobHandle` (Bearer required) |
+| `/proxy/{appId}/{terId}/mbtiles/{jobHandle}` | GET | Job status (Bearer required) |
+| `/proxy/{appId}/{terId}/mbtiles/{jobHandle}/file` | GET | Download completed MBTiles file (Bearer required; streamed) |
+| `/actuator/health` | GET | Application health status |
 
 ### Usage Examples
 
@@ -372,12 +376,18 @@ Response:
 | --- | --- | --- | --- |
 | `SITMUN_BACKEND_CONFIG_URL` | URL to backend configuration service | Yes | - |
 | `SITMUN_BACKEND_CONFIG_SECRET` | Shared secret for backend configuration access (min 32 chars; startup-validated). Must match the backend's `SITMUN_PROXY_MIDDLEWARE_SECRET` | Yes | - |
+| `SITMUN_MBTILES_URL` | Base URL of the MBTiles service (owned by middleware; never taken from clients) | No | `http://localhost:8081/mbtiles` |
+| `SITMUN_MBTILES_JOB_HANDLE_SECRET` | HMAC secret for opaque MBTiles job handles. Rotating this key without multi-key support invalidates active jobs | Yes (for MBTiles) | - |
 | `SERVER_PORT` | Application port | No | 8080 |
 | `SPRING_PROFILES_ACTIVE` | Spring profile to use | No | prod |
 | `SITMUN_OGC_CAPABILITIES_SERVICE_PATHS` | Comma-separated OGC service path suffixes recognized when rewriting URLs in `GetCapabilities` responses | No | `wms,wfs,wcs,ows` |
 | `SITMUN_OGC_CAPABILITIES_EXTRA_SOURCES` | Comma-separated list of additional source URL prefixes to replace with the proxy URL in `GetCapabilities` responses. Use this when the backend exposes an internal address (e.g. `localhost`, a private IP) that differs from the URL configured in SITMUN | No | Empty list |
 
+Proxy config requests send the client JWT as `Authorization: Bearer` to the backend together with `X-SITMUN-Proxy-Key`. The token is not included in the JSON body and is never forwarded to final upstream services.
+
 `SITMUN_BACKEND_CONFIG_SECRET` has no fallback default. Startup is fail-fast: `ProxySecretValidator` rejects a blank or shorter-than-32-character `sitmun.backend.config.secret` with an `IllegalStateException`, and a missing environment variable fails placeholder resolution before the context starts.
+
+MBTiles routes require Bearer on every call. The middleware authorizes via backend `POST /api/config/proxy/mbtiles`, then calls only the configured `sitmun.mbtiles.url` with backend-returned canonical tile JSON (clients send service/layer IDs only — never map service URLs). Create responses expose an opaque integrity-protected `jobHandle` bound to principal, app, territory, internal job id, and expiry.
 
 ### Profiles
 
@@ -412,6 +422,18 @@ sitmun:
     config:
       url: http://some.url
       secret: ${SITMUN_BACKEND_CONFIG_SECRET}
+  mbtiles:
+    url: ${SITMUN_MBTILES_URL:http://localhost:8081/mbtiles}
+    job-handle-secret: ${SITMUN_MBTILES_JOB_HANDLE_SECRET:change-me-mbtiles-job-handle-secret-32}
+    job-handle-ttl: 24h
+    max-json-bytes: 65536
+    max-zoom-span: 12
+    allowed-srs:
+      - EPSG:4326
+      - EPSG:3857
+      - EPSG:25831
+    connect-timeout: 10s
+    read-timeout: 60s
   ogc:
     capabilities:
       # OGC service path suffixes recognized when rewriting URLs in GetCapabilities responses.

@@ -71,6 +71,71 @@ class HttpRequestExecutorTest {
   }
 
   @Test
+  @DisplayName("Should use JSON content type from header for POST body")
+  void shouldUseJsonContentTypeFromHeaderForPostBody() throws IOException {
+    httpRequestExecutor.setUrl(TEST_URL);
+    httpRequestExecutor.setHeader("Content-Type", "application/json");
+    httpRequestExecutor.setBody("{\"a\":1}");
+
+    byte[] responseBytes = "{\"ok\":true}".getBytes();
+    when(response.body()).thenReturn(responseBody);
+    when(responseBody.bytes()).thenReturn(responseBytes);
+    when(response.code()).thenReturn(200);
+    when(response.header("content-type")).thenReturn("application/json");
+    when(httpClient.executeRequest(any(Request.class))).thenReturn(response);
+
+    RequestExecutorResponse<?> result = httpRequestExecutor.execute();
+
+    var requestCaptor = org.mockito.ArgumentCaptor.forClass(Request.class);
+    verify(httpClient).executeRequest(requestCaptor.capture());
+    assertThat(requestCaptor.getValue().body().contentType().toString())
+        .contains("application/json");
+    assertThat(result.asResponseEntity().getBody()).isEqualTo(responseBytes);
+  }
+
+  @Test
+  @DisplayName("Should stream response body without buffering via bytes()")
+  void shouldStreamResponseBodyWithoutBuffering() throws IOException {
+    httpRequestExecutor.setUrl(TEST_URL);
+    byte[] payload = "streamed-bytes".getBytes();
+    when(responseBody.byteStream()).thenReturn(new java.io.ByteArrayInputStream(payload));
+    when(response.body()).thenReturn(responseBody);
+    when(httpClient.executeRequest(any(Request.class))).thenReturn(response);
+
+    try (HttpRequestExecutor.StreamedHttpResponse streamed =
+        httpRequestExecutor.executeStreaming()) {
+      assertThat(streamed.bodyStream().readAllBytes()).isEqualTo(payload);
+      verify(responseBody, never()).bytes();
+    }
+  }
+
+  @Test
+  @DisplayName("Should default POST content type to text/xml when header absent")
+  void shouldDefaultPostContentTypeToTextXml() throws IOException {
+    httpRequestExecutor.setUrl(TEST_URL);
+    httpRequestExecutor.setBody("<xml/>");
+    when(response.body()).thenReturn(responseBody);
+    when(responseBody.bytes()).thenReturn(new byte[0]);
+    when(response.code()).thenReturn(200);
+    when(httpClient.executeRequest(any(Request.class))).thenReturn(response);
+
+    httpRequestExecutor.execute();
+
+    var requestCaptor = org.mockito.ArgumentCaptor.forClass(Request.class);
+    verify(httpClient).executeRequest(requestCaptor.capture());
+    assertThat(requestCaptor.getValue().body().contentType().toString()).contains("text/xml");
+  }
+
+  @Test
+  @DisplayName("isForwardableResponseHeader strips hop-by-hop and auth headers")
+  void isForwardableResponseHeaderStripsHopByHopAndAuth() {
+    assertThat(HttpRequestExecutor.isForwardableResponseHeader("Content-Type")).isTrue();
+    assertThat(HttpRequestExecutor.isForwardableResponseHeader("Authorization")).isFalse();
+    assertThat(HttpRequestExecutor.isForwardableResponseHeader("Set-Cookie")).isFalse();
+    assertThat(HttpRequestExecutor.isForwardableResponseHeader("Connection")).isFalse();
+  }
+
+  @Test
   @DisplayName("Should handle response with null body")
   void shouldHandleResponseWithNullBody() throws IOException {
     // Given
