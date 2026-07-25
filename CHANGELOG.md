@@ -7,24 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- **Config**: `sitmun.backend.config.url` reads `SITMUN_BACKEND_CONFIG_URL` (was a hardcoded placeholder that broke middleware→backend MBTiles authorization when env override did not apply).
-
 ### Added
 
-- **MBTiles**: Authenticated routes `POST /proxy/{appId}/{terId}/mbtiles/estimate`, `POST /proxy/{appId}/{terId}/mbtiles`, `GET /proxy/{appId}/{terId}/mbtiles/{jobHandle}`, and `GET .../file` that authorize via backend `POST /api/config/proxy/mbtiles` (Bearer + `X-SITMUN-Proxy-Key`), forward only backend-canonical tile JSON to configured `sitmun.mbtiles.url`, and return HMAC opaque job handles (not bare MBTiles job ids).
-- **MBTiles**: Config properties `sitmun.mbtiles.*` (url, job-handle-secret, TTL, JSON/zoom/SRS limits, upstream timeouts). Rotating `job-handle-secret` without multi-key support invalidates active jobs.
+- **MBTiles**: Authenticated estimate/create/status/file routes under `/proxy/{appId}/{terId}/mbtiles...` authorize via backend `POST /api/config/proxy/mbtiles` (Bearer + `X-SITMUN-Proxy-Key`), forward only backend-canonical tile JSON to `sitmun.mbtiles.url`, and return HMAC opaque job handles; config via `sitmun.mbtiles.*` (url, job-handle-secret, TTL, JSON/zoom/SRS limits, upstream timeouts).
 
 ### Changed
 
-- **Security**: Proxy config handshake sends the client JWT as `Authorization: Bearer` to the backend (with `X-SITMUN-Proxy-Key`); `id_token` / token removed from `ConfigProxyRequestDto` JSON body. Client Bearer is never forwarded to final upstream services.
-- **HTTP**: `HttpRequestExecutor` uses the request `Content-Type` header for POST bodies (JSON supported; defaults to `text/xml`) and can stream upstream responses without `body.bytes()` buffering.
+- **Security**: Proxy config handshake sends the client JWT as `Authorization: Bearer` (with `X-SITMUN-Proxy-Key`); `id_token` / token removed from `ConfigProxyRequestDto`; client Bearer is never forwarded to final upstream services.
+- **HTTP**: `HttpRequestExecutor` uses the request `Content-Type` for POST bodies (JSON supported; defaults to `text/xml`) and can stream upstream responses without `body.bytes()` buffering.
+
+### Fixed
+
+- **Config**: `sitmun.backend.config.url` reads `SITMUN_BACKEND_CONFIG_URL` (was a hardcoded placeholder that broke middleware→backend MBTiles authorization).
 
 ### Security
 
-- **Security**: validate Bearer headers without server errors, preserve sanitized backend 401/403 problem identity, deliberately map upstream authorization failures to non-session 502 problem responses, use fixed proxy instance/origin metadata, and omit backend/upstream URLs, credentials, SQL, parameter values, exception details, upstream bodies, and `WWW-Authenticate` from proxy responses and logs.
-- Require `SITMUN_BACKEND_CONFIG_SECRET` from the environment; removed the committed fallback. `ProxySecretValidator` fails startup when the shared secret is blank or shorter than 32 characters. The Gradle `test` task supplies a deterministic non-placeholder value.
+- **Security**: Validate Bearer headers without server errors; preserve sanitized backend 401/403 problem identity; map upstream authorization failures to non-session 502; omit credentials, URLs, SQL, exception details, and `WWW-Authenticate` from responses/logs. Require `SITMUN_BACKEND_CONFIG_SECRET` from the environment (min 32 chars); committed fallback removed.
 
 ## [1.2.7] - 2026-06-05
 
