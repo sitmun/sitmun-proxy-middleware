@@ -69,6 +69,9 @@ dependencies {
 
 tasks.named('test', Test) {
   useJUnitPlatform()
+  // Deployable config files require SITMUN_BACKEND_CONFIG_SECRET; supply a
+  // deterministic non-placeholder value so tests resolve without external env.
+  systemProperty 'sitmun.backend.config.secret', 'test-only-insecure-middleware-secret'
 }
 
 // Spotless configuration
@@ -96,7 +99,7 @@ scmVersion {
   versionIncrementer('incrementPatch')
 }
 
-project.version = '1.2.7'
+project.version = '1.2.8'
 
 // Git hooks setup
 tasks.register('setupGitHooks') {

@@ -4,9 +4,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.sitmun.proxy.middleware.test.fixtures.AuthorizationProxyFixtures.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
 import java.util.Objects;
+import okhttp3.MediaType;
+import okhttp3.Protocol;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.sitmun.proxy.middleware.dto.ProblemDetail;
 import org.sitmun.proxy.middleware.protocols.http.HttpClientFactoryService;
 import org.sitmun.proxy.middleware.service.RequestExecutorService;
 import org.sitmun.proxy.middleware.test.interceptors.CheckBasicAuthorization;
@@ -17,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.json.JacksonTester;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 
 @SpringBootTest
@@ -94,5 +103,45 @@ class ExecutionRequestExecutorServiceTest {
     assertThat(interceptor.getExpectation())
         .isEqualToIgnoringCase(
             "REQUEST=GetFeature&VERSION=2.0.0&outputformat=application/json&SERVICE=WFS&CQL_FILTER=tr_05=5&typename=grid:gridp_250");
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {401, 403})
+  @DisplayName("Upstream authorization failures remain sanitized through WMS response decoration")
+  void upstreamAuthorizationFailureThroughDecoratorChain(int upstreamStatus) {
+    httpClientFactoryService.addInterceptors(
+        chain ->
+            new Response.Builder()
+                .code(upstreamStatus)
+                .body(
+                    ResponseBody.create(
+                        "{\"detail\":\"upstream secret\"}",
+                        MediaType.parse("application/problem+json")))
+                .addHeader(HttpHeaders.WWW_AUTHENTICATE, "Bearer realm=\"private\"")
+                .addHeader(HttpHeaders.CONTENT_TYPE, "application/problem+json")
+                .protocol(Protocol.HTTP_2)
+                .message("Upstream authorization failure")
+                .request(chain.request())
+                .build());
+    var payload =
+        WmsPayloadDto.builder()
+            .method("GET")
+            .uri("https://internal.example/geoserver/wms")
+            .parameters(Map.of("REQUEST", "GetCapabilities", "SERVICE", "WMS"))
+            .build();
+
+    ResponseEntity<Object> response =
+        requestExecutorService.executeRequest("https://proxy.example/proxy/1/2/WMS/3", payload);
+
+    assertThat(response.getStatusCode().value()).isEqualTo(502);
+    assertThat(response.getHeaders()).doesNotContainKey(HttpHeaders.WWW_AUTHENTICATE);
+    assertThat(response.getBody()).isInstanceOf(ProblemDetail.class);
+    var problem = (ProblemDetail) response.getBody();
+    assertThat(problem.getType())
+        .isEqualTo("https://sitmun.org/problems/proxy-upstream-auth-error");
+    assertThat(problem.getStatus()).isEqualTo(502);
+    assertThat(problem.getInstance()).isEqualTo("/proxy");
+    assertThat(problem.getProperties()).containsEntry("origin", "upstream-service");
+    assertThat(problem.toString()).doesNotContain("upstream secret", "internal.example");
   }
 }

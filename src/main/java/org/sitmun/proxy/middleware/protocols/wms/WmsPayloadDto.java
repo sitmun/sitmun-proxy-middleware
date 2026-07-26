@@ -42,18 +42,15 @@ public class WmsPayloadDto extends PayloadDto implements HttpContext {
   @Override
   public String describe() {
     return "OgcWmsPayloadDto{"
-        + "vary="
-        + getVary()
-        + ", uri='"
-        + uri
-        + '\''
+        + "varyCount="
+        + (getVary() == null ? 0 : getVary().size())
         + ", method='"
         + method
         + '\''
-        + ", parameters="
-        + parameters
-        + ", security="
-        + security
+        + ", parameterNames="
+        + (parameters == null ? List.of() : parameters.keySet())
+        + ", securityPresent="
+        + (security != null)
         + '}';
   }
 }

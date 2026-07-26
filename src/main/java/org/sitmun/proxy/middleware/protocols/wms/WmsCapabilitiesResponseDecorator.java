@@ -30,32 +30,33 @@ public class WmsCapabilitiesResponseDecorator implements ResponseDecorator {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public void addBehavior(Object response, Context context) {
-    log.info("Adding behavior to response {} of {}", response, context);
-    if (context instanceof WmsPayloadDto wmsPayloadDto) {
-      //noinspection unchecked
+    if (response instanceof RequestExecutorResponseImpl<?> result
+        && result.getStatusCode() >= 200
+        && result.getStatusCode() < 300
+        && result.getBody() instanceof byte[]
+        && context instanceof WmsPayloadDto wmsPayloadDto) {
       RequestExecutorResponseImpl<byte[]> requestExecutionResponseImpl1 =
           (RequestExecutorResponseImpl<byte[]>) response;
       String s = new String(requestExecutionResponseImpl1.getBody(), StandardCharsets.UTF_8);
       String fullUri = wmsPayloadDto.getUri();
       String baseUri = fullUri.split("\\?")[0];
 
-      log.debug("WMS PAYLOAD FULL URI: {}", fullUri);
-      log.debug("WMS PAYLOAD BASE URI: {}", baseUri);
-      log.debug("REQ EXEC RES URL: {}", requestExecutionResponseImpl1.getBaseUrl());
-
       String baseUrl = requestExecutionResponseImpl1.getBaseUrl();
       List<String> servicePaths = properties.getServicePaths();
       String servicePathSuffixes = String.join("|", servicePaths);
+      log.debug(
+          "Decorating WMS capabilities response: servicePathCount={} extraSourceCount={}",
+          servicePaths.size(),
+          properties.getExtraSources().size());
 
       String servicePath = baseUri.replaceAll("/(?:" + servicePathSuffixes + ")/?$", "");
-      log.info("SERVICE PATH: {}", servicePath);
-      s = replace(s, servicePath, servicePathSuffixes, baseUrl);
+      s = replace(s, servicePath, servicePathSuffixes, baseUrl, "primary");
 
       for (String extraSource : properties.getExtraSources()) {
         String normalizedSource = extraSource.replaceAll("/(?:" + servicePathSuffixes + ")/?$", "");
-        log.info("EXTRA SOURCE: {}", normalizedSource);
-        s = replace(s, normalizedSource, servicePathSuffixes, baseUrl);
+        s = replace(s, normalizedSource, servicePathSuffixes, baseUrl, "extra");
       }
 
       requestExecutionResponseImpl1.setBody(s.getBytes(StandardCharsets.UTF_8));
@@ -63,7 +64,8 @@ public class WmsCapabilitiesResponseDecorator implements ResponseDecorator {
   }
 
   /** Replaces all quoted occurrences of {@code source} */
-  private String replace(String content, String source, String servicePathSuffixes, String target) {
+  private String replace(
+      String content, String source, String servicePathSuffixes, String target, String sourceKind) {
     Pattern pattern =
         Pattern.compile(
             "(?<=[\"'])"
@@ -72,12 +74,11 @@ public class WmsCapabilitiesResponseDecorator implements ResponseDecorator {
                 + servicePathSuffixes
                 + "))?(?=[?\"'\\s]|$)",
             Pattern.CASE_INSENSITIVE);
-    String result = pattern.matcher(content).replaceAll(target);
-    if (!result.equals(content)) {
-      log.info("Replacement of {} by {} in GetCapabilities response", source, target);
-    } else {
-      log.warn("No replacements of {} by {} were done in GetCapabilities response", source, target);
-    }
-    return result;
+    long replacementCount = pattern.matcher(content).results().count();
+    log.debug(
+        "WMS capabilities URL replacement: sourceKind={} replacementCount={}",
+        sourceKind,
+        replacementCount);
+    return pattern.matcher(content).replaceAll(target);
   }
 }

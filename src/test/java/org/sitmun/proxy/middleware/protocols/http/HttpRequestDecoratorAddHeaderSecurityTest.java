@@ -12,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sitmun.proxy.middleware.decorator.Context;
-import org.sitmun.proxy.middleware.utils.logging.SensitiveDataMasking;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("HttpRequestDecoratorAddHeaderSecurity tests")
@@ -95,7 +94,7 @@ class HttpRequestDecoratorAddHeaderSecurityTest {
     assertThat(requestExecutor.getHeader("X-Other")).isEqualTo("other-value");
     assertThat(requestExecutor.describe())
         .contains(HEADER_X_API_KEY)
-        .contains(SensitiveDataMasking.REDACTED)
-        .doesNotContain(apiKey);
+        .contains("X-Other")
+        .doesNotContain(apiKey, "other-value");
   }
 }

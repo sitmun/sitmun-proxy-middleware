@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.8] - 2026-07-25
+
+### Added
+
+- **MBTiles**: Authenticated estimate/create/status/file routes under `/proxy/{appId}/{terId}/mbtiles...` authorize via backend `POST /api/config/proxy/mbtiles` (Bearer + `X-SITMUN-Proxy-Key`), forward only backend-canonical tile JSON to `sitmun.mbtiles.url`, and return HMAC opaque job handles; config via `sitmun.mbtiles.*` (url, job-handle-secret, TTL, JSON/zoom/SRS limits, upstream timeouts).
+
+### Changed
+
+- **Security**: Proxy config handshake sends the client JWT as `Authorization: Bearer` (with `X-SITMUN-Proxy-Key`); `id_token` / token removed from `ConfigProxyRequestDto`; client Bearer is never forwarded to final upstream services.
+- **HTTP**: `HttpRequestExecutor` uses the request `Content-Type` for POST bodies (JSON supported; defaults to `text/xml`) and can stream upstream responses without `body.bytes()` buffering.
+- Release alignment to `1.2.8` across build metadata and documentation badges.
+
+### Fixed
+
+- **Config**: `sitmun.backend.config.url` reads `SITMUN_BACKEND_CONFIG_URL` (was a hardcoded placeholder that broke middleware→backend MBTiles authorization).
+
+### Security
+
+- **Security**: Validate Bearer headers without server errors; preserve sanitized backend 401/403 problem identity; map upstream authorization failures to non-session 502; omit credentials, URLs, SQL, exception details, and `WWW-Authenticate` from responses/logs. Require `SITMUN_BACKEND_CONFIG_SECRET` from the environment (min 32 chars); committed fallback removed.
+
 ## [1.2.7] - 2026-06-05
 
 ### Changed
@@ -158,7 +178,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Various bug fixes and improvements from the development phase
 
-[Unreleased]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.7...HEAD
+[Unreleased]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.8...HEAD
+[1.2.8]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.7...sitmun-proxy-middleware/1.2.8
 
 [1.2.7]: https://github.com/sitmun/sitmun-proxy-middleware/compare/sitmun-proxy-middleware/1.2.6...sitmun-proxy-middleware/1.2.7
 

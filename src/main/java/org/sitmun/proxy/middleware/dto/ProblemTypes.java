@@ -22,6 +22,16 @@ public final class ProblemTypes {
   /** Proxy authentication required. HTTP 401. */
   public static final String PROXY_UNAUTHORIZED = BASE_URI + "proxy-unauthorized";
 
+  /** Proxy authorization denied. HTTP 403. */
+  public static final String PROXY_FORBIDDEN = BASE_URI + "proxy-forbidden";
+
+  /** Invalid proxy request. HTTP 400. */
+  public static final String PROXY_INVALID_REQUEST = BASE_URI + "proxy-invalid-request";
+
+  /** Upstream service rejected proxy authorization. HTTP 502. */
+  public static final String PROXY_UPSTREAM_AUTHORIZATION_ERROR =
+      BASE_URI + "proxy-upstream-auth-error";
+
   private ProblemTypes() {
     // Prevent instantiation
   }

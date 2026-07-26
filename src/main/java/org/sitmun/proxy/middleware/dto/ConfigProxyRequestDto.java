@@ -33,7 +33,4 @@ public class ConfigProxyRequestDto {
 
   @JsonProperty("requestBody")
   private String requestBody;
-
-  @JsonProperty("id_token")
-  private String token;
 }
