@@ -100,7 +100,9 @@ class HttpRequestDecoratorAddEndpointTest {
         .contains("param2=value2");
     // Checking to verify parameters contain output
     String description = requestExecutor.describe();
-    assertThat(description).contains("param1=value1").contains("param2=value2");
+    assertThat(description)
+        .contains("parameterNames=", "param1", "param2")
+        .doesNotContain("value1", "value2");
   }
 
   @Test

@@ -7,8 +7,20 @@ logging:
 sitmun:
   backend:
     config:
-      url: http://some.url
-      secret: some-secret
+      url: ${SITMUN_BACKEND_CONFIG_URL:http://localhost:8080/api/config/proxy}
+      secret: ${SITMUN_BACKEND_CONFIG_SECRET}
+  mbtiles:
+    url: ${SITMUN_MBTILES_URL:http://localhost:8081/mbtiles}
+    job-handle-secret: ${SITMUN_MBTILES_JOB_HANDLE_SECRET}
+    job-handle-ttl: 24h
+    max-json-bytes: 65536
+    max-zoom-span: 12
+    allowed-srs:
+      - EPSG:4326
+      - EPSG:3857
+      - EPSG:25831
+    connect-timeout: 10s
+    read-timeout: 60s
 
 # Actuator Configuration
 management:

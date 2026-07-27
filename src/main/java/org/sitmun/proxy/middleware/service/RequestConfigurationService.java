@@ -1,15 +1,17 @@
 package org.sitmun.proxy.middleware.service;
 
 import static org.sitmun.proxy.middleware.config.ProxyMiddlewareConstants.PROXY_MIDDLEWARE_KEY;
-import static org.sitmun.proxy.middleware.dto.ProblemTypes.*;
-import static org.springframework.http.MediaType.*;
+import static org.sitmun.proxy.middleware.dto.ProxyProblemResponses.backendAuthorizationFailure;
+import static org.sitmun.proxy.middleware.dto.ProxyProblemResponses.backendFailure;
+import static org.sitmun.proxy.middleware.dto.ProxyProblemResponses.backendUnavailable;
+import static org.sitmun.proxy.middleware.dto.ProxyProblemResponses.emptyBackendConfiguration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.sitmun.proxy.middleware.dto.ConfigProxyDto;
 import org.sitmun.proxy.middleware.dto.ConfigProxyRequestDto;
 import org.sitmun.proxy.middleware.dto.PayloadDto;
-import org.sitmun.proxy.middleware.dto.ProblemDetail;
 import org.sitmun.proxy.middleware.protocols.jdbc.JdbcPayloadDto;
 import org.sitmun.proxy.middleware.protocols.wms.WmsPayloadDto;
 import org.sitmun.proxy.middleware.utils.logging.SensitiveDataMasking;
@@ -17,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -29,6 +32,7 @@ public class RequestConfigurationService {
 
   private final RestTemplate restTemplate;
   private final RequestExecutorService requestExecutorService;
+  private final ObjectMapper objectMapper;
 
   @Value("${sitmun.backend.config.url}")
   private String configUrl;
@@ -37,9 +41,12 @@ public class RequestConfigurationService {
   private String secret;
 
   public RequestConfigurationService(
-      RestTemplate restTemplate, RequestExecutorService requestExecutorService) {
+      RestTemplate restTemplate,
+      RequestExecutorService requestExecutorService,
+      ObjectMapper objectMapper) {
     this.restTemplate = restTemplate;
     this.requestExecutorService = requestExecutorService;
+    this.objectMapper = objectMapper;
   }
 
   public ResponseEntity<?> doRequest(
@@ -53,10 +60,10 @@ public class RequestConfigurationService {
       String body) {
     String method = body == null ? "GET" : "POST";
     ConfigProxyRequestDto configProxyRequest =
-        new ConfigProxyRequestDto(appId, terId, type, typeId, method, params, body, token);
+        new ConfigProxyRequestDto(appId, terId, type, typeId, method, params, body);
     log.debug(
         "Proxy config request: appId={} terId={} type={} typeId={} method={} paramKeys={} "
-            + "upstreamRequestBodyPresent={} idTokenPresent={}",
+            + "upstreamRequestBodyPresent={} authorizationPresent={}",
         appId,
         terId,
         type,
@@ -66,7 +73,7 @@ public class RequestConfigurationService {
         body != null,
         StringUtils.hasText(token));
 
-    ResponseEntity<?> response = configRequest(configProxyRequest);
+    ResponseEntity<?> response = configRequest(configProxyRequest, token);
     if (response.getStatusCode().value() == 200) {
 
       ConfigProxyDto configProxyDto = (ConfigProxyDto) response.getBody();
@@ -83,57 +90,40 @@ public class RequestConfigurationService {
         log.info("Requesting data from the final service");
         return requestExecutorService.executeRequest(url, configProxyDto.getPayload());
       } else {
-        ProblemDetail problem =
-            ProblemDetail.builder()
-                .type(PROXY_UNAUTHORIZED)
-                .status(401)
-                .title("Unauthorized")
-                .detail("Request not valid")
-                .instance(configUrl)
-                .build();
-        return ResponseEntity.status(401).contentType(APPLICATION_PROBLEM_JSON).body(problem);
+        return emptyBackendConfiguration();
       }
     } else {
       return response;
     }
   }
 
-  private ResponseEntity<?> configRequest(ConfigProxyRequestDto configRequest) {
+  private ResponseEntity<?> configRequest(ConfigProxyRequestDto configRequest, String token) {
     HttpHeaders requestHeaders = new HttpHeaders();
     requestHeaders.add(PROXY_MIDDLEWARE_KEY, this.secret);
+    if (StringUtils.hasText(token)) {
+      requestHeaders.setBearerAuth(token);
+    }
     log.debug(
-        "Calling backend config: url={} outboundHeaders={} jsonBody idTokenPresent={} requestBodyPresent={}",
-        configUrl,
+        "Calling backend config: outboundHeaders={} authorizationPresent={} requestBodyPresent={}",
         SensitiveDataMasking.formatMaskedMap(Map.of(PROXY_MIDDLEWARE_KEY, secret)),
-        StringUtils.hasText(configRequest.getToken()),
+        StringUtils.hasText(token),
         StringUtils.hasText(configRequest.getRequestBody()));
     HttpEntity<ConfigProxyRequestDto> httpEntity = new HttpEntity<>(configRequest, requestHeaders);
     try {
       return restTemplate.exchange(configUrl, HttpMethod.POST, httpEntity, ConfigProxyDto.class);
     } catch (HttpClientErrorException e) {
-      log.error("Error getting response: {}", e.getMessage(), e);
-      ProblemDetail problem =
-          ProblemDetail.builder()
-              .type(PROXY_BACKEND_ERROR)
-              .status(e.getStatusCode().value())
-              .title("Backend Error")
-              .detail(e.getMessage())
-              .instance(configUrl)
-              .build();
-      return ResponseEntity.status(e.getStatusCode())
-          .contentType(APPLICATION_PROBLEM_JSON)
-          .body(problem);
+      if (e.getStatusCode().value() == 401 || e.getStatusCode().value() == 403) {
+        log.warn(
+            "Backend configuration request rejected with status {}", e.getStatusCode().value());
+        return backendAuthorizationFailure(e, objectMapper);
+      }
+      log.error("Backend configuration request failed with status {}", e.getStatusCode().value());
+      return backendFailure(HttpStatus.valueOf(e.getStatusCode().value()));
     } catch (Exception e) {
-      log.error("Error getting response: {}", e.getMessage(), e);
-      ProblemDetail problem =
-          ProblemDetail.builder()
-              .type(PROXY_CONFIG_ERROR)
-              .status(500)
-              .title("Proxy Configuration Error")
-              .detail(e.getMessage())
-              .instance(configUrl)
-              .build();
-      return ResponseEntity.status(500).contentType(APPLICATION_PROBLEM_JSON).body(problem);
+      log.error(
+          "Backend configuration request failed with exception type {}",
+          e.getClass().getSimpleName());
+      return backendUnavailable();
     }
   }
 
@@ -143,9 +133,7 @@ public class RequestConfigurationService {
     }
     if (payload instanceof WmsPayloadDto wms) {
       var sec = wms.getSecurity();
-      return "uri="
-          + wms.getUri()
-          + ", method="
+      return "method="
           + wms.getMethod()
           + ", "
           + (sec == null ? "security=null" : sec.describeForLog());

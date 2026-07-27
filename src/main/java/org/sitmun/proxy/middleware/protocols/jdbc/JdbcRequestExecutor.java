@@ -25,14 +25,15 @@ public class JdbcRequestExecutor implements RequestExecutor {
     try (Connection connectionUsed = connection) {
       executeStatement(connectionUsed, result);
     } catch (SQLException e) {
-      log.error("Error getting response: {}", e.getMessage(), e);
+      log.error("JDBC request failed with exception type {}", e.getClass().getSimpleName());
       ProblemDetail problem =
           ProblemDetail.builder()
               .type(ProblemTypes.PROXY_SERVICE_ERROR)
               .status(500)
               .title("SQL Error")
-              .detail(e.getMessage())
-              .instance("")
+              .detail("The JDBC service request failed")
+              .instance("/proxy")
+              .properties(Map.of("origin", "upstream-service"))
               .build();
       return new RequestExecutorResponseImpl<>(null, 500, "application/problem+json", problem);
     }
@@ -59,30 +60,26 @@ public class JdbcRequestExecutor implements RequestExecutor {
     }
   }
 
-  private void retrieveResultSetMetadata(ResultSet resultSet, List<Map<String, Object>> result) {
-    try {
-      ResultSetMetaData metadata = resultSet.getMetaData();
-      while (resultSet.next()) {
-        Map<String, Object> row = new HashMap<>();
-        for (int i = 1; i <= metadata.getColumnCount(); i++) {
-          Object value = resultSet.getObject(i);
-          row.put(metadata.getColumnLabel(i), value);
-        }
-        result.add(row);
+  private void retrieveResultSetMetadata(ResultSet resultSet, List<Map<String, Object>> result)
+      throws SQLException {
+    ResultSetMetaData metadata = resultSet.getMetaData();
+    while (resultSet.next()) {
+      Map<String, Object> row = new HashMap<>();
+      for (int i = 1; i <= metadata.getColumnCount(); i++) {
+        Object value = resultSet.getObject(i);
+        row.put(metadata.getColumnLabel(i), value);
       }
-    } catch (SQLException e) {
-      log.error("Error in statement: {}", e.getMessage(), e);
+      result.add(row);
     }
   }
 
   public String describe() {
     return "JdbcRequest{"
-        + "connection="
-        + connection
-        + ", sql='"
-        + sql
-        + '\''
-        + ", parameters="
+        + "connectionPresent="
+        + (connection != null)
+        + ", sqlPresent="
+        + (sql != null && !sql.isBlank())
+        + ", parameterCount="
         + (parameters != null ? parameters.size() : 0)
         + '}';
   }

@@ -3,6 +3,9 @@ package org.sitmun.proxy.middleware.protocols.http;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -16,11 +19,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sitmun.proxy.middleware.dto.ProblemDetail;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponse;
-import org.sitmun.proxy.middleware.utils.logging.SensitiveDataMasking;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("HttpRequestExecutor tests")
@@ -62,6 +68,71 @@ class HttpRequestExecutorTest {
     assertThat(result.asResponseEntity().getHeaders().getFirst("content-type"))
         .isEqualTo("application/json");
     assertThat(result.asResponseEntity().getBody()).isEqualTo(responseBytes);
+  }
+
+  @Test
+  @DisplayName("Should use JSON content type from header for POST body")
+  void shouldUseJsonContentTypeFromHeaderForPostBody() throws IOException {
+    httpRequestExecutor.setUrl(TEST_URL);
+    httpRequestExecutor.setHeader("Content-Type", "application/json");
+    httpRequestExecutor.setBody("{\"a\":1}");
+
+    byte[] responseBytes = "{\"ok\":true}".getBytes();
+    when(response.body()).thenReturn(responseBody);
+    when(responseBody.bytes()).thenReturn(responseBytes);
+    when(response.code()).thenReturn(200);
+    when(response.header("content-type")).thenReturn("application/json");
+    when(httpClient.executeRequest(any(Request.class))).thenReturn(response);
+
+    RequestExecutorResponse<?> result = httpRequestExecutor.execute();
+
+    var requestCaptor = org.mockito.ArgumentCaptor.forClass(Request.class);
+    verify(httpClient).executeRequest(requestCaptor.capture());
+    assertThat(requestCaptor.getValue().body().contentType().toString())
+        .contains("application/json");
+    assertThat(result.asResponseEntity().getBody()).isEqualTo(responseBytes);
+  }
+
+  @Test
+  @DisplayName("Should stream response body without buffering via bytes()")
+  void shouldStreamResponseBodyWithoutBuffering() throws IOException {
+    httpRequestExecutor.setUrl(TEST_URL);
+    byte[] payload = "streamed-bytes".getBytes();
+    when(responseBody.byteStream()).thenReturn(new java.io.ByteArrayInputStream(payload));
+    when(response.body()).thenReturn(responseBody);
+    when(httpClient.executeRequest(any(Request.class))).thenReturn(response);
+
+    try (HttpRequestExecutor.StreamedHttpResponse streamed =
+        httpRequestExecutor.executeStreaming()) {
+      assertThat(streamed.bodyStream().readAllBytes()).isEqualTo(payload);
+      verify(responseBody, never()).bytes();
+    }
+  }
+
+  @Test
+  @DisplayName("Should default POST content type to text/xml when header absent")
+  void shouldDefaultPostContentTypeToTextXml() throws IOException {
+    httpRequestExecutor.setUrl(TEST_URL);
+    httpRequestExecutor.setBody("<xml/>");
+    when(response.body()).thenReturn(responseBody);
+    when(responseBody.bytes()).thenReturn(new byte[0]);
+    when(response.code()).thenReturn(200);
+    when(httpClient.executeRequest(any(Request.class))).thenReturn(response);
+
+    httpRequestExecutor.execute();
+
+    var requestCaptor = org.mockito.ArgumentCaptor.forClass(Request.class);
+    verify(httpClient).executeRequest(requestCaptor.capture());
+    assertThat(requestCaptor.getValue().body().contentType().toString()).contains("text/xml");
+  }
+
+  @Test
+  @DisplayName("isForwardableResponseHeader strips hop-by-hop and auth headers")
+  void isForwardableResponseHeaderStripsHopByHopAndAuth() {
+    assertThat(HttpRequestExecutor.isForwardableResponseHeader("Content-Type")).isTrue();
+    assertThat(HttpRequestExecutor.isForwardableResponseHeader("Authorization")).isFalse();
+    assertThat(HttpRequestExecutor.isForwardableResponseHeader("Set-Cookie")).isFalse();
+    assertThat(HttpRequestExecutor.isForwardableResponseHeader("Connection")).isFalse();
   }
 
   @Test
@@ -107,6 +178,42 @@ class HttpRequestExecutorTest {
     assertThat(problemDetail.getStatus()).isEqualTo(503);
     assertThat(problemDetail.getTitle()).isEqualTo("Service Error");
     assertThat(problemDetail.getDetail()).isEqualTo("Error with the request to final service");
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {401, 403})
+  @DisplayName("Should sanitize upstream authorization failures as bad gateway")
+  void shouldSanitizeUpstreamAuthorizationFailuresAsBadGateway(int upstreamStatus)
+      throws IOException {
+    // Given
+    httpRequestExecutor.setUrl(TEST_URL);
+    when(response.code()).thenReturn(upstreamStatus);
+    lenient().when(response.body()).thenReturn(responseBody);
+    lenient()
+        .when(response.header(HttpHeaders.WWW_AUTHENTICATE))
+        .thenReturn("Bearer realm=\"hostile\"");
+    when(httpClient.executeRequest(any(Request.class))).thenReturn(response);
+
+    // When
+    ResponseEntity<?> result = httpRequestExecutor.execute().asResponseEntity();
+
+    // Then
+    assertThat(result.getStatusCode().value()).isEqualTo(502);
+    assertThat(result.getHeaders().getContentType().toString())
+        .isEqualTo("application/problem+json");
+    assertThat(result.getHeaders()).doesNotContainKey(HttpHeaders.WWW_AUTHENTICATE);
+    assertThat(result.getBody()).isInstanceOf(ProblemDetail.class);
+    ProblemDetail problem = (ProblemDetail) result.getBody();
+    assertThat(problem.getType())
+        .isEqualTo("https://sitmun.org/problems/proxy-upstream-auth-error");
+    assertThat(problem.getStatus()).isEqualTo(502);
+    assertThat(problem.getTitle()).isEqualTo("Upstream Authorization Error");
+    assertThat(problem.getDetail()).isEqualTo("The upstream service rejected proxy authorization");
+    assertThat(problem.getInstance()).isEqualTo("/proxy");
+    assertThat(problem.getProperties()).containsEntry("origin", "upstream-service");
+    verify(response, never()).body();
+    verify(responseBody, never()).bytes();
+    verify(response, never()).header(HttpHeaders.WWW_AUTHENTICATE);
   }
 
   @Test
@@ -345,9 +452,8 @@ class HttpRequestExecutorTest {
 
     // Then
     assertThat(description)
-        .contains("Authorization=Bearer " + SensitiveDataMasking.REDACTED)
-        .contains("Content-Type=application/json")
-        .contains("Accept=application/json");
+        .contains("Authorization", "Content-Type", "Accept")
+        .doesNotContain("token123", "application/json");
   }
 
   @Test
@@ -363,7 +469,7 @@ class HttpRequestExecutorTest {
     String description = httpRequestExecutor.describe();
 
     // Then
-    assertThat(description).contains("param1=value1").contains("param2=value2");
+    assertThat(description).contains("param1", "param2").doesNotContain("value1", "value2");
   }
 
   @Test
@@ -382,10 +488,12 @@ class HttpRequestExecutorTest {
     // Then
     assertThat(description)
         .contains("HttpRequest{")
-        .contains("url='https://api.example.com/test'")
-        .contains("Authorization=Bearer " + SensitiveDataMasking.REDACTED)
-        .contains("query=test")
-        .contains("baseUrl=http://test-service.com");
+        .contains("Authorization", "query")
+        .doesNotContain(
+            "https://api.example.com/test",
+            "Bearer token",
+            "query=test",
+            "http://test-service.com");
   }
 
   @Test

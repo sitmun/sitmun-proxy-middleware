@@ -2,6 +2,10 @@ package org.sitmun.proxy.middleware.protocols.wms;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
@@ -19,7 +23,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sitmun.proxy.middleware.decorator.Context;
+import org.sitmun.proxy.middleware.dto.ProblemDetail;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponseImpl;
+import org.slf4j.LoggerFactory;
 
 @DisplayName("WmsCapabilitiesResponseDecorator")
 class WmsCapabilitiesResponseDecoratorTest {
@@ -64,6 +70,18 @@ class WmsCapabilitiesResponseDecoratorTest {
 
   private static String onlineResourceWrap(String url) {
     return "<OnlineResource xlink:href=\"" + url + "\"/>";
+  }
+
+  @Test
+  @DisplayName("does not decorate a synthesized upstream authorization problem")
+  void rejectsUpstreamAuthorizationProblem() {
+    ProblemDetail problem = ProblemDetail.builder().status(502).build();
+    RequestExecutorResponseImpl<ProblemDetail> response =
+        new RequestExecutorResponseImpl<>(PROXY_URL, 502, "application/problem+json", problem);
+
+    decorator.apply(response, capabilitiesPayload(SERVICE_URI));
+
+    assertThat(response.getBody()).isSameAs(problem);
   }
 
   @ParameterizedTest(name = "{0}")
@@ -206,6 +224,35 @@ class WmsCapabilitiesResponseDecoratorTest {
   }
 
   @Test
+  @DisplayName("logs replacement counts without internal or proxy URLs")
+  void logsReplacementCountsWithoutUrls() {
+    properties.setExtraSources(List.of(BAD_CAPABILITIES_HOST));
+    final RequestExecutorResponseImpl<byte[]> resp =
+        response(
+            onlineResourceWrap(GEOSERVER + "/wms?SERVICE=WMS")
+                + onlineResourceWrap(BAD_CAPABILITIES_HOST + "/wms?SERVICE=WMS"));
+
+    List<ILoggingEvent> events =
+        captureLogs(() -> decorator.addBehavior(resp, capabilitiesPayload(SERVICE_URI)));
+
+    assertThat(events)
+        .extracting(ILoggingEvent::getFormattedMessage)
+        .anySatisfy(
+            message ->
+                assertThat(message)
+                    .contains("servicePathCount=4", "extraSourceCount=1")
+                    .doesNotContain(GEOSERVER, BAD_CAPABILITIES_HOST, PROXY_URL))
+        .anySatisfy(
+            message ->
+                assertThat(message)
+                    .contains("sourceKind=primary", "replacementCount=1")
+                    .doesNotContain(GEOSERVER, BAD_CAPABILITIES_HOST, PROXY_URL))
+        .allSatisfy(
+            message ->
+                assertThat(message).doesNotContain(GEOSERVER, BAD_CAPABILITIES_HOST, PROXY_URL));
+  }
+
+  @Test
   @DisplayName("replaces all quoted URLs in a full WMS GetCapabilities response")
   void fullWmsCapabilitiesExample() {
     String inputXml =
@@ -302,6 +349,23 @@ class WmsCapabilitiesResponseDecoratorTest {
             GEOSERVER + "/wms",
             onlineResourceWrap(GEOSERVER + "/ows?SERVICE=WMS"),
             GEOSERVER + "/ows?SERVICE=WMS"));
+  }
+
+  private List<ILoggingEvent> captureLogs(Runnable action) {
+    Logger logger = (Logger) LoggerFactory.getLogger(WmsCapabilitiesResponseDecorator.class);
+    var appender = new ListAppender<ILoggingEvent>();
+    appender.start();
+    logger.addAppender(appender);
+    Level previousLevel = logger.getLevel();
+    logger.setLevel(Level.DEBUG);
+    try {
+      action.run();
+      return List.copyOf(appender.list);
+    } finally {
+      logger.setLevel(previousLevel);
+      logger.detachAppender(appender);
+      appender.stop();
+    }
   }
 
   @Nested

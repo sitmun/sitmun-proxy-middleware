@@ -1,5 +1,5 @@
 [![License: EUPL v1.2](https://img.shields.io/badge/License-EUPL%20v1.2-blue.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-1.2.6-blue.svg)
+![Version](https://img.shields.io/badge/version-1.2.8-blue.svg)
 
 # SITMUN Proxy Middleware
 
@@ -127,7 +127,7 @@ This service integrates with the [SITMUN Backend Core](https://github.com/sitmun
    # Create .env file
    cat > .env << EOF
    SITMUN_BACKEND_CONFIG_URL=http://localhost:9001/api/config/proxy
-   SITMUN_BACKEND_CONFIG_SECRET=your-secret-key
+   SITMUN_BACKEND_CONFIG_SECRET=<32+ char random value>
    EOF
    ```
 
@@ -326,10 +326,14 @@ spring.profiles.active=prod
 
 ### Endpoints
 
-| Endpoint                                 | Method | Description                        |
-|------------------------------------------|--------|------------------------------------|
-| `/proxy/{appId}/{terId}/{type}/{typeId}` | GET    | Proxy request to protected service |
-| `/actuator/health`                       | GET    | Application health status          |
+| Endpoint | Method | Description |
+| --- | --- | --- |
+| `/proxy/{appId}/{terId}/{type}/{typeId}` | GET/POST | Proxy request to protected service (Bearer optional) |
+| `/proxy/{appId}/{terId}/mbtiles/estimate` | POST | Estimate MBTiles size (Bearer required) |
+| `/proxy/{appId}/{terId}/mbtiles` | POST | Start MBTiles job; returns opaque `jobHandle` (Bearer required) |
+| `/proxy/{appId}/{terId}/mbtiles/{jobHandle}` | GET | Job status (Bearer required) |
+| `/proxy/{appId}/{terId}/mbtiles/{jobHandle}/file` | GET | Download completed MBTiles file (Bearer required; streamed) |
+| `/actuator/health` | GET | Application health status |
 
 ### Usage Examples
 
@@ -371,11 +375,19 @@ Response:
 | Variable | Description | Required | Default |
 | --- | --- | --- | --- |
 | `SITMUN_BACKEND_CONFIG_URL` | URL to backend configuration service | Yes | - |
-| `SITMUN_BACKEND_CONFIG_SECRET` | Secret key for configuration access | Yes | - |
+| `SITMUN_BACKEND_CONFIG_SECRET` | Shared secret for backend configuration access (min 32 chars; startup-validated). Must match the backend's `SITMUN_PROXY_MIDDLEWARE_SECRET` | Yes | - |
+| `SITMUN_MBTILES_URL` | Base URL of the MBTiles service (owned by middleware; never taken from clients) | No | `http://localhost:8081/mbtiles` |
+| `SITMUN_MBTILES_JOB_HANDLE_SECRET` | HMAC secret for opaque MBTiles job handles. Rotating this key without multi-key support invalidates active jobs | Yes (for MBTiles) | - |
 | `SERVER_PORT` | Application port | No | 8080 |
 | `SPRING_PROFILES_ACTIVE` | Spring profile to use | No | prod |
 | `SITMUN_OGC_CAPABILITIES_SERVICE_PATHS` | Comma-separated OGC service path suffixes recognized when rewriting URLs in `GetCapabilities` responses | No | `wms,wfs,wcs,ows` |
 | `SITMUN_OGC_CAPABILITIES_EXTRA_SOURCES` | Comma-separated list of additional source URL prefixes to replace with the proxy URL in `GetCapabilities` responses. Use this when the backend exposes an internal address (e.g. `localhost`, a private IP) that differs from the URL configured in SITMUN | No | Empty list |
+
+Proxy config requests send the client JWT as `Authorization: Bearer` to the backend together with `X-SITMUN-Proxy-Key`. The token is not included in the JSON body and is never forwarded to final upstream services.
+
+`SITMUN_BACKEND_CONFIG_SECRET` has no fallback default. Startup is fail-fast: `ProxySecretValidator` rejects a blank or shorter-than-32-character `sitmun.backend.config.secret` with an `IllegalStateException`, and a missing environment variable fails placeholder resolution before the context starts.
+
+MBTiles routes require Bearer on every call. The middleware authorizes via backend `POST /api/config/proxy/mbtiles`, then calls only the configured `sitmun.mbtiles.url` with backend-returned canonical tile JSON (clients send service/layer IDs only — never map service URLs). Create responses expose an opaque integrity-protected `jobHandle` bound to principal, app, territory, internal job id, and expiry.
 
 ### Profiles
 
@@ -409,7 +421,19 @@ sitmun:
   backend:
     config:
       url: http://some.url
-      secret: some-secret
+      secret: ${SITMUN_BACKEND_CONFIG_SECRET}
+  mbtiles:
+    url: ${SITMUN_MBTILES_URL:http://localhost:8081/mbtiles}
+    job-handle-secret: ${SITMUN_MBTILES_JOB_HANDLE_SECRET:change-me-mbtiles-job-handle-secret-32}
+    job-handle-ttl: 24h
+    max-json-bytes: 65536
+    max-zoom-span: 12
+    allowed-srs:
+      - EPSG:4326
+      - EPSG:3857
+      - EPSG:25831
+    connect-timeout: 10s
+    read-timeout: 60s
   ogc:
     capabilities:
       # OGC service path suffixes recognized when rewriting URLs in GetCapabilities responses.
@@ -498,7 +522,7 @@ sitmun:
   backend:
     config:
       url: http://sitmun-backend:8080
-      secret: ${SITMUN_BACKEND_CONFIG_SECRET:your-secret-key-here}
+      secret: ${SITMUN_BACKEND_CONFIG_SECRET}
 
 # Server Configuration
 server:
@@ -640,9 +664,22 @@ WmsCapabilitiesResponseDecorator       // Modifies WMS capabilities responses
 
 ### Error Handling
 
-- **HTTP Status Codes**: Proper status code mapping
-- **Error Response Format**: Consistent error response structure
-- **Logging**: Comprehensive error logging
+| Failure source | Status | Client meaning |
+| --- | --- | --- |
+| Malformed middleware request or Bearer header | `400` | Invalid request; keep the SITMUN session. |
+| Backend configuration authentication failure | `401` | Refresh the short-lived proxy token once. |
+| Backend configuration resource denial | `403` | Keep the session and report denied access. |
+| Upstream WMS/WFS/HTTP authentication failure | `502` | Upstream service/configuration failure, never SITMUN session expiry. |
+
+- Proxy-generated errors use `application/problem+json`, instance `/proxy`, and an `origin`
+  property identifying `proxy-request`, `backend-config`, or `upstream-service`.
+- Malformed Bearer headers return `400` without forwarding the request.
+- Backend configuration `401`/`403` responses retain only trusted SITMUN problem type/title
+  identity; their detail, instance, body, and `WWW-Authenticate` header are not forwarded.
+- Upstream service `401`/`403` responses deliberately return `502`. The proxy is the upstream
+  client, so forwarding those statuses would incorrectly signal that the viewer session failed.
+- Logs retain request method, field names, counts, and presence while omitting credentials,
+  connection URLs, SQL, parameter values, upstream URLs, and exception messages.
 
 ## Development
 

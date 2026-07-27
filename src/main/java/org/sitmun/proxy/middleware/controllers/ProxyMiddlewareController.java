@@ -1,7 +1,10 @@
 package org.sitmun.proxy.middleware.controllers;
 
+import static org.sitmun.proxy.middleware.dto.ProxyProblemResponses.invalidAuthorizationHeader;
+
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
+import org.sitmun.proxy.middleware.controllers.AuthorizationBearerParser.AuthorizationToken;
 import org.sitmun.proxy.middleware.service.RequestConfigurationService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -27,10 +30,13 @@ public class ProxyMiddlewareController {
       @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
       @RequestParam(required = false) Map<String, String> params,
       HttpServletRequest request) {
-    String token = authorization != null ? authorization.substring(7) : null;
+    AuthorizationToken authorizationToken = AuthorizationBearerParser.parse(authorization, false);
+    if (!authorizationToken.valid()) {
+      return invalidAuthorizationHeader();
+    }
     String url = request.getRequestURL().toString();
     return requestConfigurationService.doRequest(
-        appId, terId, type, typeId, token, params, url, null);
+        appId, terId, type, typeId, authorizationToken.token(), params, url, null);
   }
 
   @PostMapping(
@@ -45,9 +51,12 @@ public class ProxyMiddlewareController {
       @RequestParam(required = false) Map<String, String> params,
       HttpServletRequest request,
       @RequestBody(required = false) String body) {
-    String token = authorization != null ? authorization.substring(7) : null;
+    AuthorizationToken authorizationToken = AuthorizationBearerParser.parse(authorization, false);
+    if (!authorizationToken.valid()) {
+      return invalidAuthorizationHeader();
+    }
     String url = request.getRequestURL().toString();
     return requestConfigurationService.doRequest(
-        appId, terId, type, typeId, token, params, url, body);
+        appId, terId, type, typeId, authorizationToken.token(), params, url, body);
   }
 }
