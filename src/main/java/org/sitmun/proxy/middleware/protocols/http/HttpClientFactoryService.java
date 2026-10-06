@@ -1,6 +1,8 @@
 package org.sitmun.proxy.middleware.protocols.http;
 
 import java.io.IOException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import javax.net.ssl.SSLContext;
@@ -71,27 +73,25 @@ public class HttpClientFactoryService implements HttpClient {
           new TrustManager[] {
             new X509TrustManager() {
               @Override
-              public void checkClientTrusted(
-                  java.security.cert.X509Certificate[] chain, String authType) {
+              public void checkClientTrusted(X509Certificate[] chain, String authType) {
                 // No implementation needed for ignoring SSL certificate validation
               }
 
               @Override
-              public void checkServerTrusted(
-                  java.security.cert.X509Certificate[] chain, String authType) {
+              public void checkServerTrusted(X509Certificate[] chain, String authType) {
                 // No implementation needed for ignoring SSL certificate validation
               }
 
               @Override
-              public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                return new java.security.cert.X509Certificate[] {};
+              public X509Certificate[] getAcceptedIssuers() {
+                return new X509Certificate[] {};
               }
             }
           };
 
       // Install the all-trusting trust manager
       final SSLContext sslContext = SSLContext.getInstance("SSL");
-      sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+      sslContext.init(null, trustAllCerts, new SecureRandom());
       // Create a ssl socket factory with our all-trusting manager
       final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 

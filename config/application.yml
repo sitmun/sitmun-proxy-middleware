@@ -21,6 +21,17 @@ sitmun:
       - EPSG:25831
     connect-timeout: 10s
     read-timeout: 60s
+  proxy:
+    service-check:
+      enabled: true
+      debounce-count: 5
+      debounce-window: 20s
+      scan-max-bytes: 65536
+      exception-text-max-length: 200
+    usage:
+      enabled: true
+      flush-interval: 5m
+      backlog: 24h
 
 # Actuator Configuration
 management:

@@ -16,6 +16,7 @@ java {
   }
 }
 repositories {
+  mavenLocal()
   mavenCentral()
 }
 
@@ -36,6 +37,7 @@ dependencies {
 
   // Spring Boot Starters
   implementation libs.spring.boot.starter.web
+  implementation 'org.springframework.boot:spring-boot-starter-validation'
   implementation libs.spring.boot.starter.jdbc
   implementation libs.spring.boot.starter.actuator
 
@@ -47,6 +49,7 @@ dependencies {
 
   // HTTP Client
   implementation libs.okhttp3
+  implementation 'org.sitmun:sitmun-proxy-contract:1.2.9'
 
   // URI Templates
   implementation libs.handyUriTemplates

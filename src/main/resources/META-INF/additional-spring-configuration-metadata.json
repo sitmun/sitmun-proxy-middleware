@@ -65,6 +65,46 @@
       "sourceType": "org.sitmun.proxy.middleware.mbtiles.MbtilesProperties"
     },
     {
+      "name": "sitmun.proxy.service-check.enabled",
+      "type": "java.lang.Boolean",
+      "description": "When false, OGC forwards still complete and no service-check report is sent."
+    },
+    {
+      "name": "sitmun.proxy.service-check.debounce-count",
+      "type": "java.lang.Integer",
+      "description": "Identical classified statuses in a row before a proxy report is posted."
+    },
+    {
+      "name": "sitmun.proxy.service-check.debounce-window",
+      "type": "java.time.Duration",
+      "description": "How long one pending status waits before a proxy report is posted."
+    },
+    {
+      "name": "sitmun.proxy.service-check.scan-max-bytes",
+      "type": "java.lang.Integer",
+      "description": "Maximum bytes read by the shared StAX scan on an OGC forward."
+    },
+    {
+      "name": "sitmun.proxy.service-check.exception-text-max-length",
+      "type": "java.lang.Integer",
+      "description": "Maximum characters kept from an OGC exception text before classification."
+    },
+    {
+      "name": "sitmun.proxy.usage.enabled",
+      "type": "java.lang.Boolean",
+      "description": "When false, OGC forwards are not counted."
+    },
+    {
+      "name": "sitmun.proxy.usage.flush-interval",
+      "type": "java.time.Duration",
+      "description": "How often in-memory usage deltas are posted."
+    },
+    {
+      "name": "sitmun.proxy.usage.backlog",
+      "type": "java.time.Duration",
+      "description": "Unsent usage hours older than this are dropped, oldest first."
+    },
+    {
       "name": "sitmun.mbtiles.read-timeout",
       "type": "java.time.Duration",
       "description": "Read timeout for upstream MBTiles HTTP calls.",

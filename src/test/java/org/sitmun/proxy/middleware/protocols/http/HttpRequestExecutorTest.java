@@ -8,6 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sitmun.proxy.middleware.dto.ProblemDetail;
@@ -86,7 +88,7 @@ class HttpRequestExecutorTest {
 
     RequestExecutorResponse<?> result = httpRequestExecutor.execute();
 
-    var requestCaptor = org.mockito.ArgumentCaptor.forClass(Request.class);
+    var requestCaptor = ArgumentCaptor.forClass(Request.class);
     verify(httpClient).executeRequest(requestCaptor.capture());
     assertThat(requestCaptor.getValue().body().contentType().toString())
         .contains("application/json");
@@ -98,7 +100,7 @@ class HttpRequestExecutorTest {
   void shouldStreamResponseBodyWithoutBuffering() throws IOException {
     httpRequestExecutor.setUrl(TEST_URL);
     byte[] payload = "streamed-bytes".getBytes();
-    when(responseBody.byteStream()).thenReturn(new java.io.ByteArrayInputStream(payload));
+    when(responseBody.byteStream()).thenReturn(new ByteArrayInputStream(payload));
     when(response.body()).thenReturn(responseBody);
     when(httpClient.executeRequest(any(Request.class))).thenReturn(response);
 
@@ -121,7 +123,7 @@ class HttpRequestExecutorTest {
 
     httpRequestExecutor.execute();
 
-    var requestCaptor = org.mockito.ArgumentCaptor.forClass(Request.class);
+    var requestCaptor = ArgumentCaptor.forClass(Request.class);
     verify(httpClient).executeRequest(requestCaptor.capture());
     assertThat(requestCaptor.getValue().body().contentType().toString()).contains("text/xml");
   }

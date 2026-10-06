@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -191,18 +192,12 @@ class ProxyParameterizedJdbcIntegrationTest {
         .andExpect(MockMvcResultMatchers.jsonPath("$.properties.origin").value("backend-config"))
         .andExpect(
             MockMvcResultMatchers.content()
-                .string(
-                    org.hamcrest.Matchers.not(
-                        org.hamcrest.Matchers.containsString("attacker.example"))))
+                .string(Matchers.not(Matchers.containsString("attacker.example"))))
         .andExpect(
             MockMvcResultMatchers.content()
-                .string(
-                    org.hamcrest.Matchers.not(
-                        org.hamcrest.Matchers.containsString("backend secret"))))
+                .string(Matchers.not(Matchers.containsString("backend secret"))))
         .andExpect(
             MockMvcResultMatchers.content()
-                .string(
-                    org.hamcrest.Matchers.not(
-                        org.hamcrest.Matchers.containsString("internal.example"))));
+                .string(Matchers.not(Matchers.containsString("internal.example"))));
   }
 }

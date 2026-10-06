@@ -4,18 +4,29 @@ import static org.sitmun.proxy.middleware.dto.ProxyProblemResponses.upstreamAuth
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
+import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 import okhttp3.ResponseBody;
+import org.sitmun.proxy.middleware.dto.ProblemDetail;
+import org.sitmun.proxy.middleware.dto.ProblemTypes;
 import org.sitmun.proxy.middleware.service.RequestExecutor;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponse;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponseImpl;
+import org.sitmun.proxy.middleware.servicecheck.UpstreamExchange;
 import org.sitmun.proxy.middleware.utils.UriTemplateExpander;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -43,10 +54,21 @@ public class HttpRequestExecutor implements RequestExecutor {
 
   private final Map<String, String> headers = new HashMap<>();
   private final Map<String, String> parameters = new HashMap<>();
+  private static final Executor REPORT_EXECUTOR =
+      Executors.newSingleThreadExecutor(
+          runnable -> {
+            Thread thread = new Thread(runnable, "service-check-report");
+            thread.setDaemon(true);
+            return thread;
+          });
+
   private final HttpClient httpClient;
   private final String baseUrl;
   @Setter private String url;
   @Setter private String body;
+  private Consumer<UpstreamExchange> exchangeListener;
+  private Executor listenerExecutor = REPORT_EXECUTOR;
+  private UpstreamExchange upstreamExchange;
 
   public HttpRequestExecutor(String baseUrl, HttpClient httpClient) {
     this.baseUrl = baseUrl;
@@ -74,6 +96,18 @@ public class HttpRequestExecutor implements RequestExecutor {
     }
   }
 
+  public void setExchangeListener(Consumer<UpstreamExchange> exchangeListener) {
+    this.exchangeListener = exchangeListener;
+  }
+
+  void setListenerExecutor(Executor listenerExecutor) {
+    this.listenerExecutor = listenerExecutor;
+  }
+
+  public UpstreamExchange upstreamExchange() {
+    return upstreamExchange;
+  }
+
   @SuppressWarnings("unchecked")
   @Override
   public RequestExecutorResponse<?> execute() {
@@ -81,28 +115,31 @@ public class HttpRequestExecutor implements RequestExecutor {
       throw new IllegalStateException("Url is not set");
     }
 
-    okhttp3.Request httpRequest = buildRequest();
+    Request httpRequest = buildRequest();
 
     log.debug(
         "Executing upstream request: method={} headerNames={}",
         httpRequest.method(),
         httpRequest.headers().names());
 
-    try (okhttp3.Response r = httpClient.executeRequest(httpRequest)) {
+    long started = System.nanoTime();
+    try (Response r = httpClient.executeRequest(httpRequest)) {
+      String contentType = r.header("content-type");
       if (r.code() == 401 || r.code() == 403) {
+        publish(httpRequest, r.code(), contentType, null, null, started);
         return new RequestExecutorResponseImpl<>(
             baseUrl, 502, "application/problem+json", upstreamAuthorizationFailure());
       }
-      ResponseBody body = r.body();
-      if (body == null)
-        return new RequestExecutorResponseImpl<>(baseUrl, r.code(), r.header("content-type"), null);
-      return new RequestExecutorResponseImpl<>(
-          baseUrl, r.code(), r.header("content-type"), body.bytes());
+      ResponseBody responseBody = r.body();
+      byte[] bytes = responseBody == null ? null : responseBody.bytes();
+      publish(httpRequest, r.code(), contentType, bytes, null, started);
+      return new RequestExecutorResponseImpl<>(baseUrl, r.code(), contentType, bytes);
     } catch (IOException e) {
+      publish(httpRequest, null, null, null, e, started);
       log.error("Upstream request failed with exception type {}", e.getClass().getSimpleName());
-      org.sitmun.proxy.middleware.dto.ProblemDetail problem =
-          org.sitmun.proxy.middleware.dto.ProblemDetail.builder()
-              .type(org.sitmun.proxy.middleware.dto.ProblemTypes.PROXY_SERVICE_ERROR)
+      ProblemDetail problem =
+          ProblemDetail.builder()
+              .type(ProblemTypes.PROXY_SERVICE_ERROR)
               .status(503)
               .title("Service Error")
               .detail("Error with the request to final service")
@@ -110,6 +147,37 @@ public class HttpRequestExecutor implements RequestExecutor {
               .build();
       return new RequestExecutorResponseImpl<>(baseUrl, 503, "application/problem+json", problem);
     }
+  }
+
+  private void publish(
+      Request httpRequest,
+      Integer httpStatus,
+      String contentType,
+      byte[] bytes,
+      Throwable transportError,
+      long started) {
+    UpstreamExchange exchange =
+        new UpstreamExchange(
+            httpRequest.method(),
+            URI.create(httpRequest.url().toString()),
+            httpStatus,
+            contentType,
+            bytes,
+            transportError,
+            Math.max(0L, (System.nanoTime() - started) / 1_000_000L),
+            Instant.now());
+    upstreamExchange = exchange;
+    if (exchangeListener == null) {
+      return;
+    }
+    listenerExecutor.execute(
+        () -> {
+          try {
+            exchangeListener.accept(exchange);
+          } catch (RuntimeException ex) {
+            log.warn("Service check listener failed: {}", ex.getClass().getSimpleName());
+          }
+        });
   }
 
   /**
@@ -121,21 +189,21 @@ public class HttpRequestExecutor implements RequestExecutor {
       throw new IllegalStateException("Url is not set");
     }
 
-    okhttp3.Request httpRequest = buildRequest();
+    Request httpRequest = buildRequest();
     log.debug(
         "Executing streaming upstream request: method={} headerNames={}",
         httpRequest.method(),
         httpRequest.headers().names());
 
-    okhttp3.Response response = httpClient.executeRequest(httpRequest);
+    Response response = httpClient.executeRequest(httpRequest);
     ResponseBody responseBody = response.body();
     InputStream stream =
         responseBody != null ? responseBody.byteStream() : InputStream.nullInputStream();
     return new StreamedHttpResponse(response, stream);
   }
 
-  private okhttp3.Request buildRequest() {
-    okhttp3.Request.Builder builder = new okhttp3.Request.Builder();
+  private Request buildRequest() {
+    Request.Builder builder = new Request.Builder();
     builder.url(getUrl());
     for (String k : headers.keySet()) {
       builder.addHeader(k, headers.get(k));
@@ -143,7 +211,7 @@ public class HttpRequestExecutor implements RequestExecutor {
 
     if (body != null) {
       String contentType = resolvePostContentType();
-      RequestBody requestBody = RequestBody.create(body, okhttp3.MediaType.parse(contentType));
+      RequestBody requestBody = RequestBody.create(body, MediaType.parse(contentType));
       builder.post(requestBody);
     }
     return builder.build();
@@ -162,25 +230,20 @@ public class HttpRequestExecutor implements RequestExecutor {
       return url;
     }
 
-    // Check if URL contains URI template variables
     if (UriTemplateExpander.hasTemplateVariables(url)) {
-      // Expand template variables and get which ones were used
       UriTemplateExpander.ExpandedResult result =
           UriTemplateExpander.expandWithUsedVariables(url, parameters);
       String expandedUrl = result.getUri();
 
-      // If all parameters were used in template expansion, return the expanded URL
       if (result.getUsedVariables().size() == parameters.size()) {
         return expandedUrl;
       }
 
-      // Some parameters weren't used in template, add them as query parameters
       UriComponents components = UriComponentsBuilder.fromUriString(expandedUrl).build();
       return rebuildUrlWithMergedQueryParams(
           components, k -> !result.getUsedVariables().contains(k));
     }
 
-    // No template variables, just add parameters as query strings
     UriComponents components = UriComponentsBuilder.fromUriString(url).build();
     return rebuildUrlWithMergedQueryParams(components, k -> true);
   }
@@ -233,7 +296,7 @@ public class HttpRequestExecutor implements RequestExecutor {
   }
 
   /** Open OkHttp response with a body stream; must be closed by the caller. */
-  public record StreamedHttpResponse(okhttp3.Response response, InputStream bodyStream)
+  public record StreamedHttpResponse(Response response, InputStream bodyStream)
       implements AutoCloseable {
     @Override
     public void close() {

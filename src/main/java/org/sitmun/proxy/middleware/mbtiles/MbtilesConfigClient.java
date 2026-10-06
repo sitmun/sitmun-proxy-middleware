@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -50,7 +51,7 @@ public class MbtilesConfigClient {
       throw new MbtilesBackendException(e);
     } catch (MbtilesClientException e) {
       throw e;
-    } catch (org.springframework.web.client.HttpServerErrorException e) {
+    } catch (HttpServerErrorException e) {
       log.error(
           "Backend MBTiles config server error {}: {}",
           e.getStatusCode().value(),

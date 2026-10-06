@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.sitmun.proxy.middleware.mbtiles.JwtPrincipalExtractor;
 import org.sitmun.proxy.middleware.mbtiles.MbtilesConfigClient;
 import org.sitmun.proxy.middleware.mbtiles.MbtilesDtos.BackendConfigRequest;
@@ -109,7 +110,7 @@ class MbtilesProxyControllerTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.tileCount").value(42));
 
-    var captor = org.mockito.ArgumentCaptor.forClass(BackendConfigRequest.class);
+    var captor = ArgumentCaptor.forClass(BackendConfigRequest.class);
     verify(configClient).authorize(captor.capture(), eq("mobile-token"));
     assertThat(captor.getValue().action()).isEqualTo("estimate");
     assertThat(captor.getValue().services()).isNotEmpty();

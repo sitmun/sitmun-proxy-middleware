@@ -13,6 +13,9 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.sitmun.proxy.middleware.controllers.AuthorizationBearerParser;
 import org.sitmun.proxy.middleware.controllers.AuthorizationBearerParser.AuthorizationToken;
+import org.sitmun.proxy.middleware.dto.ProblemDetail;
+import org.sitmun.proxy.middleware.dto.ProblemTypes;
+import org.sitmun.proxy.middleware.dto.ProxyProblemResponses;
 import org.sitmun.proxy.middleware.mbtiles.MbtilesConfigClient.MbtilesBackendException;
 import org.sitmun.proxy.middleware.mbtiles.MbtilesDtos.BackendConfigRequest;
 import org.sitmun.proxy.middleware.mbtiles.MbtilesDtos.BackendConfigResponse;
@@ -154,9 +157,7 @@ public class MbtilesProxyService {
               upstream.close();
               return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
                   .contentType(MediaType.APPLICATION_PROBLEM_JSON)
-                  .body(
-                      org.sitmun.proxy.middleware.dto.ProxyProblemResponses
-                          .upstreamAuthorizationFailure());
+                  .body(ProxyProblemResponses.upstreamAuthorizationFailure());
             }
             if (!upstream.response().isSuccessful()) {
               upstream.close();
@@ -229,8 +230,8 @@ public class MbtilesProxyService {
       return ResponseEntity.status(e.clientError().getStatusCode().value())
           .contentType(MediaType.APPLICATION_PROBLEM_JSON)
           .body(
-              org.sitmun.proxy.middleware.dto.ProblemDetail.builder()
-                  .type(org.sitmun.proxy.middleware.dto.ProblemTypes.PROXY_BACKEND_ERROR)
+              ProblemDetail.builder()
+                  .type(ProblemTypes.PROXY_BACKEND_ERROR)
                   .status(e.clientError().getStatusCode().value())
                   .title("Backend Error")
                   .detail("Backend configuration request failed")

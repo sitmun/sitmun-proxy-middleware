@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -512,7 +513,7 @@ class RequestConfigurationServiceTest {
         appId, terId, type, typeId, token, params, TEST_URL, null);
 
     // Then: Verify the request sent to backend includes all required fields
-    var httpEntityCaptor = org.mockito.ArgumentCaptor.forClass(HttpEntity.class);
+    var httpEntityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
     verify(restTemplate)
         .exchange(
             eq(CONFIG_URL),
@@ -559,7 +560,7 @@ class RequestConfigurationServiceTest {
         appId, terId, TYPE_SQL, typeId, token, params, TEST_URL, null);
 
     // Then: Verify the X-SITMUN-Proxy-Key header is present
-    var httpEntityCaptor = org.mockito.ArgumentCaptor.forClass(HttpEntity.class);
+    var httpEntityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
     verify(restTemplate)
         .exchange(
             eq(CONFIG_URL),
@@ -600,7 +601,7 @@ class RequestConfigurationServiceTest {
     requestConfigurationService.doRequest(appId, terId, type, typeId, null, params, TEST_URL, null);
 
     // Then: Verify all body fields are present and Authorization is absent for public users
-    var httpEntityCaptor = org.mockito.ArgumentCaptor.forClass(HttpEntity.class);
+    var httpEntityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
     verify(restTemplate)
         .exchange(
             eq(CONFIG_URL),

@@ -7,6 +7,7 @@ import static org.sitmun.proxy.middleware.dto.ProxyProblemResponses.backendUnava
 import static org.sitmun.proxy.middleware.dto.ProxyProblemResponses.emptyBackendConfiguration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Locale;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.sitmun.proxy.middleware.dto.ConfigProxyDto;
@@ -14,7 +15,9 @@ import org.sitmun.proxy.middleware.dto.ConfigProxyRequestDto;
 import org.sitmun.proxy.middleware.dto.PayloadDto;
 import org.sitmun.proxy.middleware.protocols.jdbc.JdbcPayloadDto;
 import org.sitmun.proxy.middleware.protocols.wms.WmsPayloadDto;
+import org.sitmun.proxy.middleware.servicecheck.ProxyCheckSubject;
 import org.sitmun.proxy.middleware.utils.logging.SensitiveDataMasking;
+import org.sitmun.upstream.signal.RequestContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -88,7 +91,12 @@ public class RequestConfigurationService {
 
       if (configProxyDto != null) {
         log.info("Requesting data from the final service");
-        return requestExecutorService.executeRequest(url, configProxyDto.getPayload());
+        ProxyCheckSubject.set(subjectFor(appId, type, typeId));
+        try {
+          return requestExecutorService.executeRequest(url, configProxyDto.getPayload());
+        } finally {
+          ProxyCheckSubject.clear();
+        }
       } else {
         return emptyBackendConfiguration();
       }
@@ -125,6 +133,17 @@ public class RequestConfigurationService {
           e.getClass().getSimpleName());
       return backendUnavailable();
     }
+  }
+
+  public static ProxyCheckSubject subjectFor(Integer appId, String type, Integer typeId) {
+    if (appId == null || type == null || typeId == null) {
+      return null;
+    }
+    String protocol = type.toUpperCase(Locale.ROOT);
+    if (!RequestContext.isOgcProtocol(protocol)) {
+      return null;
+    }
+    return new ProxyCheckSubject(typeId.longValue(), appId.longValue(), protocol);
   }
 
   private static String describePayloadForLog(PayloadDto payload) {
