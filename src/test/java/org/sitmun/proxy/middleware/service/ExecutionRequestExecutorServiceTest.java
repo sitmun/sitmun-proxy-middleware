@@ -128,19 +128,4 @@ class ExecutionRequestExecutorServiceTest {
     Object body = response.getBody();
     assertThat(body).isNotNull().asInstanceOf(InstanceOfAssertFactories.LIST).hasSize(35);
   }
-
-  /** Public user access to a relational service filtered. */
-  @Test
-  @DisplayName("Request to a JDBC service with filters")
-  @Disabled(
-      "Redundant test: the test is identical to jdbcAccess because the SQL query is built on the Configuration and Authorization API")
-  void jdbcAccessWithFilters() {
-    ResponseEntity<Object> response =
-        requestExecutorService.executeRequest("", inMemoryH2Database(false));
-    assertThat(response.getStatusCode().value()).isEqualTo(200);
-    assertThat(Objects.requireNonNull(response.getHeaders().get("Content-Type")).get(0))
-        .isEqualTo("application/json");
-    Object body = response.getBody();
-    assertThat(body).isNotNull().asInstanceOf(InstanceOfAssertFactories.LIST).hasSize(35);
-  }
 }
