@@ -50,13 +50,9 @@ public class HttpRequestDecoratorAddBasicSecurity implements RequestDecorator {
             .getUsername()
             .concat(HttpSecurityConstants.BASIC_CREDENTIAL_SEPARATOR)
             .concat(httpContext.getSecurity().getPassword());
-    String authEncode = encodeAuthorization(authString);
+    String authEncode = Base64.getEncoder().encodeToString(authString.getBytes());
     request.setHeader(
         HttpSecurityConstants.HEADER_AUTHORIZATION,
         HttpSecurityConstants.AUTH_SCHEME_BASIC_PREFIX.concat(authEncode));
-  }
-
-  private String encodeAuthorization(String authorization) {
-    return Base64.getEncoder().encodeToString(authorization.getBytes());
   }
 }
