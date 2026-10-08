@@ -32,7 +32,5 @@ public final class ProblemTypes {
   public static final String PROXY_UPSTREAM_AUTHORIZATION_ERROR =
       BASE_URI + "proxy-upstream-auth-error";
 
-  private ProblemTypes() {
-    // Prevent instantiation
-  }
+  private ProblemTypes() {}
 }

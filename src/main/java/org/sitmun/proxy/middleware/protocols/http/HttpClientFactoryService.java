@@ -68,7 +68,6 @@ public class HttpClientFactoryService implements HttpClient {
     log.warn("Ignore SSL Certificate");
     try {
 
-      // Create a trust manager that does not validate certificate chains
       final TrustManager[] trustAllCerts =
           new TrustManager[] {
             new X509TrustManager() {
@@ -89,10 +88,8 @@ public class HttpClientFactoryService implements HttpClient {
             }
           };
 
-      // Install the all-trusting trust manager
       final SSLContext sslContext = SSLContext.getInstance("SSL");
       sslContext.init(null, trustAllCerts, new SecureRandom());
-      // Create a ssl socket factory with our all-trusting manager
       final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
       builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
