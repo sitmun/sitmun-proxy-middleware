@@ -5,7 +5,6 @@ import org.sitmun.proxy.middleware.decorator.Context;
 import org.sitmun.proxy.middleware.decorator.RequestDecorator;
 import org.springframework.stereotype.Component;
 
-/** Decorator that appends security query parameters to the request URL. */
 @Component
 public class HttpRequestDecoratorAddQueryParamSecurity implements RequestDecorator {
 
