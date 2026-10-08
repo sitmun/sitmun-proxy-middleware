@@ -93,7 +93,6 @@ class ExecutionRequestExecutorServiceTest {
     assertThat(interceptor.getExpectation()).isEqualTo("154.58.18.33");
   }
 
-  /** Public user access to a private WMS service, adding a filter to the request. */
   @Test
   @DisplayName("Request to service with filters")
   void privateWfsWithFilter() {

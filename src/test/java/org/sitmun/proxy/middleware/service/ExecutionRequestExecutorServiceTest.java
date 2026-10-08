@@ -80,7 +80,6 @@ class ExecutionRequestExecutorServiceTest {
     Object body = response.getBody();
     assertThat(body).isNotNull().isInstanceOf(byte[].class);
     String text = new String((byte[]) body, StandardCharsets.UTF_8);
-    // Updated from 273 to 294 to reflect current external WMS service state
     assertThat(jsonTester.parse(text)).extracting("totalFeatures").isEqualTo(294);
   }
 
@@ -104,7 +103,6 @@ class ExecutionRequestExecutorServiceTest {
     assertThat(interceptor.getExpectation()).isEqualTo("154.58.18.33");
   }
 
-  /** Public user access to a private WMS service, adding a filter to the request. */
   @Test
   @DisplayName("Request to service with filters")
   void privateWfsWithFilter() {
