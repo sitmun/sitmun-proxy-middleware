@@ -5,9 +5,7 @@ package org.sitmun.proxy.middleware.config;
  * backend-core module to ensure proper communication.
  */
 public class ProxyMiddlewareConstants {
-  private ProxyMiddlewareConstants() {
-    // Private constructor to prevent instantiation
-  }
+  private ProxyMiddlewareConstants() {}
 
   /**
    * Header name for authenticating proxy middleware requests to the backend configuration API. This
