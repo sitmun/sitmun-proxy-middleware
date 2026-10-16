@@ -66,7 +66,8 @@ public class ProxyServiceCheckReporter {
 
   public ExchangeSignals signals(UpstreamExchange exchange) {
     if (exchange.transportError() != null) {
-      return ExchangeSignals.transport(exchange.transportError());
+      return ExchangeSignals.transport(
+          exchange.transportError(), properties.exceptionTextMaxLength());
     }
     ExchangeSignals http = ExchangeSignals.http(exchange.httpStatus());
     if (exchange.body() == null || !scannable(exchange.contentType())) {

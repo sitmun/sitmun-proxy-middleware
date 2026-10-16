@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **HTTP**: OkHttp is 5.5.0. The unsafe client does not follow redirects itself. Each hop selects the client for the `Location` host.
+- **Service checks**: Transport text is capped at `exceptionTextMaxLength`.
+
 ## [1.2.9] - 2026-09-18
 
 ### Changed

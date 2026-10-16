@@ -14,6 +14,7 @@ import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.sitmun.upstream.http.ManualRedirects;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -36,7 +37,10 @@ public class HttpClientFactoryService implements HttpClient {
   private OkHttpClient createUnsafeClient() {
     OkHttpClient.Builder builder = new OkHttpClient.Builder();
     interceptors.forEach(builder::addInterceptor);
-    return configureToIgnoreCertificate(builder).build();
+    return configureToIgnoreCertificate(builder)
+        .followRedirects(false)
+        .followSslRedirects(false)
+        .build();
   }
 
   private OkHttpClient createSafeClient() {
@@ -47,7 +51,7 @@ public class HttpClientFactoryService implements HttpClient {
 
   @Override
   public Response executeRequest(Request httpRequest) throws IOException {
-    return getClient(httpRequest.url().host()).newCall(httpRequest).execute();
+    return ManualRedirects.execute(httpRequest, this::getClient);
   }
 
   public OkHttpClient getClient(String host) {
