@@ -61,9 +61,22 @@ public class RequestConfigurationService {
       Map<String, String> params,
       String url,
       String body) {
+    return doRequest(appId, terId, type, typeId, null, token, params, url, body);
+  }
+
+  public ResponseEntity<?> doRequest(
+      Integer appId,
+      Integer terId,
+      String type,
+      Integer typeId,
+      Integer cartographyId,
+      String token,
+      Map<String, String> params,
+      String url,
+      String body) {
     String method = body == null ? "GET" : "POST";
     ConfigProxyRequestDto configProxyRequest =
-        new ConfigProxyRequestDto(appId, terId, type, typeId, method, params, body);
+        new ConfigProxyRequestDto(appId, terId, type, typeId, method, params, body, cartographyId);
     log.debug(
         "Proxy config request: appId={} terId={} type={} typeId={} method={} paramKeys={} "
             + "upstreamRequestBodyPresent={} authorizationPresent={}",

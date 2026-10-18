@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Proxy**: `GET` and `POST /proxy/{appId}/{terId}/{type}/{typeId}/{cartographyId}` forward `cartographyId` on the backend config request. `POST` still accepts only `application/xml` ([sitmun-application-stack#90](https://github.com/sitmun/sitmun-application-stack/issues/90)).
+
 ### Changed
 
 - **HTTP**: OkHttp is 5.5.0. The unsafe client does not follow redirects itself. Each hop selects the client for the `Location` host.

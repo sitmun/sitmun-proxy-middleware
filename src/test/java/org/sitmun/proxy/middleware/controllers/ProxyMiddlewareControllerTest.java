@@ -307,4 +307,55 @@ class ProxyMiddlewareControllerTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     verifyNoInteractions(requestConfigurationService);
   }
+
+  @Test
+  @DisplayName("GET cartography path forwards the cartography id")
+  void getCartographyForwardsCartographyId() {
+    String requestUrl = "http://localhost:8080/proxy/1/2/WMS/100/7";
+    when(httpServletRequest.getRequestURL()).thenReturn(new StringBuffer(requestUrl));
+    doReturn(ResponseEntity.ok("success"))
+        .when(requestConfigurationService)
+        .doRequest(1, 2, "WMS", 100, 7, "test-token", Map.of("LAYERS", "roads"), requestUrl, null);
+
+    ResponseEntity<?> result =
+        proxyMiddlewareController.getCartography(
+            1,
+            2,
+            "WMS",
+            100,
+            7,
+            "Bearer test-token",
+            Map.of("LAYERS", "roads"),
+            httpServletRequest);
+
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+    verify(requestConfigurationService)
+        .doRequest(1, 2, "WMS", 100, 7, "test-token", Map.of("LAYERS", "roads"), requestUrl, null);
+  }
+
+  @Test
+  @DisplayName("POST cartography path forwards the cartography id and the XML body")
+  void postCartographyForwardsCartographyId() {
+    String requestUrl = "http://localhost:8080/proxy/1/2/WFS/100/7";
+    when(httpServletRequest.getRequestURL()).thenReturn(new StringBuffer(requestUrl));
+    doReturn(ResponseEntity.ok("success"))
+        .when(requestConfigurationService)
+        .doRequest(1, 2, "WFS", 100, 7, "test-token", Map.of(), requestUrl, "<Transaction/>");
+
+    ResponseEntity<?> result =
+        proxyMiddlewareController.postCartography(
+            1,
+            2,
+            "WFS",
+            100,
+            7,
+            "Bearer test-token",
+            Map.of(),
+            httpServletRequest,
+            "<Transaction/>");
+
+    assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+    verify(requestConfigurationService)
+        .doRequest(1, 2, "WFS", 100, 7, "test-token", Map.of(), requestUrl, "<Transaction/>");
+  }
 }

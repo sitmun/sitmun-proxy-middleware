@@ -33,4 +33,7 @@ public class ConfigProxyRequestDto {
 
   @JsonProperty("requestBody")
   private String requestBody;
+
+  @JsonProperty("cartographyId")
+  private Integer cartographyId;
 }
