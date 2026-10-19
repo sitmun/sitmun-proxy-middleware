@@ -5,15 +5,18 @@ import static org.sitmun.proxy.middleware.test.fixtures.AuthorizationProxyFixtur
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.sitmun.proxy.middleware.service.RequestExecutorService;
+import org.sitmun.proxy.middleware.service.UpstreamContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
@@ -34,9 +37,16 @@ class ExecutionRequestExecutorServiceTest {
     JacksonTester.initFields(this, objectMapper);
   }
 
+  @BeforeEach
+  void bindRequest() {
+    RequestContextHolder.setRequestAttributes(
+        new ServletRequestAttributes(new MockHttpServletRequest()));
+  }
+
   @AfterEach
   void clearInterceptors() {
     httpClientFactoryService.removeAllInterceptors();
+    RequestContextHolder.resetRequestAttributes();
   }
 
   /**
@@ -49,8 +59,7 @@ class ExecutionRequestExecutorServiceTest {
   void publicWfs() throws Exception {
     ResponseEntity<Object> response = requestExecutorService.executeRequest("", wfsService(false));
     assertThat(response.getStatusCode().value()).isEqualTo(200);
-    assertThat(Objects.requireNonNull(response.getHeaders().get("Content-Type")).get(0))
-        .isEqualTo("application/json;charset=UTF-8");
+    assertThat(UpstreamContentType.current()).isEqualTo("application/json;charset=UTF-8");
     Object body = response.getBody();
     assertThat(body).isNotNull().isInstanceOf(byte[].class);
     String text = new String((byte[]) body, StandardCharsets.UTF_8);

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **WFS**: Upstream `Content-Type` values pass through unchanged, including GeoServer `text/xml; subtype=gml/2.1.2`. The proxy sets a different type only when it replaces the body, such as `application/problem+json`.
+
 ### Added
 
 - **Proxy**: `GET` and `POST /proxy/{appId}/{terId}/{type}/{typeId}/{cartographyId}` forward `cartographyId` on the backend config request. `POST` still accepts only `application/xml` ([sitmun-application-stack#90](https://github.com/sitmun/sitmun-application-stack/issues/90)).

@@ -5,7 +5,6 @@ import static org.sitmun.proxy.middleware.test.fixtures.AuthorizationProxyFixtur
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
@@ -19,6 +18,9 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
@@ -39,9 +41,16 @@ class ExecutionRequestExecutorServiceTest {
     JacksonTester.initFields(this, objectMapper);
   }
 
+  @BeforeEach
+  void bindRequest() {
+    RequestContextHolder.setRequestAttributes(
+        new ServletRequestAttributes(new MockHttpServletRequest()));
+  }
+
   @AfterEach
   void clearInterceptors() {
     httpClientFactoryService.removeAllInterceptors();
+    RequestContextHolder.resetRequestAttributes();
   }
 
   /** Public user access to the public WMS service. */
@@ -50,8 +59,7 @@ class ExecutionRequestExecutorServiceTest {
   void publicWms() {
     ResponseEntity<Object> response = requestExecutorService.executeRequest("", wmsService(false));
     assertThat(response.getStatusCode().value()).isEqualTo(200);
-    assertThat(Objects.requireNonNull(response.getHeaders().get("Content-Type")).get(0))
-        .isEqualTo("image/png");
+    assertThat(UpstreamContentType.current()).isEqualTo("image/png");
   }
 
   /** Public user access to the public WMS service. */
@@ -61,8 +69,7 @@ class ExecutionRequestExecutorServiceTest {
     ResponseEntity<Object> response =
         requestExecutorService.executeRequest("", wmsServiceWithURIWithParameters());
     assertThat(response.getStatusCode().value()).isEqualTo(200);
-    assertThat(Objects.requireNonNull(response.getHeaders().get("Content-Type")).get(0))
-        .isEqualTo("image/png");
+    assertThat(UpstreamContentType.current()).isEqualTo("image/png");
   }
 
   /**
@@ -75,8 +82,7 @@ class ExecutionRequestExecutorServiceTest {
   void publicWfs() throws Exception {
     ResponseEntity<Object> response = requestExecutorService.executeRequest("", wfsService(false));
     assertThat(response.getStatusCode().value()).isEqualTo(200);
-    assertThat(Objects.requireNonNull(response.getHeaders().get("Content-Type")).get(0))
-        .isEqualTo("application/json;charset=UTF-8");
+    assertThat(UpstreamContentType.current()).isEqualTo("application/json;charset=UTF-8");
     Object body = response.getBody();
     assertThat(body).isNotNull().isInstanceOf(byte[].class);
     String text = new String((byte[]) body, StandardCharsets.UTF_8);
@@ -121,8 +127,7 @@ class ExecutionRequestExecutorServiceTest {
     ResponseEntity<Object> response =
         requestExecutorService.executeRequest("", inMemoryH2Database(false));
     assertThat(response.getStatusCode().value()).isEqualTo(200);
-    assertThat(Objects.requireNonNull(response.getHeaders().get("Content-Type")).get(0))
-        .isEqualTo("application/json");
+    assertThat(UpstreamContentType.current()).isEqualTo("application/json");
     Object body = response.getBody();
     assertThat(body).isNotNull().asInstanceOf(InstanceOfAssertFactories.LIST).hasSize(35);
   }

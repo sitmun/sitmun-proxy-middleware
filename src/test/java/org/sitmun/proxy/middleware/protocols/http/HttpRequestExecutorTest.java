@@ -15,6 +15,7 @@ import java.util.Map;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,8 +28,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sitmun.proxy.middleware.dto.ProblemDetail;
 import org.sitmun.proxy.middleware.service.RequestExecutorResponse;
+import org.sitmun.proxy.middleware.service.UpstreamContentType;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("HttpRequestExecutor tests")
@@ -45,6 +50,13 @@ class HttpRequestExecutorTest {
   @BeforeEach
   void setUp() {
     httpRequestExecutor = new HttpRequestExecutor(BASE_URL, httpClient);
+    RequestContextHolder.setRequestAttributes(
+        new ServletRequestAttributes(new MockHttpServletRequest()));
+  }
+
+  @AfterEach
+  void resetRequest() {
+    RequestContextHolder.resetRequestAttributes();
   }
 
   @Test
@@ -67,8 +79,7 @@ class HttpRequestExecutorTest {
     // Then
     assertThat(result).isNotNull();
     assertThat(result.asResponseEntity().getStatusCode().value()).isEqualTo(200);
-    assertThat(result.asResponseEntity().getHeaders().getFirst("content-type"))
-        .isEqualTo("application/json");
+    assertThat(UpstreamContentType.current()).isEqualTo("application/json");
     assertThat(result.asResponseEntity().getBody()).isEqualTo(responseBytes);
   }
 
@@ -169,8 +180,7 @@ class HttpRequestExecutorTest {
     // Then
     assertThat(result).isNotNull();
     assertThat(result.asResponseEntity().getStatusCode().value()).isEqualTo(503);
-    assertThat(result.asResponseEntity().getHeaders().getFirst("content-type"))
-        .isEqualTo("application/problem+json");
+    assertThat(UpstreamContentType.current()).isEqualTo("application/problem+json");
 
     Object body = result.asResponseEntity().getBody();
     assertThat(body).isInstanceOf(ProblemDetail.class);
@@ -201,8 +211,7 @@ class HttpRequestExecutorTest {
 
     // Then
     assertThat(result.getStatusCode().value()).isEqualTo(502);
-    assertThat(result.getHeaders().getContentType().toString())
-        .isEqualTo("application/problem+json");
+    assertThat(UpstreamContentType.current()).isEqualTo("application/problem+json");
     assertThat(result.getHeaders()).doesNotContainKey(HttpHeaders.WWW_AUTHENTICATE);
     assertThat(result.getBody()).isInstanceOf(ProblemDetail.class);
     ProblemDetail problem = (ProblemDetail) result.getBody();

@@ -1,7 +1,6 @@
 package org.sitmun.proxy.middleware.service;
 
 import lombok.Data;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 @Data
@@ -21,8 +20,7 @@ public class RequestExecutorResponseImpl<T> implements RequestExecutorResponse<T
 
   @Override
   public ResponseEntity<T> asResponseEntity() {
-    return ResponseEntity.status(statusCode)
-        .contentType(MediaType.parseMediaType(contentType))
-        .body(body);
+    UpstreamContentType.remember(contentType);
+    return ResponseEntity.status(statusCode).body(body);
   }
 }

@@ -5,7 +5,6 @@ import static org.sitmun.proxy.middleware.test.fixtures.AuthorizationProxyFixtur
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
-import java.util.Objects;
 import okhttp3.MediaType;
 import okhttp3.Protocol;
 import okhttp3.Response;
@@ -17,6 +16,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.sitmun.proxy.middleware.dto.ProblemDetail;
 import org.sitmun.proxy.middleware.protocols.http.HttpClientFactoryService;
 import org.sitmun.proxy.middleware.service.RequestExecutorService;
+import org.sitmun.proxy.middleware.service.UpstreamContentType;
 import org.sitmun.proxy.middleware.test.interceptors.CheckBasicAuthorization;
 import org.sitmun.proxy.middleware.test.interceptors.DoNotRequest;
 import org.sitmun.proxy.middleware.test.interceptors.HostnameCheck;
@@ -27,6 +27,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
@@ -47,9 +50,16 @@ class ExecutionRequestExecutorServiceTest {
     JacksonTester.initFields(this, objectMapper);
   }
 
+  @BeforeEach
+  void bindRequest() {
+    RequestContextHolder.setRequestAttributes(
+        new ServletRequestAttributes(new MockHttpServletRequest()));
+  }
+
   @AfterEach
   void clearInterceptors() {
     httpClientFactoryService.removeAllInterceptors();
+    RequestContextHolder.resetRequestAttributes();
   }
 
   /** Public user access to the public WMS service. */
@@ -58,8 +68,7 @@ class ExecutionRequestExecutorServiceTest {
   void publicWms() {
     ResponseEntity<Object> response = requestExecutorService.executeRequest("", wmsService(false));
     assertThat(response.getStatusCode().value()).isEqualTo(200);
-    assertThat(Objects.requireNonNull(response.getHeaders().get("Content-Type")).get(0))
-        .isEqualTo("image/png");
+    assertThat(UpstreamContentType.current()).isEqualTo("image/png");
   }
 
   /** Public user access to the public WMS service. */
@@ -69,8 +78,7 @@ class ExecutionRequestExecutorServiceTest {
     ResponseEntity<Object> response =
         requestExecutorService.executeRequest("", wmsServiceWithURIWithParameters());
     assertThat(response.getStatusCode().value()).isEqualTo(200);
-    assertThat(Objects.requireNonNull(response.getHeaders().get("Content-Type")).get(0))
-        .isEqualTo("image/png");
+    assertThat(UpstreamContentType.current()).isEqualTo("image/png");
   }
 
   /** Public user access to a private WMS service with basic authentication. */
