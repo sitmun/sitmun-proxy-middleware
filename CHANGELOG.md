@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Build**: Gradle wrapper is 8.14.6.
+- **Build**: `setupGitHooks` is no longer a dependency of `build` (submodule-safe / opt-in via `./gradlew setupGitHooks`).
 - **HTTP**: OkHttp is 5.5.0. The unsafe client does not follow redirects itself. Each hop selects the client for the `Location` host.
 - **Service checks**: Transport text is capped at `exceptionTextMaxLength`.
 
