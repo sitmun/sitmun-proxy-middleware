@@ -172,7 +172,7 @@ docker system prune -f
 ### Building
 
 ```bash
-# Build the project (includes Git hooks setup)
+# Build the project
 ./gradlew build
 
 # Build without tests (faster for development)
@@ -945,7 +945,7 @@ Testing commands:
 
 #### Git Hooks
 
-Automated Git hooks run on every commit:
+Git hooks are opt-in via `./gradlew setupGitHooks`. When installed, they run on every commit:
 
 **Pre-commit checks:**
 
@@ -996,7 +996,7 @@ git commit -m "style: format code with Google Java Format"
 #### Managing Git Hooks
 
 ```bash
-# Install Git hooks (automatic with build)
+# Install Git hooks (opt-in)
 ./gradlew setupGitHooks
 
 # Remove Git hooks
