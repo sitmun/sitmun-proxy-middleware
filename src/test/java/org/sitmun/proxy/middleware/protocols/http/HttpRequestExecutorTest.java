@@ -212,7 +212,7 @@ class HttpRequestExecutorTest {
     // Then
     assertThat(result.getStatusCode().value()).isEqualTo(502);
     assertThat(UpstreamContentType.current()).isEqualTo("application/problem+json");
-    assertThat(result.getHeaders()).doesNotContainKey(HttpHeaders.WWW_AUTHENTICATE);
+    assertThat(result.getHeaders().headerNames()).doesNotContain(HttpHeaders.WWW_AUTHENTICATE);
     assertThat(result.getBody()).isInstanceOf(ProblemDetail.class);
     ProblemDetail problem = (ProblemDetail) result.getBody();
     assertThat(problem.getType())

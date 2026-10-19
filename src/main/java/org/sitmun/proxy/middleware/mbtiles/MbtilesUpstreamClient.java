@@ -1,6 +1,5 @@
 package org.sitmun.proxy.middleware.mbtiles;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
@@ -14,6 +13,7 @@ import okhttp3.Response;
 import org.sitmun.proxy.middleware.protocols.http.HttpRequestExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Calls the configured MBTiles service. Never forwards client Authorization or proxy key headers.

@@ -3,13 +3,13 @@ package org.sitmun.proxy.middleware.dto;
 import static org.sitmun.proxy.middleware.dto.ProblemTypes.*;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 public final class ProxyProblemResponses {
 

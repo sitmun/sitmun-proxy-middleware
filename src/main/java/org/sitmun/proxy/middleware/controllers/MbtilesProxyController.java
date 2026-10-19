@@ -1,6 +1,5 @@
 package org.sitmun.proxy.middleware.controllers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.sitmun.proxy.middleware.mbtiles.MbtilesDtos.ClientCreateRequest;
 import org.sitmun.proxy.middleware.mbtiles.MbtilesProxyService;
 import org.springframework.http.HttpHeaders;
@@ -13,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import tools.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping("/proxy")

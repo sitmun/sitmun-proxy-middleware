@@ -6,7 +6,6 @@ import static org.sitmun.proxy.middleware.dto.ProxyProblemResponses.backendFailu
 import static org.sitmun.proxy.middleware.dto.ProxyProblemResponses.backendUnavailable;
 import static org.sitmun.proxy.middleware.dto.ProxyProblemResponses.emptyBackendConfiguration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Locale;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 @Slf4j

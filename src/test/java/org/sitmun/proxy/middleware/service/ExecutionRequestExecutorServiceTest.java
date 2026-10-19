@@ -3,7 +3,6 @@ package org.sitmun.proxy.middleware.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.sitmun.proxy.middleware.test.fixtures.AuthorizationProxyFixtures.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.*;
@@ -14,13 +13,14 @@ import org.sitmun.proxy.middleware.test.interceptors.DoNotRequest;
 import org.sitmun.proxy.middleware.test.interceptors.HostnameCheck;
 import org.sitmun.proxy.middleware.test.interceptors.QueryCheck;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
@@ -37,7 +37,7 @@ class ExecutionRequestExecutorServiceTest {
 
   @BeforeAll
   void setup() {
-    ObjectMapper objectMapper = new ObjectMapper();
+    JsonMapper objectMapper = new JsonMapper();
     JacksonTester.initFields(this, objectMapper);
   }
 

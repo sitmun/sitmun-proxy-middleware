@@ -5,7 +5,7 @@ import java.time.Duration;
 import org.sitmun.proxy.middleware.mbtiles.MbtilesProperties;
 import org.sitmun.proxy.middleware.protocols.wms.WmsCapabilitiesProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;

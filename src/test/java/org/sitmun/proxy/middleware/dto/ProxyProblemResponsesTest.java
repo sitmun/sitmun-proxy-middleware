@@ -2,7 +2,6 @@ package org.sitmun.proxy.middleware.dto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -10,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.HttpClientErrorException;
+import tools.jackson.databind.ObjectMapper;
 
 class ProxyProblemResponsesTest {
 
@@ -50,7 +50,7 @@ class ProxyProblemResponsesTest {
     var response = ProxyProblemResponses.backendAuthorizationFailure(exception, objectMapper);
 
     assertThat(response.getStatusCode().value()).isEqualTo(status);
-    assertThat(response.getHeaders()).doesNotContainKey(HttpHeaders.WWW_AUTHENTICATE);
+    assertThat(response.getHeaders().headerNames()).doesNotContain(HttpHeaders.WWW_AUTHENTICATE);
     assertThat(response.getBody()).isNotNull();
     assertThat(response.getBody().getType()).isEqualTo(expectedType);
     assertThat(response.getBody().getTitle()).isEqualTo(expectedTitle);
