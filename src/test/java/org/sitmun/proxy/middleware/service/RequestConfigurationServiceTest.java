@@ -7,7 +7,6 @@ import static org.sitmun.proxy.middleware.config.ProxyMiddlewareConstants.TYPE_S
 import static org.sitmun.proxy.middleware.config.ProxyMiddlewareConstants.TYPE_WMS;
 import static org.sitmun.proxy.middleware.config.ProxyMiddlewareConstants.TYPE_WMTS;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +35,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import tools.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("RequestConfigurationService tests")
@@ -225,7 +225,7 @@ class RequestConfigurationServiceTest {
 
     // Then
     assertThat(result.getStatusCode().value()).isEqualTo(status);
-    assertThat(result.getHeaders()).doesNotContainKey(HttpHeaders.WWW_AUTHENTICATE);
+    assertThat(result.getHeaders().headerNames()).doesNotContain(HttpHeaders.WWW_AUTHENTICATE);
     assertThat(result.getBody()).isInstanceOf(ProblemDetail.class);
     ProblemDetail problem = (ProblemDetail) result.getBody();
     assertThat(problem.getType()).isEqualTo(type);
@@ -571,7 +571,7 @@ class RequestConfigurationServiceTest {
     HttpEntity<?> capturedEntity = httpEntityCaptor.getValue();
     HttpHeaders headers = capturedEntity.getHeaders();
 
-    assertThat(headers.containsKey(PROXY_MIDDLEWARE_KEY)).isTrue();
+    assertThat(headers.containsHeader(PROXY_MIDDLEWARE_KEY)).isTrue();
     assertThat(headers.getFirst(PROXY_MIDDLEWARE_KEY)).isEqualTo(SECRET);
     assertThat(headers.getFirst(HttpHeaders.AUTHORIZATION)).isEqualTo("Bearer " + token);
   }
@@ -618,6 +618,6 @@ class RequestConfigurationServiceTest {
     assertThat(requestDto.getTerId()).isEqualTo(terId);
     assertThat(requestDto.getType()).isEqualTo(type);
     assertThat(requestDto.getTypeId()).isEqualTo(typeId);
-    assertThat(capturedEntity.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)).isFalse();
+    assertThat(capturedEntity.getHeaders().containsHeader(HttpHeaders.AUTHORIZATION)).isFalse();
   }
 }

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.*;
 import org.sitmun.proxy.middleware.service.RequestExecutorService;
 import org.sitmun.proxy.middleware.service.UpstreamContentType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;

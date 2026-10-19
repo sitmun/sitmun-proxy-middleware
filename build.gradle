@@ -36,7 +36,8 @@ dependencies {
   }
 
   // Spring Boot Starters
-  implementation libs.spring.boot.starter.web
+  implementation libs.spring.boot.starter.webmvc
+  implementation libs.spring.boot.starter.restclient
   implementation 'org.springframework.boot:spring-boot-starter-validation'
   implementation libs.spring.boot.starter.jdbc
   implementation libs.spring.boot.starter.actuator
@@ -66,6 +67,8 @@ dependencies {
   testImplementation(libs.spring.boot.starter.test) {
     exclude group: 'com.vaadin.external.google', module: 'android-json'
   }
+  testImplementation libs.spring.boot.starter.webmvc.test
+  testImplementation libs.spring.boot.starter.jdbc.test
 
   testImplementation libs.h2
 }

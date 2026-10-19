@@ -7,7 +7,6 @@ import static org.sitmun.proxy.middleware.dto.ProxyProblemResponses.missingAutho
 import static org.sitmun.proxy.middleware.dto.ProxyProblemResponses.proxyInvalidRequest;
 import static org.sitmun.proxy.middleware.protocols.http.HttpRequestExecutor.isForwardableResponseHeader;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +29,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 @Slf4j
@@ -167,7 +167,7 @@ public class MbtilesProxyService {
             copyHeader(upstream, headers, HttpHeaders.CONTENT_TYPE);
             copyHeader(upstream, headers, HttpHeaders.CONTENT_LENGTH);
             copyHeader(upstream, headers, HttpHeaders.CONTENT_DISPOSITION);
-            if (!headers.containsKey(HttpHeaders.CONTENT_TYPE)) {
+            if (!headers.containsHeader(HttpHeaders.CONTENT_TYPE)) {
               headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
             }
             StreamingResponseBody stream =

@@ -1,6 +1,6 @@
 [versions]
 # Spring Boot and related versions
-spring-boot = "3.5.4"
+spring-boot = "4.1.1"
 spring-dependency-management = "1.1.7"
 
 # Plugin versions
@@ -16,10 +16,13 @@ okhttp3 = "5.5.0"
 handy-uri-templates = "2.1.8"
 
 [libraries]
-spring-boot-starter-web = { group = "org.springframework.boot", name = "spring-boot-starter-web" }
+spring-boot-starter-webmvc = { group = "org.springframework.boot", name = "spring-boot-starter-webmvc" }
+spring-boot-starter-restclient = { group = "org.springframework.boot", name = "spring-boot-starter-restclient" }
 spring-boot-starter-jdbc = { group = "org.springframework.boot", name = "spring-boot-starter-jdbc" }
 spring-boot-starter-actuator = { group = "org.springframework.boot", name = "spring-boot-starter-actuator" }
 spring-boot-starter-test = { group = "org.springframework.boot", name = "spring-boot-starter-test" }
+spring-boot-starter-webmvc-test = { group = "org.springframework.boot", name = "spring-boot-starter-webmvc-test" }
+spring-boot-starter-jdbc-test = { group = "org.springframework.boot", name = "spring-boot-starter-jdbc-test" }
 spring-boot-starter-tomcat = { group = "org.springframework.boot", name = "spring-boot-starter-tomcat" }
 spring-boot-devtools = { group = "org.springframework.boot", name = "spring-boot-devtools" }
 h2 = { group = "com.h2database", name = "h2", version.ref = "h2" }

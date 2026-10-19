@@ -3,7 +3,6 @@ package org.sitmun.proxy.middleware.protocols.wms;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.sitmun.proxy.middleware.test.fixtures.AuthorizationProxyFixtures.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import okhttp3.MediaType;
 import okhttp3.Protocol;
@@ -22,7 +21,7 @@ import org.sitmun.proxy.middleware.test.interceptors.DoNotRequest;
 import org.sitmun.proxy.middleware.test.interceptors.HostnameCheck;
 import org.sitmun.proxy.middleware.test.interceptors.QueryCheck;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.http.HttpHeaders;
@@ -30,6 +29,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
@@ -46,7 +46,7 @@ class ExecutionRequestExecutorServiceTest {
 
   @BeforeAll
   void setup() {
-    ObjectMapper objectMapper = new ObjectMapper();
+    JsonMapper objectMapper = new JsonMapper();
     JacksonTester.initFields(this, objectMapper);
   }
 
@@ -141,7 +141,7 @@ class ExecutionRequestExecutorServiceTest {
         requestExecutorService.executeRequest("https://proxy.example/proxy/1/2/WMS/3", payload);
 
     assertThat(response.getStatusCode().value()).isEqualTo(502);
-    assertThat(response.getHeaders()).doesNotContainKey(HttpHeaders.WWW_AUTHENTICATE);
+    assertThat(response.getHeaders().headerNames()).doesNotContain(HttpHeaders.WWW_AUTHENTICATE);
     assertThat(response.getBody()).isInstanceOf(ProblemDetail.class);
     var problem = (ProblemDetail) response.getBody();
     assertThat(problem.getType())
