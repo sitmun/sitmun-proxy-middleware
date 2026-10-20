@@ -67,12 +67,33 @@ class UpstreamContentTypeFilterTest {
           HttpServletResponse http = (HttpServletResponse) res;
           http.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE);
           assertThat(MediaType.parseMediaType(http.getHeader(HttpHeaders.CONTENT_TYPE)))
-              .isEqualTo(MediaType.APPLICATION_OCTET_STREAM);
+              .isEqualTo(MediaType.TEXT_XML);
           assertThat(http.getContentType()).isEqualTo("text/xml; subtype=gml/2.1.2");
         });
 
     assertThat(response.getHeader(HttpHeaders.CONTENT_TYPE))
         .isEqualTo("text/xml; subtype=gml/2.1.2");
+  }
+
+  @Test
+  void springKeepsAStandardParameterAndDropsTheGmlSubtype() throws Exception {
+    String upstream = "text/xml; charset=utf-8; subtype=gml/2.1.2";
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    request.setAttribute(UpstreamContentType.ATTRIBUTE, upstream);
+    MockHttpServletResponse response = new MockHttpServletResponse();
+
+    filter.doFilter(
+        request,
+        response,
+        (req, res) -> {
+          HttpServletResponse http = (HttpServletResponse) res;
+          http.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE);
+          assertThat(MediaType.parseMediaType(http.getHeader(HttpHeaders.CONTENT_TYPE)))
+              .isEqualTo(MediaType.parseMediaType("text/xml; charset=utf-8"));
+          assertThat(http.getContentType()).isEqualTo(upstream);
+        });
+
+    assertThat(response.getHeader(HttpHeaders.CONTENT_TYPE)).isEqualTo(upstream);
   }
 
   @Test

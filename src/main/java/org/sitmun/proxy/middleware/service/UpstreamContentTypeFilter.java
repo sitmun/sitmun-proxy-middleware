@@ -6,9 +6,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
+import org.apache.james.mime4j.stream.NameValuePair;
+import org.apache.james.mime4j.stream.RawBody;
+import org.apache.james.mime4j.stream.RawField;
+import org.apache.james.mime4j.stream.RawFieldParser;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.InvalidMediaTypeException;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -86,12 +93,29 @@ public class UpstreamContentTypeFilter extends OncePerRequestFilter {
       return super.getContentType();
     }
 
+    @Override
+    public void setCharacterEncoding(String charset) {
+      if (upstreamApplied) {
+        return;
+      }
+      super.setCharacterEncoding(charset);
+    }
+
+    @Override
+    public void setCharacterEncoding(Charset charset) {
+      if (upstreamApplied) {
+        return;
+      }
+      super.setCharacterEncoding(charset);
+    }
+
     private boolean applyUpstream(String name, String value) {
       String upstream = upstream();
       if (!isContentType(name) || upstream == null) {
         return false;
       }
-      springVisibleContentType = value;
+      String visible = visibleToSpring(upstream);
+      springVisibleContentType = visible != null ? visible : value;
       super.setHeader(name, upstream);
       upstreamApplied = true;
       return true;
@@ -107,6 +131,47 @@ public class UpstreamContentTypeFilter extends OncePerRequestFilter {
 
     private static boolean isContentType(String name) {
       return HttpHeaders.CONTENT_TYPE.equalsIgnoreCase(name);
+    }
+  }
+
+  static String visibleToSpring(String upstream) {
+    RawBody body = RawFieldParser.DEFAULT.parseRawBody(new RawField("Content-Type", upstream));
+    String type = body.getValue();
+    if (type == null || !parses(type)) {
+      return null;
+    }
+    String visible = type;
+    for (NameValuePair parameter : body.getParams()) {
+      String rendered = render(parameter);
+      if (rendered == null) {
+        continue;
+      }
+      String candidate = visible + "; " + rendered;
+      if (parses(candidate)) {
+        visible = candidate;
+      }
+    }
+    return visible;
+  }
+
+  private static String render(NameValuePair parameter) {
+    String name = parameter.getName();
+    if (name == null || name.isBlank()) {
+      return null;
+    }
+    String value = parameter.getValue();
+    if (value == null) {
+      return name;
+    }
+    return name + "=" + value;
+  }
+
+  private static boolean parses(String value) {
+    try {
+      MediaType.parseMediaType(value);
+      return true;
+    } catch (InvalidMediaTypeException ex) {
+      return false;
     }
   }
 }
