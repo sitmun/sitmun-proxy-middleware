@@ -50,6 +50,7 @@ dependencies {
 
   // HTTP Client
   implementation libs.okhttp3
+  implementation libs.mime4j.core
   implementation 'org.sitmun:sitmun-proxy-contract:1.2.9'
 
   // URI Templates
