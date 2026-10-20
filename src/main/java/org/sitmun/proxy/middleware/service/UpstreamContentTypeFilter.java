@@ -6,6 +6,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -27,6 +29,8 @@ public class UpstreamContentTypeFilter extends OncePerRequestFilter {
   private static final class ContentTypeResponse extends HttpServletResponseWrapper {
 
     private final HttpServletRequest request;
+    private String springVisibleContentType;
+    private boolean upstreamApplied;
 
     private ContentTypeResponse(HttpServletRequest request, HttpServletResponse response) {
       super(response);
@@ -35,28 +39,74 @@ public class UpstreamContentTypeFilter extends OncePerRequestFilter {
 
     @Override
     public void setHeader(String name, String value) {
-      super.setHeader(name, contentType(name, value));
+      if (applyUpstream(name, value)) {
+        return;
+      }
+      super.setHeader(name, value);
     }
 
     @Override
     public void addHeader(String name, String value) {
-      super.addHeader(name, contentType(name, value));
+      if (applyUpstream(name, value)) {
+        return;
+      }
+      super.addHeader(name, value);
     }
 
     @Override
     public void setContentType(String type) {
-      super.setContentType(contentType(HttpHeaders.CONTENT_TYPE, type));
+      if (applyUpstream(HttpHeaders.CONTENT_TYPE, type)) {
+        return;
+      }
+      super.setContentType(type);
     }
 
-    private String contentType(String name, String value) {
-      if (!HttpHeaders.CONTENT_TYPE.equalsIgnoreCase(name)) {
-        return value;
+    @Override
+    public String getHeader(String name) {
+      if (springVisibleContentType != null && isContentType(name)) {
+        return springVisibleContentType;
       }
+      return super.getHeader(name);
+    }
+
+    @Override
+    public Collection<String> getHeaders(String name) {
+      if (springVisibleContentType != null && isContentType(name)) {
+        return List.of(springVisibleContentType);
+      }
+      return super.getHeaders(name);
+    }
+
+    @Override
+    public String getContentType() {
+      String upstream = upstream();
+      if (upstreamApplied && upstream != null) {
+        return upstream;
+      }
+      return super.getContentType();
+    }
+
+    private boolean applyUpstream(String name, String value) {
+      String upstream = upstream();
+      if (!isContentType(name) || upstream == null) {
+        return false;
+      }
+      springVisibleContentType = value;
+      super.setHeader(name, upstream);
+      upstreamApplied = true;
+      return true;
+    }
+
+    private String upstream() {
       Object raw = request.getAttribute(UpstreamContentType.ATTRIBUTE);
       if (raw instanceof String contentType && !contentType.isBlank()) {
         return contentType;
       }
-      return value;
+      return null;
+    }
+
+    private static boolean isContentType(String name) {
+      return HttpHeaders.CONTENT_TYPE.equalsIgnoreCase(name);
     }
   }
 }

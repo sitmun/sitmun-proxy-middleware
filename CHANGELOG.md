@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **WFS**: Upstream `Content-Type` values pass through unchanged, including GeoServer `text/xml; subtype=gml/2.1.2`. The proxy sets a different type only when it replaces the body, such as `application/problem+json`.
+- **WFS**: Upstream `Content-Type` values pass through unchanged, including GeoServer `text/xml; subtype=gml/2.1.2`. Spring reads a separate parseable value, so the slash in `subtype` is not a 500. The proxy sets a different type only when it replaces the body, such as `application/problem+json`.
 
 ### Added
 
