@@ -1,4 +1,4 @@
-> **Archived.** Since SITMUN 1.3.0 this code is maintained in [sitmun/sitmun](https://github.com/sitmun/sitmun), folder [`sitmun-proxy`](https://github.com/sitmun/sitmun/tree/main/sitmun-proxy), which imported this repository's history. This repository is read-only and receives no further changes. Documentation: [https://sitmun.github.io](https://sitmun.github.io).
+> **Archived.** Since SITMUN 1.3.0 this code is maintained in [sitmun/sitmun](https://github.com/sitmun/sitmun), folder [`sitmun-proxy`](https://github.com/sitmun/sitmun/tree/main/sitmun-proxy), which imported this repository's history. This repository is read-only and receives no further changes. Documentation: [https://sitmun.github.io](https://sitmun.github.io). The instructions below describe the archived 1.2.x code; to install or develop the current version, see the documentation and [sitmun/sitmun](https://github.com/sitmun/sitmun).
 
 [![License: EUPL v1.2](https://img.shields.io/badge/License-EUPL%20v1.2-blue.svg)](LICENSE)
 ![Version](https://img.shields.io/badge/version-1.2.9-blue.svg)
